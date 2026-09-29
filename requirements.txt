@@ -1,0 +1,17 @@
+# 机械零件参数化建模与工程图流水线 —— Python 依赖
+#
+# 安装：
+#   python -m venv .venv
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# 环境：Python 3.13（本项目在 3.13.12 上验证）
+
+build123d==0.13.0       # 三维建模（B-rep 实体，底层是 cadquery-ocp 内核）
+matplotlib==3.11.2      # 图纸 / 表格渲染（A3 矢量 PDF + 300dpi PNG）
+
+# ---------------- 说明 ----------------
+# 1) FreeCAD 1.1.0 **不是 pip 包**，需单独安装（见 README「环境准备」第 2 步）。
+#    本项目只调用它的命令行版 freecadcmd.exe 做无界面 TechDraw 投影。
+# 2) 下面两个只在「像素级读图 / 校核」的辅助脚本里用到，正式流水线不依赖：
+#      numpy           像素扫描、坐标换算
+#      Pillow          图像裁切、叠加验证

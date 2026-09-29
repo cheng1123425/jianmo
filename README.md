@@ -20,11 +20,41 @@ D:\3d\build123d\.venv\Scripts\python.exe make_all.py
 
 ---
 
-## 环境
+## 环境准备（clone 之后要做的三件事）
+
+### 1. 装 Python 依赖
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+本项目在 **Python 3.13.12** 上验证；核心依赖只有 `build123d` 和 `matplotlib`。
+
+### 2. 装 FreeCAD（**不是 pip 包**）
+
+从 [freecad.org](https://www.freecad.org/downloads.php) 下载 **FreeCAD 1.1.0** 安装即可。
+本项目只用它的**命令行版** `freecadcmd.exe`（无界面 TechDraw 出图）。
+
+### 3. 改掉脚本里写死的本机路径
+
+脚本里保留了原开发机的绝对路径，换机器要改这几处：
+
+| 文件 | 变量 | 应指向 |
+|---|---|---|
+| `params.py` | `STEP_DIR` | STEP / STL 输出目录（如本仓库的 `models/`）|
+| `make_all.py` | `PY` / `FC` | 你的 venv `python.exe` / FreeCAD 的 `freecadcmd.exe` |
+| `check_loop.py`、`verify_link.py` | `PY` | 同上的 venv `python.exe` |
+| `freecad_drawing.py`、`bracket_draw.py`、`socket_draw.py` | `TD` | FreeCAD 的 A3 图框模板 `A3_Landscape_TD.svg` |
+
+> 模板位置：`<FreeCAD 安装目录>/data/Mod/TechDraw/Templates/ISO/A3_Landscape_TD.svg`
+> —— 注意它比 `App.getResourceDir()` 多一层 `data/`，拼不出这个路径。
+
+### 原开发机的环境（供对照）
 
 | 用途 | 路径 |
 |---|---|
-| build123d 0.13.0 | `D:\3d\build123d\.venv\Scripts\python.exe` |
+| Python 3.13 + build123d 0.13.0 | `D:\3d\build123d\.venv\Scripts\python.exe` |
 | FreeCAD 1.1.0 | `D:\3d\新建文件夹\FreeCAD 1.1\bin\freecadcmd.exe` |
 
 ---
@@ -61,7 +91,7 @@ D:\3d\build123d\.venv\Scripts\python.exe make_all.py
 | `drawing.pdf` / `.png` | A3 横向矢量图纸（三视图 + 完整标注） |
 | `dims_table.pdf` / `.md` | 尺寸命名与推导对照表 |
 | `gasket_fixture.FCStd` | FreeCAD 工程图文档（尺寸是真实关联对象，可在 GUI 里编辑） |
-| `gasket_fixture.step` / `.stl` | 三维实体（在 `D:\3d\build123d\`） |
+| `models/*.step` / `.stl` | 三个零件的三维实体导出（`gasket_fixture` / `bracket` / `socket_cover`）。STEP 为 **AP214 纯几何**，无参数与特征树 |
 
 ---
 
