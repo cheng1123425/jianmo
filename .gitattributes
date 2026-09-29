@@ -1,0 +1,19 @@
+# 统一换行符：仓库内一律 LF（Windows 上编辑、跨平台 checkout 都一致）
+* text=auto eol=lf
+
+# 文本
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.txt  text eol=lf
+
+# 二进制（禁止换行符转换、不做 diff）
+*.png   binary
+*.pdf   binary
+*.step  binary
+*.stp   binary
+*.stl   binary
+*.FCStd binary
+
+# STEP / STL 虽为文本格式，但内容大且无意义 diff → 按二进制处理
+*.FCStd diff=fcstd

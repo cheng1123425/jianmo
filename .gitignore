@@ -1,0 +1,26 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- FreeCAD 备份 / 临时 ----
+*.FCBak
+*.bak
+
+# ---- 建模中间产物（可重新生成，但保留注释以便按需忽略）----
+# 说明：_td_data.json / _bracket_data.json / _socket_data.json 是 FreeCAD 投影导出的
+#      特征数据，虽然可由脚本重新生成，但体积很小且是校核的直接输入，故**纳入版本管理**。
+
+# ---- 系统文件 ----
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- 工作目录（agent 的工作记忆，不属于项目产出；且含跨项目偏好信息）----
+.workbuddy/
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
