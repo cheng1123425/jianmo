@@ -8,6 +8,7 @@ venv/
 # ---- FreeCAD 备份 / 临时 ----
 *.FCBak
 *.bak
+*.FCStd
 
 # ---- 消息流水线的运行时产物（每次 pipe.py 重新生成，不进库）----
 _msg/
