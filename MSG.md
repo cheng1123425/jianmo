@@ -171,6 +171,24 @@ _msg/
 把关系式算出来的值和图上标的数比对，不符就给出可直接应用的建议值；
 `s7` 在投影比对推不出建议时用它兜底，让闭环还能继续跑。
 
+### 技能投影分析（mech-projection-analysis）的接入
+
+`mpipe/1` 上还有两条可选入参/出参，把外部 skill 也接进循环：
+
+| 角色 | 方向 | 文件 | 谁写 |
+|---|---|---|---|
+| `skill_advice` | s0_plan 入参（`?` 可选） | `notes/skill_advice.md` | 人工/agent 跑 `mech-projection-analysis` 技能后落地 |
+| `skill_feedback` | s9_record 入参（`?` 可选） | `notes/skill_feedback.md` | 历史反馈（追加） |
+| `skill_feedback_md` | s9_record 出参 | `notes/skill_feedback.md` | s9 每轮追加 |
+
+`s0_plan` 解析技能产物：
+- 「## 视图辨认与投影映射」表 → 写到 plan.md「## 0.」顶部
+- 「## 5. 高效作画/建模步骤」编号列表（含紧随其后的「理由：…」）→ 写到 plan.md「### 0.1」
+- 「## 6. 风险与待确认」表（4 列或 5 列都支持）→ 写到 plan.md「### 0.2」
+
+`s9_record` 把本轮判定 + 差异 + 修正按 `确认/补正/证伪/待分析` 写一条到 skill_feedback.md。
+下次跑技能时把 skill_feedback.md 当额外上下文（"之前分析版哪些被证伪/确认"），形成闭环。
+
 ---
 
 ## 五、怎么跑

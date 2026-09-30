@@ -6,14 +6,17 @@ r"""s9_record —— 每轮结束的「记录员」：建模思路 + 错误思�
 
     notes/model_notes.md   建模思路时间线（每轮一行结论，可回溯）
     notes/errors.md        错误库（按分类去重累积，记次数，供 s0 下轮提示）
+    notes/skill_feedback.md 反馈给 mech-projection-analysis 技能的条目
+                                 （证伪/补正/确认。下次跑技能时把本文件当额外上下文）
 
 入参消息
     refs: params（当前参数值）、dims_spec（分类映射）、plan_md（s0 产出的本轮方案，可选）
+          skill_feedback（已有的 notes/skill_feedback.md，可选）
     data: out_dir（notes 目录）、round（轮次）
           以及驱动器注入的 s7_decide 判定（verdict/items/fixes/diagnosis）
 
 产出
-    refs: model_notes、errors_md
+    refs: model_notes、errors_md、skill_feedback_md
     data: {round, verdict, n_new_error, n_error_total}
 
 只有这一步和 s8_apply 会写文件：s8 改 params.py，s9 写 notes/。
@@ -119,10 +122,42 @@ def handler(in_msg):
             n_new += 1
     open(err_path, "w", encoding="utf-8").write(dump_errors(errs))
 
-    print("[s9_record] 第 %d 轮：判定=%s，新增错误条目 %d，错误库共 %d 条"
+    # ---- ③ 给 mech-projection-analysis 技能写反馈 ----
+    fb_path = os.path.join(out_dir, "skill_feedback.md")
+    if not os.path.exists(fb_path):
+        open(fb_path, "w", encoding="utf-8").write(
+            "# 技能反馈（s9_record 自动追加）\n\n"
+            "下次跑 `mech-projection-analysis` 技能时，把本文件当额外上下文："
+            "「上一版分析在实际建模里被证伪/补正/确认了哪些条目」。\n\n"
+            "格式：\n\n```\n## <日期> · 第 N 轮 · 判定=<verdict>\n"
+            "- 差异 N 项：\n  - <差异名> 基准 X / 当前 Y（cat=...）\n"
+            "  - 反馈类型：<证伪分析 / 补正分析 / 确认分析>\n"
+            "  - 根因：<一句话>\n- 应用修正：<参数改动>\n```\n\n---")
+    fb_type = {"pass": "确认分析", "fix": "补正分析",
+               "manual": "证伪分析", "stuck": "证伪分析",
+               "suggest": "待分析"}.get(verdict, "待分析")
+    fb_L = []
+    fb_L.append("\n## %s · 第 %d 轮 · 判定=%s" % (
+        time.strftime("%Y-%m-%d"), rd, verdict))
+    if items:
+        fb_L.append("- 差异 %d 项：" % len(items))
+        for x in items:
+            fb_L.append("  - `%s` 基准 %s / 当前 %s（cat=%s）"
+                        % (x.get("name"), x.get("base"), x.get("cur"),
+                           cat_of(x.get("name"))))
+    fb_L.append("- 反馈类型：%s" % fb_type)
+    if fixes:
+        fb_L.append("- 应用修正：%s" % ", ".join("%s → %s" % (k, v) for k, v in fixes.items()))
+    if reason:
+        fb_L.append("- 根因（自动判断）：%s" % reason[:120])
+    with open(fb_path, "a", encoding="utf-8") as f:
+        f.write("\n".join(fb_L) + "\n")
+
+    print("[s9_record] 第 %d 轮：判定=%s，新增错误条目 %d，错误库共 %d 条，技能反馈 +1"
           % (rd, verdict, n_new, len(errs)))
 
-    return [("model_notes", notes_path), ("errors_md", err_path)], {
+    return [("model_notes", notes_path), ("errors_md", err_path),
+            ("skill_feedback_md", fb_path)], {
         "round": rd, "verdict": verdict,
         "n_new_error": n_new, "n_error_total": len(errs),
         "n_item": len(items),

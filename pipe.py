@@ -96,7 +96,8 @@ STEPS = [
     dict(name="s0_plan", runner="py", out_dir="notes", head=True,
          in_files=[("params", "params.py"), ("dims_spec", "dims_spec.py"),
                    ("ref_spec", "ref_spec.py"), ("plan_src", "notes/plan_src.md"),
-                   ("errors_md", "?notes/errors.md")],
+                   ("errors_md", "?notes/errors.md"),
+                   ("skill_advice", "?notes/skill_advice.md")],
          in_data_from="s7_decide"),
     dict(name="s1_build", runner="py", out_dir="models",
          in_files=[("params", "params.py")]),
@@ -119,7 +120,8 @@ STEPS = [
          in_files=[("params", "params.py")], in_data_from="s7_decide"),
     dict(name="s9_record", runner="py", out_dir="notes", loop=True, tail=True,
          in_files=[("params", "params.py"), ("dims_spec", "dims_spec.py"),
-                   ("plan_md", "@s0_plan")],
+                   ("plan_md", "@s0_plan"),
+                   ("skill_feedback", "?notes/skill_feedback.md")],
          in_data_from="s7_decide"),
 ]
 BY_NAME = {s["name"]: s for s in STEPS}
@@ -308,6 +310,9 @@ class Driver(object):
             print("    构造 %d 阶段｜参数预检不符 %d 项｜疑似失误 %d 处｜历史错误提示 %d 条"
                   % (pl.get("n_stages", 0), pl.get("n_bad", 0),
                      pl.get("n_suspect", 0), pl.get("n_risk", 0)))
+            if pl.get("n_skill_steps") or pl.get("n_skill_risks"):
+                print("    技能建议 %d 步｜技能风险 %d 条（来自 mech-projection-analysis）"
+                      % (pl.get("n_skill_steps", 0), pl.get("n_skill_risks", 0)))
             for s in pl.get("suspects", []):
                 if s.get("stage"):
                     print("      → 阶段 %d「%s」← %s" % (s["stage"], s["stage_title"], s["name"]))

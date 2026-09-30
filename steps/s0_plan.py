@@ -10,6 +10,7 @@ r"""s0_plan —— 每轮循环前的「读图 → 建模方案 → 失误定位
           ref_spec    (ref_spec.py —— 原图基准 / 真值)
           plan_src    (notes/plan_src.md —— 人工维护的建模方案源：读图/构造/易错)
           errors_md   (notes/errors.md —— 历史错误库，可选)
+          skill_advice (notes/skill_advice.md —— 来自 mech-projection-analysis 技能的视图映射/有序步骤/风险，可选)
     data: out_dir（notes 目录）、round（轮次）
           以及驱动器注入的上一轮 s7_decide 判定（verdict/items/fixes）
 
@@ -84,6 +85,42 @@ def parse_errors(text):
     return out
 
 
+# ---------------- notes/skill_advice.md 解析 ----------------
+def parse_skill_steps(lines):
+    """技能模板「## 5. 高效作画 / 建模步骤」段的编号列表；紧随其后的「理由：…」也并入。"""
+    steps, last = [], None
+    for ln in lines:
+        m = re.match(r"^\s*(\d+)\.\s+(.+)$", ln)
+        if m:
+            if last is not None:
+                steps.append(last)
+            last = dict(no=int(m.group(1)), title=m.group(2).strip(), reason="")
+        elif last is not None and ln.strip():
+            r = re.search(r"理由[：:]\s*(.+)$", ln)
+            last["reason"] = (r.group(1).strip() if r else (last["reason"] + " " + ln.strip())).strip()
+    if last is not None:
+        steps.append(last)
+    return steps
+
+
+def parse_skill_risks(lines):
+    """技能模板「## 6. 风险与待确认」的 markdown 表行。
+    支持 4 列「项/问题/影响/建议」和 5 列「#/项/问题/影响/建议」两种表头。
+    跳过表头（首格是 # 或空）和分隔行（任何格只含 - 字符）。"""
+    out = []
+    for ln in lines:
+        c = [x.strip() for x in ln.strip().strip("|").split("|")]
+        if len(c) < 4 or not c[0] or c[0] == "#":
+            continue
+        if any((not x) or set(x) <= set("-") for x in c):
+            continue                                # 表头/分隔行
+        if len(c) >= 5:
+            out.append(dict(num=c[0], item=c[1], issue=c[2], impact=c[3], advice=c[4]))
+        else:
+            out.append(dict(num="", item=c[0], issue=c[1], impact=c[2], advice=c[3]))
+    return out
+
+
 def has_role(msg, role):
     return any(r["role"] == role for r in msg.get("in", {}).get("refs", []))
 
@@ -114,6 +151,18 @@ def handler(in_msg):
     errs = []
     if has_role(in_msg, "errors_md"):
         errs = parse_errors(open(ref_path(in_msg, "errors_md"), encoding="utf-8").read())
+
+    # ---- ①' 技能建议（mech-projection-analysis 的产物） ----
+    skill_steps, skill_risks, skill_view_map = [], [], []
+    if has_role(in_msg, "skill_advice"):
+        sk = parse_sections(open(ref_path(in_msg, "skill_advice"), encoding="utf-8").read())
+        for key, lines in sk.items():
+            if "视图" in key and ("投影" in key or "辨认" in key or "映射" in key):
+                skill_view_map = [l for l in lines if l.strip()]
+            elif "步骤" in key or "作画" in key:
+                skill_steps = parse_skill_steps(lines)
+            elif "风险" in key:
+                skill_risks = parse_skill_risks(lines)
 
     # ---- ① 参数预检：关系式算出来的值 vs 图上标的数 ----
     pre = []
@@ -172,6 +221,28 @@ def handler(in_msg):
     L = []
     w = L.append
     w("# 建模方案（第 %d 轮 · %s）\n" % (rd, time.strftime("%Y-%m-%d %H:%M:%S")))
+    if skill_steps or skill_risks or skill_view_map:
+        w("## 0. 投影技能建议（mech-projection-analysis）\n")
+        if skill_view_map:
+            w("视图映射：\n")
+            for l in skill_view_map[:8]:
+                w("> %s" % l.lstrip("|").strip())
+            w("")
+        if skill_steps:
+            w("### 0.1 推荐作画/建模顺序\n")
+            for s in skill_steps:
+                w("%d. **%s**" % (s["no"], s["title"]))
+                if s["reason"]:
+                    w("   - 理由：%s" % s["reason"])
+            w("")
+        if skill_risks:
+            w("### 0.2 技能列出的风险\n")
+            w("| # | 项 | 问题 | 影响 | 建议 |")
+            w("|---|---|---|---|---|")
+            for r in skill_risks:
+                w("| %s | %s | %s | %s | %s |" % (
+                    r.get("num", ""), r["item"], r["issue"], r["impact"], r["advice"]))
+            w("")
     w("## 1. 读图结论\n")
     for l in read_lines:
         w(l)
@@ -230,9 +301,13 @@ def handler(in_msg):
         "n_bad": n_bad,
         "n_suspect": len(suspects),
         "n_risk": len(risks),
+        "n_skill_steps": len(skill_steps),
+        "n_skill_risks": len(skill_risks),
         "precheck": pre,
         "suspects": suspects,
         "risks": [e["text"] for e in risks],
+        "skill_steps": skill_steps,
+        "skill_risks": skill_risks,
         "stages": [{"no": s["no"], "title": s["title"], "cats": s["cats"]} for s in stages],
     }
 
