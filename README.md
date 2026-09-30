@@ -131,15 +131,16 @@ python -m venv .venv
 | `drawing.pdf` / `.png` | A3 横向矢量图纸（三视图 + 完整标注） |
 | `dims_table.pdf` / `.md` | 尺寸命名与推导对照表 |
 | `gasket_fixture.FCStd` | FreeCAD 工程图文档（尺寸是真实关联对象，可在 GUI 里编辑） |
-| `models/*.step` / `.stl` | 三个零件的三维实体导出（`gasket_fixture` / `bracket` / `socket_cover`）。STEP 为 **AP214 纯几何**，无参数与特征树 |
+| `models/*.step` / `.stl` | 各零件的三维实体导出（`gasket_fixture` / `bracket` / `lbracket` / `socket_cover`）。STEP 为 **AP214 纯几何**，无参数与特征树 |
 
 ### 零件目录 `parts/`
 
 | 目录 | 零件 | 状态 |
 |---|---|---|
-| `parts/bracket/` | 铰链支座 | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 pass） |
-| （根目录） | 加工垫片 | ✅ 主流水线 |
-| `socket_*.py`（根目录） | 多耳球铰盖 | ⏳ 仍是旧的"直读文件"写法，未迁入。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） |
+| （根目录） | 加工垫片 | ✅ 主流水线（`pipe.py`，闭环 pass） |
+| `parts/bracket/` | 铰链支座（双耳） | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 pass） |
+| `parts/lbracket/` | L 形支座（单立板双耳） | ✅ 已建完整流水线（`pipe.py --part parts/lbracket`，闭环 pass；按原图重修：叶形底板 56×40 + 顶双耳 R7/R6,5 + 中央窗口 8×14 + 3×φ8） |
+| `parts/socket/` | 多耳球铰盖 | ⏳ **未迁入**（`parts/socket/steps/` 为空；旧脚本 `socket_*.py` 在根目录）。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） |
 
 每个零件目录结构相同：
 
@@ -148,11 +149,15 @@ parts/<零件>/
   params.py        唯一数据源
   dims_spec.py     标注 ↔ 实体关系（cat 字段要和 notes/plan_src.md 对上）
   ref_spec.py      原图基准（闭环的真值）
-  steps/           零件专属步骤（s1_build … s8_apply）
-  notes/           方案源 + 方案 + 思路记录 + 错误库
+  steps/           零件专属步骤（s1_build … s8_apply；s0_plan/s9_record 共用 root/steps/）
+  notes/           方案源 + 方案 + 思路记录 + 错误库 + 技能回路
   _msg/            消息（不入库）
   models/          STEP / STL
 ```
+
+> ⚠️ **每个零件必须有完整的 `steps/` 副本**（s1~s8）。缺步骤时驱动器会**静默回退**到根目录的
+> 通用步骤——而根目录的 s6_compare 是垫片专属，schema 对不上会炸在该步，很难第一时间定位
+> （lbracket 就因此卡了很久）。
 
 ---
 
