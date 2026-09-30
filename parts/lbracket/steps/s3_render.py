@@ -61,17 +61,18 @@ def draw_view(name):
     v = V[name]
     px, py, flip = PLACE[name]
     sc = v["plot_scale"]
+    # 关键：ey_min/ey_max 必须取「整个视图」的范围（对所有边统一），
+    # 而不是逐边各自归一 —— 否则 flip=True 时水平边会被压到同一条 y 上。
+    ey_min = min(p[1] for e in v["edges"] for p in e)
+    ey_max = max(p[1] for e in v["edges"] for p in e)
     xs = []
     ys = []
     for e in v["edges"]:
-        ey_min = min(p[1] for p in e)
-        ey_max = max(p[1] for p in e)
-        for q in e:
-            xs.append(v["X"] + q[0] * sc)
-            ys.append(v["Y"] + ((ey_max - q[1]) if flip else (q[1] - ey_min)) * sc)
-        ax.plot([v["X"] + q[0] * sc for q in e],
-                [v["Y"] + ((ey_max - q[1]) if flip else (q[1] - ey_min)) * sc for q in e],
-                color="k", lw=0.42, zorder=2)
+        ex = [v["X"] + q[0] * sc for q in e]
+        ey = [v["Y"] + ((ey_max - q[1]) if flip else (q[1] - ey_min)) * sc for q in e]
+        xs.extend(ex)
+        ys.extend(ey)
+        ax.plot(ex, ey, color="k", lw=0.42, zorder=2)
     return min(xs), max(xs), min(ys), max(ys)
 
 
