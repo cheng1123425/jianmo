@@ -106,6 +106,12 @@ _msg/
 ## 四、拓扑
 
 ```
+   params.py + dims_spec.py + ref_spec.py + notes/plan_src.md
+                        │
+                   ┌────▼─────┐
+                   │ s0_plan  │──> notes/plan.md   ← 每轮循环前的读图/方案/失误定位
+                   └────┬─────┘
+                        │
                     params.py  (人的输入)
                         │
                    ┌────▼────┐
@@ -142,31 +148,71 @@ _msg/
         └─────┬──────┘
               │  回到 s1（下一轮）
               └──────────►
+
+        ┌────────────┐
+        │ s9_record  │──> notes/model_notes.md + notes/errors.md
+        └────────────┘   每轮结束记录：本轮怎么判的、改了什么、错在哪
 ```
+
+### s0_plan / s9_record：思考与记忆
+
+闭环最容易出现的浪费是「不看图纸就改参数」。所以链的两端各加了一步：
+
+| 步骤 | 时机 | 读什么 | 产出 |
+|---|---|---|---|
+| `s0_plan` | 每轮循环**最前面** | `ref_spec`（图上标的数）+ `dims_spec`（标注↔实体关系）+ `notes/plan_src.md`（人工维护的方案源）+ `notes/errors.md`（历史错误）+ 上一轮 `s7` 的判定 | `notes/plan.md`：读图结论、构造顺序、**参数预检**、**上一轮差异定位到哪个建模阶段**、历史错误提示 |
+| `s9_record` | 每轮**结束**（无论成败） | 本轮 `s7` 判定 + `dims_spec` 分类 + `s0` 的方案 | 追加 `notes/model_notes.md`（时间线）与 `notes/errors.md`（按分类去重累积，记次数） |
+
+`s0` 定位失误的办法：把差异项的名字按「标注 label → 分类 cat → 构造阶段」三级映射，
+输出形如「阶段 3『圆头铰接端』← R_head 基准 10 / 当前 13」。
+所以 `notes/plan_src.md` 里的 `cat=` 必须和 `dims_spec.py` 的 `cat` 对得上。
+
+`s0` 还能在**参数层面**直接预检：对每个「标注 == 参数本身」的恒等关系，
+把关系式算出来的值和图上标的数比对，不符就给出可直接应用的建议值；
+`s7` 在投影比对推不出建议时用它兜底，让闭环还能继续跑。
 
 ---
 
 ## 五、怎么跑
 
 ```bash
-# 全链（4 段）
+# 全链（s0→s1→s2→s3→s4），默认跑根零件（垫片）
 python pipe.py
 
+# 跑别的零件
+python pipe.py --part parts/bracket
+
 # 全链 + 闭环自动迭代（默认上限 6 轮）
-python pipe.py --loop --auto
+python pipe.py --part parts/bracket --loop --auto
 
 # 闭环只检查不重跑、不改参数
-python pipe.py --loop --no-run
+python pipe.py --loop
 
 # 只跑某一段（调试用）
-python pipe.py --only s2_drawing
+python pipe.py --part parts/bracket --only s2_drawing
+
+# 忽略指纹缓存，强制重跑（改了环境或想确认真实耗时）
+python pipe.py --no-cache
 
 # 隔离检查（改完步骤脚本后先跑这个）
-python guard.py
+python guard.py --steps parts/bracket/steps --steps steps
 ```
 
 **看消息**：`_msg/<stage>.in.json` / `.out.json` 是纯文本，
 出问题直接打开看"这一步当时收到了什么、产出了什么"。
+
+**看思路**：`notes/plan.md`（本轮方案）、`notes/model_notes.md`（每轮结论）、
+`notes/errors.md`（错误库）是人读的，也是下一轮 `s0` 的输入。
+
+### 两个省时间的机制（默认开启）
+
+1. **指纹缓存**：入参 sha256 + 入参 data + 步骤脚本 sha256 全都没变 → 直接复用上次
+   结果，不起进程。改了某一步的脚本，只有它和它的下游会重跑。
+   缓存索引在 `_msg/.cache.json`，用 `--no-cache` 跳过。
+2. **延迟出图**：闭环中间轮只跑 `s1+s2`（几何相关），`s3_render/s4_table`
+   等最后一轮结束再补跑一次 —— 每轮省下约 3 秒的渲染与制表开销。
+
+跑完会打印**耗时排行**，一眼看出瓶颈在哪一步。
 
 ---
 

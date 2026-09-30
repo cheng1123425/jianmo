@@ -4,28 +4,46 @@
 > - **`MSG.md`** —— 消息协议：整条链与闭环都是**互相隔离的独立进程**，只通过消息文件通信
 > - **`lessons.md`** —— 三次建模（垫片 / 球铰盖 / 铰链支座）的复盘与学习记录
 > - **`drawing_techniques.md`** —— build123d 绘图技巧与踩坑
-> - `socket_log.md` / `bracket_log.md` —— 另两个零件的迭代日志
+> - **`PUSH.md`** —— 上传 GitHub 的规矩（不自动推送，等你提醒）
+> - `socket_log.md` —— 多耳球铰盖的迭代日志（铰链支座的已并入 `parts/bracket/notes/`）
 
 ## 快速使用
 
 ```bash
 # 1) 改参数（唯一数据源）
-notepad params.py
+notepad params.py                       # 垫片
+notepad parts\bracket\params.py         # 铰链支座
 
-# 2) 全链：三维 → STEP → 工程图 → PDF → 尺寸表（约 15~20 秒）
+# 2) 全链：三维 → STEP → 工程图 → PDF → 尺寸表
 D:\3d\build123d\.venv\Scripts\python.exe pipe.py
+D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/bracket
 
 # 3) 全链 + 闭环校核（对照原图自动检出差异，只报不改）
 D:\3d\build123d\.venv\Scripts\python.exe pipe.py --loop
 
 # 4) 全链 + 闭环自动修正（改错参数也能自动改回，最多 6 轮）
-D:\3d\build123d\.venv\Scripts\python.exe pipe.py --loop --auto
+D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/bracket --loop --auto
+
+# 5) 想看瓶颈 / 想强制重跑
+... pipe.py --part parts/bracket            # 跑完打印耗时排行
+... pipe.py --no-cache                      # 忽略指纹缓存
 ```
 
 **架构**：不再是 `make_all.py` 那种一个大脚本串子进程，而是**消息驱动的隔离流水线**——
 每个步骤是独立进程，只读自己的 `_msg/<stage>.in.json`、只写 `_msg/<stage>.out.json`，
 步骤之间**只允许通过消息文件传输**（`guard.py` 静态扫描强制，`pipe.py` 运行时校验）。
 详见 **`MSG.md`**。
+
+**一个驱动器跑所有零件**：`pipe.py --part parts/bracket`。零件目录里放
+`params.py` / `dims_spec.py` / `ref_spec.py` / `steps/` / `notes/`；
+`steps/` 里没有的步骤（如 `s0_plan`、`s9_record`）会自动回落到根目录的通用实现。
+
+---
+
+## 上传 GitHub（`jianmo`）
+
+**不会自动推送。** 模型更新后先在本地跑通、提交，等你说「上传」我再 push。
+流程与检查清单见 **`PUSH.md`**。
 
 ---
 
@@ -86,6 +104,7 @@ python -m venv .venv
 | `msgio.py` | 协议实现：`boot`/`finish`/`run_stage`、`ref_path`（按消息声明读入参 + 校验 sha256）|
 | `pipe.py` | **驱动器**：只做调度与投递，不做业务计算；读每步消息决定继续/停止/回环 |
 | `guard.py` | **隔离校验器**：静态扫描 steps/，违例（跨步骤 import / 硬编码路径）即拒绝运行 |
+| `steps/s0_plan.py` | **每轮循环前读图**：图纸基准 + 关系表 + 方案源 + 历史错误 → 本轮建模方案与失误定位（所有零件共用）|
 | `steps/s1_build.py` | 三维建模 → STEP / STL |
 | `steps/s2_drawing.py` | STEP → 工程图 FCStd + 投影特征（FreeCAD 无界面）|
 | `steps/s3_render.py` | 投影特征 → A3 矢量图纸 PDF / PNG |
@@ -94,6 +113,16 @@ python -m venv .venv
 | `steps/s6_compare.py` | 几何摘要 vs 原图基准 → 差异清单 |
 | `steps/s7_decide.py` | 差异清单 → 判定 + 修正建议 |
 | `steps/s8_apply.py` | 修正建议 → 写回 params.py（**唯一**被允许改参数的步骤）|
+| `steps/s9_record.py` | **每轮结束记录**：本轮思路、差异、修正、错误条目 → `notes/`（所有零件共用）|
+
+### 建模思路与错误库（`notes/`，人写 + 机器累积）
+
+| 文件 | 谁写 | 说明 |
+|---|---|---|
+| `notes/plan_src.md` | **人** | 建模方案源：读图结论 + 构造阶段（`cat=` 要跟 `dims_spec.py` 对得上）+ 易错点 |
+| `notes/plan.md` | `s0_plan` | 每轮生成的本轮方案：读图 / 构造顺序 / 参数预检 / 疑似失误阶段 / 历史错误提示 |
+| `notes/model_notes.md` | `s9_record` | 建模思路时间线：每轮判定、差异、改了什么 |
+| `notes/errors.md` | 人 + `s9_record` | 错误库，按分类去重累积并记次数；下轮 `s0_plan` 会读它做风险提示 |
 
 ### 产物
 
@@ -104,14 +133,26 @@ python -m venv .venv
 | `gasket_fixture.FCStd` | FreeCAD 工程图文档（尺寸是真实关联对象，可在 GUI 里编辑） |
 | `models/*.step` / `.stl` | 三个零件的三维实体导出（`gasket_fixture` / `bracket` / `socket_cover`）。STEP 为 **AP214 纯几何**，无参数与特征树 |
 
-### 另两个零件的独立脚本（未迁入消息流水线）
+### 零件目录 `parts/`
 
-| 文件 | 说明 |
-|---|---|
-| `bracket_part.py` / `_draw.py` / `_verify.py` / `_render.py` | 铰链支座：建模 / 投影 / 校核 / 出图 |
-| `socket_part.py` / `_draw.py` / `_verify.py` | 多耳球铰盖：建模 / 投影 / 校核 |
+| 目录 | 零件 | 状态 |
+|---|---|---|
+| `parts/bracket/` | 铰链支座 | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 pass） |
+| （根目录） | 加工垫片 | ✅ 主流水线 |
+| `socket_*.py`（根目录） | 多耳球铰盖 | ⏳ 仍是旧的"直读文件"写法，未迁入。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） |
 
-> 它们仍是旧的"直读文件"写法。若需要，可套用 `steps/` 同样的消息模板迁入。
+每个零件目录结构相同：
+
+```
+parts/<零件>/
+  params.py        唯一数据源
+  dims_spec.py     标注 ↔ 实体关系（cat 字段要和 notes/plan_src.md 对上）
+  ref_spec.py      原图基准（闭环的真值）
+  steps/           零件专属步骤（s1_build … s8_apply）
+  notes/           方案源 + 方案 + 思路记录 + 错误库
+  _msg/            消息（不入库）
+  models/          STEP / STL
+```
 
 ---
 

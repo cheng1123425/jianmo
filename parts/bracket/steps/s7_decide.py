@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
-r"""s7_decide —— 差异清单 → 判定 + 修正建议（只决策，不动任何文件）
-
-入参 refs: params（用于过滤「与当前值相同」的无效建议）
-入参 data: s6 的 issues
-产出 data: verdict(pass|fix|manual) / fixes / diagnosis / reason
-"""
+r"""s7_decide —— 差异清单 → 判定 + 修正建议（铰链支座）"""
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.environ.get("MPIPE_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.dirname(HERE))          # 兼容
 
-from msgio import run_stage, ref_path, ref_data, exec_module    # noqa: E402
+from msgio import run_stage, ref_path, ref_data, exec_module
 
 
 def handler(in_msg):
-    P = exec_module(ref_path(in_msg, "params"), "gasket_params")
+    P = exec_module(ref_path(in_msg, "params"), "bracket_params")
     D = ref_data(in_msg)
     iss = D.get("issues", [])
     n_geom, n_mark = D.get("n_geom", 0), D.get("n_mark", 0)
@@ -23,28 +21,26 @@ def handler(in_msg):
         return [], {"verdict": "pass", "fixes": {}, "diagnosis": "",
                     "reason": "几何与标注全部相符"}
 
-    # 汇总建议；过滤掉「与当前值相同」的 no-op
     fixes = {}
     for x in iss:
         if x.get("action"):
             k, v = x["action"]
             v = round(float(v), 4)
-            if abs(getattr(P, k) - v) > 1e-9:
+            if abs(getattr(P, k, v) - v) > 1e-9:
                 fixes[k] = v
 
     if n_geom:
-        diagnosis = "三维画错（投影轮廓与图纸不符；标注偏差会随之消失）"
+        diagnosis = "三维画错（投影轮廓与图纸不符）"
         reason = "三维形状不对 → 改 params.py 后重出"
         verdict = "fix" if fixes else "manual"
     elif n_mark:
-        diagnosis = "二维标注错（形状对，标注没跟上）"
-        reason = "形状没问题，是标注层的事 → 需人工检查边引用"
+        diagnosis = "二维标注错"
+        reason = "形状对、标注没跟上 → 查 s2_drawing.py 的边引用"
         verdict = "manual"
     else:
         diagnosis, reason, verdict = "", "未知差异", "manual"
 
-    # 兜底：s0_plan 的「参数预检」能直接反解恒等映射（标注 == 参数本身）的差异。
-    # 投影比对推不出建议时（s6 的 action 为空），用 s0 的建议让闭环继续跑。
+    # 兜底：s0_plan 的「参数预检」能直接反解恒等映射（标注 == 参数本身）的差异
     s0_fix = D.get("s0_fix") or {}
     if not fixes and s0_fix:
         for k, v in s0_fix.items():

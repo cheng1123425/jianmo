@@ -22,16 +22,18 @@ import traceback
 
 PROTOCOL = "mpipe/1"
 ROOT = os.path.dirname(os.path.abspath(__file__))
-MSG_DIR = os.path.join(ROOT, "_msg")
+MSG_DIR = os.environ.get("MPIPE_MSG_DIR") or os.path.join(ROOT, "_msg")
+# 路径相对化的基准（默认 ROOT，子目录的 pipe.py 通过 MPIPE_HERE 覆盖为自身目录）
+PATH_BASE = os.environ.get("MPIPE_HERE") or ROOT
 
 
 # ---------------- 路径与摘要 ----------------
 def abspath(path):
-    return path if os.path.isabs(path) else os.path.join(ROOT, path)
+    return path if os.path.isabs(path) else os.path.join(PATH_BASE, path)
 
 
 def relpath(path):
-    return os.path.relpath(os.path.abspath(path), ROOT).replace("\\", "/")
+    return os.path.relpath(os.path.abspath(path), PATH_BASE).replace("\\", "/")
 
 
 def sha256(path, buf=1 << 20):

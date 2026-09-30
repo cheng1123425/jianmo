@@ -12,6 +12,12 @@ r"""guard.py —— 隔离校验器
 
 静态查不到的（由 pipe.py 在运行时强制）：
   5. 只有 s8_apply 允许修改 params.py —— 每步执行前后比对 params.py 的 sha256
+
+用法
+----
+    python guard.py                          扫描根 steps/
+    python guard.py --steps parts/bracket/steps --steps steps
+                                             同时扫多个目录（零件的专属步骤 + 通用步骤）
 """
 import os
 import re
@@ -30,24 +36,37 @@ RULES = [
 ]
 
 
-def main():
+def main(argv=None):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception:
         pass
 
-    if not os.path.isdir(STEPS):
-        print("找不到 steps/ 目录：%s" % STEPS)
+    argv = sys.argv[1:] if argv is None else argv
+    dirs = []
+    for i, a in enumerate(argv):
+        if a == "--steps" and i + 1 < len(argv):
+            dirs.append(argv[i + 1])
+        elif a.startswith("--steps="):
+            dirs.append(a.split("=", 1)[1])
+    dirs = dirs or [STEPS]
+    dirs = [d for d in dirs if os.path.isdir(d)]
+    if not dirs:
+        print("找不到 steps/ 目录：%s" % ", ".join(dirs or [STEPS]))
         return 1
 
-    files = sorted(f for f in os.listdir(STEPS) if f.endswith(".py"))
+    files = []          # [(显示名, 绝对路径)]
+    for d in dirs:
+        for f in sorted(os.listdir(d)):
+            if f.endswith(".py") and not f.startswith("_"):
+                files.append((("%s/%s" % (os.path.basename(d), f)), os.path.join(d, f)))
     if not files:
-        print("steps/ 下没有步骤脚本")
+        print("steps/ 下没有步骤脚本：%s" % ", ".join(dirs))
         return 1
 
     bad = 0
-    for f in files:
-        txt = open(os.path.join(STEPS, f), encoding="utf-8").read()
+    for f, path in files:
+        txt = open(path, encoding="utf-8").read()
         hits = []
         for name, pat in RULES:
             for m in pat.finditer(txt):
@@ -64,6 +83,7 @@ def main():
             print("✓ %s" % f)
 
     print()
+    print("扫描目录：%s" % ", ".join(os.path.relpath(d, HERE).replace("\\", "/") for d in dirs))
     if bad:
         print("隔离检查未通过：%d / %d 个步骤有违例" % (bad, len(files)))
         return 1
