@@ -3,6 +3,10 @@
 > 目的：把整条流水线（建模 → 出图 → 渲染 → 表格）和闭环校核（采集 → 比对 → 判定 → 修正）
 > 拆成**互相隔离的独立进程**，步骤之间**只允许通过消息文件传递数据**。
 
+> **维护约定（必须遵守）**：任何对**步骤、拓扑、消息字段、输入/输出 role** 的改动，
+> 都必须**同步更新本文件**。`MSG.md` 是"流程 + 输入/输出"的唯一权威说明，
+> 必须与 `pipe.py` 的 `STEPS` 表保持一致。改了代码不改文档 = 文档作废。
+
 ---
 
 ## 一、为什么
@@ -150,9 +154,30 @@ _msg/
               └──────────►
 
         ┌────────────┐
-        │ s9_record  │──> notes/model_notes.md + notes/errors.md
+        │ s9_record  │──> notes/model_notes.md + notes/errors.md + notes/skill_feedback.md
         └────────────┘   每轮结束记录：本轮怎么判的、改了什么、错在哪
 ```
+
+### 逐步 输入 / 输出（与 `pipe.py` 的 `STEPS` 一一对应）
+
+> `@sN(role)` = 读第 N 步声明的产物；`?` = 可选（文件不在就跳过）。
+> 每步同时写 `_msg/<stage>.in.json` 与 `.out.json`；`out_dir` 是产物相对零件目录的落脚点。
+
+| 步 | 运行器 | 输入 refs | 输入 data | 输出 refs | 输出 data | out_dir |
+|---|---|---|---|---|---|---|
+| `s0_plan` | py | `params` / `dims_spec` / `ref_spec` / `notes/plan_src.md` / `?notes/errors.md` / `?notes/skill_advice.md` | 上轮 `s7` 判定 | `notes/plan.md`（role `plan_md`） | n_stages / n_bad / n_suspect / n_risk | `notes` |
+| `s1_build` | py | `params` | — | `models/*.step`(`model_step`)、`*.stl`(`model_stl`) | bbox / volume / solids | `models` |
+| `s2_drawing` | **fc** | `params`、`@s1_build(model_step)` | `template`（TechDraw 图框） | `_drawing.json`(`drawing_json`)、`*.FCStd`(`fcstd`) | views / n_dims | `.` |
+| `s3_render` | py | `@s2_drawing(drawing_json)` | — | `drawing.pdf`(`drawing_pdf`)、`drawing.png`(`drawing_png`) | n_dims_drawn | `.` |
+| `s4_table` | py | `params`、`dims_spec`、`@s2_drawing(drawing_json)` | — | `dims_table.md/.png/.pdf` | rows / consistent / mismatch | `.` |
+| `s5_collect` | py | `@s2_drawing(drawing_json)` | — | （无） | 三视图外接 / 圆特征 / 标注实测 | `.` |
+| `s6_compare` | py | `ref_spec` | ← `s5_collect` | （无） | issues / n_geom / n_mark | `.` |
+| `s7_decide` | py | `params` | ← `s6_compare` | （无） | verdict / fixes / items | `.` |
+| `s8_apply` | py | `params` | ← `s7_decide` | `params.py`（**唯一允许改参**） | applied / before | `.` |
+| `s9_record` | py | `params`、`dims_spec`、`@s0_plan(plan_md)`、`?notes/skill_feedback.md` | ← `s7_decide` | `notes/model_notes.md`、`notes/errors.md`、`notes/skill_feedback.md` | round / verdict | `notes` |
+
+**跑的顺序**：主链 `s0→s1→s2→s3→s4`；闭环 `s5→s6→s7`（`s8` 按需；`s9` 每轮结尾）；
+`--auto` 时 `s7` 出建议 → `s8` 改参 → 回 `s1` 下一轮。
 
 ### s0_plan / s9_record：思考与记忆
 
@@ -180,6 +205,11 @@ _msg/
 | `skill_advice` | s0_plan 入参（`?` 可选） | `notes/skill_advice.md` | 人工/agent 跑 `mech-projection-analysis` 技能后落地 |
 | `skill_feedback` | s9_record 入参（`?` 可选） | `notes/skill_feedback.md` | 历史反馈（追加） |
 | `skill_feedback_md` | s9_record 出参 | `notes/skill_feedback.md` | s9 每轮追加 |
+| `skill_query` | **pipeline → 技能**（agent 级提问） | `notes/skill_query.md` | agent：把读不准的尺寸列成追问清单 + **源图绝对路径**（技能据此读图） |
+| `skill_answer` | **技能 → pipeline** | `notes/skill_answer.md` | agent 跑技能后落地（尺寸链闭合推导结果） |
+
+> **提问回路**：遇到图上读不准的尺寸，**不许停在"待确认"**——写进 `skill_query.md`
+> （带源图路径，技能才有读图权限）→ 技能用**尺寸链闭合**推导 → 落到 `skill_answer.md`。
 
 `s0_plan` 解析技能产物：
 - 「## 视图辨认与投影映射」表 → 写到 plan.md「## 0.」顶部
