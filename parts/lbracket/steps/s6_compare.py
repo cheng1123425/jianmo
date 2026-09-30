@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-r"""s6_compare —— 几何摘要 vs 原图基准，产出差异清单（L 形支座）
+r"""s6_compare —— 几何摘要 vs 原图基准，产出差异清单（L 形支座 · 第 2 版）
 
-检查项（与 ref_spec 自洽，覆盖核心尺寸与 3-φ8 孔位）：
-  - 俯视外接 L=40 / W=26
+检查项（与 ref_spec 自洽）：
+  - 俯视外接 L=56 / W=40
   - 主视总高 H_total=39
-  - 右侧视图 2×φ8（轴沿 X），心距 pitch=26；俯视 1×φ8（底板孔）；主视 ≥1×φ8（立板两孔投影重合）
+  - 俯视 3×φ8（底板孔，轴 Z → 圆）；右视 2×φ8（立板销孔，轴 X → 圆，心距 26）
   - 图纸标注 L / W / H_total / pitch
 """
 import os
@@ -36,10 +36,10 @@ def handler(in_msg):
     # ---- 俯视外接 ----
     if abs(S["len_x_top"] - R.TOP["len_x"]) > TOL:
         add("geom", "俯视外接 X (L)", R.TOP["len_x"], S["len_x_top"], None,
-            "L = 底板长 = 40（立板落在底板 X 范围内，不增加总长）")
+            "L = 底板长 = 56")
     if abs(S["len_y_top"] - R.TOP["len_y"]) > TOL:
         add("geom", "俯视外接 Y (W)", R.TOP["len_y"], S["len_y_top"], None,
-            "W = 底板宽 = 26")
+            "W = 底板最大宽 = 40")
 
     # ---- 主视总高 ----
     if abs(S["hgt_front"] - R.FRONT["height"]) > TOL:
@@ -47,31 +47,25 @@ def handler(in_msg):
             "H_total = 底板厚 + 立板高 = 8 + 31 = 39")
 
     # ---- 俯视 φ8（底板孔，轴 Z → 圆）----
+    # 注：立板为曲面顶（双耳），其销孔在 TechDraw 俯视里也会投出圆/弧，
+    #     故此处只校验"底板 3 孔存在"（>=3），不要求恰好等于 3。
     top8 = phi8(S["top_circles"])
-    if len(top8) != 1:
-        add("geom", "底板 φ8 圆数 (Top)", 1, len(top8), None,
-            "1 个底板孔，轴沿 Z，俯视为圆")
-    elif abs(top8[0][1] - R.TOP["circles"][0][1]) > 1.5:
-        add("geom", "底板 φ8 圆心 x (Top)", R.TOP["circles"][0][1], round(top8[0][1], 1),
-            None, "底板孔应在自由段 X≈-13")
+    if len(top8) < 3:
+        add("geom", "底板 φ8 圆数 (Top)", 3, len(top8), None,
+            "底板应有 3 个 φ8 孔（轴沿 Z，俯视为圆）")
 
-    # ---- 主视 φ8：立板两孔轴沿 X，在 Front 视图投影为矩形/线（非圆），
-    #      故 Front 不要求出现 φ8 圆；孔位由 Top 与 Right 校验即可。 ----
-
-    # ---- 右侧 φ8（立板两孔，轴沿 X → 右侧视为 2 个圆；
-    #      两孔沿世界 Y 分居 ±13，在 Right 视图里表现为 view2d-x 方向间距）----
+    # ---- 右视 φ8（立板销孔，轴 X → 2 个圆，心距 = pitch）----
     right8 = phi8(S["right_circles"])
     if len(right8) != 2:
         add("geom", "立板 φ8 圆数 (Right)", 2, len(right8), None,
-            "立板两 φ8，轴沿 X，右侧视为 2 个圆")
+            "立板两 φ8，轴沿 X，右视显 2 个圆")
     else:
-        # 两孔圆心在 Right 视图里的欧氏距离（其一沿 view2d-x 相差 26，另一维重合）
         dx = right8[0][1] - right8[1][1]
         dy = right8[0][2] - right8[1][2]
         pitch = (dx * dx + dy * dy) ** 0.5
         if abs(pitch - R.RIGHT["hole_pitch"]) > TOL:
             add("geom", "立板 φ8 心距 (pitch)", R.RIGHT["hole_pitch"], round(pitch, 1),
-                None, "pitch = 立板宽两端 = 26")
+                None, "pitch = 26")
 
     # ---- 图纸标注 ----
     for label, bv in R.MARKS.items():
