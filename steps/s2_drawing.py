@@ -19,12 +19,16 @@ import Part
 import TechDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-if HERE not in sys.path:
-    sys.path.insert(0, HERE)
-import params as P
+sys.path.insert(0, os.path.dirname(HERE))          # 项目根，用于引用 msgio
 
-STEP = os.path.join(P.STEP_DIR, P.TAG + ".step")
-TD = "D:/3d/\u65b0\u5efa\u6587\u4ef6\u5939/FreeCAD 1.1/data/Mod/TechDraw/Templates/ISO/A3_Landscape_TD.svg"
+from msgio import boot, finish, ref_path, ref_data, exec_module    # noqa: E402
+
+# ---- 输入只来自消息：没有硬编码路径，也不 import params ----
+IN = boot("s2_drawing")
+P = exec_module(ref_path(IN, "params"), "gasket_params")
+STEP = ref_path(IN, "model_step")
+OUT_DIR = ref_data(IN, "out_dir")
+TD = ref_data(IN, "template")                      # FreeCAD 的 A3 图框模板
 PLOT = {"Front": 0.25, "Top": 0.25, "Iso": 0.20}
 
 
@@ -323,11 +327,17 @@ data = {
               for nm, v in views.items()],
     "dims": dims,
 }
-jf = os.path.join(HERE, "_td_data.json")
+jf = os.path.join(OUT_DIR, "_drawing.json")
 json.dump(data, open(jf, "w", encoding="utf-8"), ensure_ascii=False)
-p("[out] JSON:", jf, os.path.getsize(jf), "bytes")
 
-fc = os.path.join(HERE, P.TAG + ".FCStd")
+fc = os.path.join(OUT_DIR, P.TAG + ".FCStd")
 doc.saveAs(fc)
-p("[out] FCStd:", fc)
-p("@@STAGE2_OK@@")
+
+finish([("drawing_json", jf), ("fcstd", fc)], {
+    "views": [v["name"] for v in data["views"]],
+    "n_edges": sum(len(v["edges"]) for v in data["views"]),
+    "n_circles": sum(len(v["circles"]) for v in data["views"]),
+    "n_hlines": sum(len(v["hlines"]) for v in data["views"]),
+    "n_dims": len(data["dims"]),
+    "dim_values": {d["label"]: d["value"] for d in data["dims"]},
+})

@@ -9,9 +9,14 @@ venv/
 *.FCBak
 *.bak
 
-# ---- 建模中间产物（可重新生成，但保留注释以便按需忽略）----
-# 说明：_td_data.json / _bracket_data.json / _socket_data.json 是 FreeCAD 投影导出的
-#      特征数据，虽然可由脚本重新生成，但体积很小且是校核的直接输入，故**纳入版本管理**。
+# ---- 消息流水线的运行时产物（每次 pipe.py 重新生成，不进库）----
+_msg/
+_drawing.json
+
+# ---- 建模中间产物（可重新生成）----
+# _bracket_data.json / _socket_data.json 是支架/球铰盖两个零件投影导出的特征数据，
+# 体积小且是它们校核脚本的直接输入，故保留进库；主流程（垫片）已改为消息架构，
+# 其投影走 _msg/ 与 _drawing.json，不再入库。
 
 # ---- 系统文件 ----
 Thumbs.db

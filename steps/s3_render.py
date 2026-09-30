@@ -9,6 +9,7 @@ r"""
 import json
 import math
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -16,7 +17,14 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-data = json.load(open(os.path.join(HERE, "_td_data.json"), encoding="utf-8"))
+sys.path.insert(0, os.path.dirname(HERE))          # 项目根，用于引用 msgio
+
+from msgio import boot, finish, ref_path, ref_data    # noqa: E402
+
+# ---- 输入只来自消息 ----
+IN = boot("s3_render")
+OUT_DIR = ref_data(IN, "out_dir")
+data = json.load(open(ref_path(IN, "drawing_json"), encoding="utf-8"))
 
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
@@ -144,9 +152,11 @@ for d in data["dims"]:
         ln(x, a[1], x, b[1]); arrow((x, a[1]), 270); arrow((x, b[1]), 90)
         txt(x + 3.4, (a[1] + b[1]) / 2, "%.0f" % val, 9, ha="left")
 
-pdf = os.path.join(HERE, "drawing.pdf")
-png = os.path.join(HERE, "drawing.png")
+pdf = os.path.join(OUT_DIR, "drawing.pdf")
+png = os.path.join(OUT_DIR, "drawing.png")
 fig.savefig(pdf)
 fig.savefig(png, dpi=300)
-print("[out] PDF ->", pdf, os.path.getsize(pdf), "bytes (vector)")
-print("[out] PNG ->", png, os.path.getsize(png), "bytes")
+
+finish([("drawing_pdf", pdf), ("drawing_png", png)],
+       {"pdf_bytes": os.path.getsize(pdf), "png_bytes": os.path.getsize(png),
+        "n_dims_drawn": len(data["dims"])})

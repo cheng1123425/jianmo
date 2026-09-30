@@ -7,6 +7,7 @@ r"""
 """
 import json
 import os
+import sys
 import time
 
 import matplotlib
@@ -15,13 +16,20 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-import dims_spec as S
-import params as P
+sys.path.insert(0, os.path.dirname(HERE))          # 项目根，用于引用 msgio
+
+from msgio import boot, finish, ref_path, ref_data, exec_module    # noqa: E402
+
+# ---- 输入只来自消息：params 与 dims_spec 都按消息声明加载 ----
+IN = boot("s4_table")
+P = exec_module(ref_path(IN, "params"), "gasket_params")
+S = exec_module(ref_path(IN, "dims_spec"), "dims_spec")
+OUT_DIR = ref_data(IN, "out_dir")
 
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
-data = json.load(open(os.path.join(HERE, "_td_data.json"), encoding="utf-8"))
+data = json.load(open(ref_path(IN, "drawing_json"), encoding="utf-8"))
 MEAS = {d["label"]: d["value"] for d in data["dims"]}
 
 
@@ -69,7 +77,8 @@ for r in rows:
 md += ["", "## 推导说明", ""]
 for t, body in S.notes(P):
     md += ["**%s**" % t, "", body, ""]
-open(os.path.join(HERE, "dims_table.md"), "w", encoding="utf-8").write("\n".join(md))
+md_path = os.path.join(OUT_DIR, "dims_table.md")
+open(md_path, "w", encoding="utf-8").write("\n".join(md))
 
 # ---------------- 图纸 (A3 横向) ----------------
 A3W, A3H = 420.0, 297.0
@@ -155,10 +164,12 @@ for title, body in S.notes(P):
 # 图框
 ax.add_patch(Rectangle((7, 7), A3W - 14, A3H - 14, fill=False, edgecolor="k", lw=0.9))
 
-fig.savefig(os.path.join(HERE, "dims_table.pdf"))
-fig.savefig(os.path.join(HERE, "dims_table.png"), dpi=300)
-print("[out] dims_table.md / .png / .pdf   %d/%d 校验一致" % (n_ok, len(rows)))
-for r in rows:
-    flag = "" if r["ok"] == "OK" else "   <<< 不一致!"
-    print("   %-14s 参数 %-8s 实测 %-8s %s%s"
-          % (r["key"], r["param"], r["meas"], r["mark"], flag))
+t_pdf = os.path.join(OUT_DIR, "dims_table.pdf")
+t_png = os.path.join(OUT_DIR, "dims_table.png")
+fig.savefig(t_pdf)
+fig.savefig(t_png, dpi=300)
+
+bad = [r for r in rows if r["ok"] != "OK"]
+finish([("dims_table_md", md_path), ("dims_table_png", t_png), ("dims_table_pdf", t_pdf)],
+       {"rows": len(rows), "consistent": n_ok, "mismatch": len(bad),
+        "mismatch_keys": [r["key"] for r in bad]})
