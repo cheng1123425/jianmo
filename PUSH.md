@@ -77,4 +77,8 @@ git push origin main
 |---|---|---|
 | 2026-09-29 | `93b6e03` | 首版：垫片 + 球铰盖 + 铰链支座 |
 | 2026-09-30 | `fcf126f` | 消息驱动隔离流水线（steps/s1~s8 + pipe + guard + msgio） |
-| 2026-09-30 | `852f540` | s0_plan / s9_record + 统一驱动器（`--part`）+ 指纹缓存 + 延迟出图（本地已提交，待推送） |
+| 2026-09-30 | `dd656ac` | s0_plan / s9_record + 统一驱动器（`--part`）+ 指纹缓存 + 延迟出图 |
+| 2026-09-30 | `5cc7239` | 接入 mech-projection-analysis 技能回路（skill_advice → s0 → skill_feedback ← s9） |
+| 2026-09-30 | `a687bea` | bracket 重跑闭环 pass，刷新方案时间戳 |
+| 2026-09-30 | `08f876b` | 垫片重跑闭环 pass，刷新方案与记录 |
+| 2026-09-30 | `0cfc657` | s9_record 写回的技能反馈与模型记录（闭环产物） |
