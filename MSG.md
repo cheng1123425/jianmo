@@ -6,6 +6,10 @@
 > **维护约定（必须遵守）**：任何对**步骤、拓扑、消息字段、输入/输出 role** 的改动，
 > 都必须**同步更新本文件**。`MSG.md` 是"流程 + 输入/输出"的唯一权威说明，
 > 必须与 `pipe.py` 的 `STEPS` 表保持一致。改了代码不改文档 = 文档作废。
+>
+> **流程图**由 `tools/gen_flowchart.py` 从 `pipe.py` 的 `STEPS` **自动生成**到
+> `docs/flowchart.md`（Mermaid，GitHub / VS Code 可直接渲染），**不要手改**。
+> 改了拓扑后跑：`python tools/gen_flowchart.py`
 
 ---
 
