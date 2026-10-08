@@ -286,5 +286,28 @@ python guard.py --steps parts/bracket/steps --steps steps
        run_stage("sN_xxx", handler)
    ```
 
-2. 在 `pipe.py` 的 `TOPO` 里加一行（声明输入 role → 输出 role）。
+2. 在 `pipe.py` 的 `STEPS` 里加一条（声明 `in_files` 输入 role → `out_dir` 输出）。
 3. 跑 `python guard.py` 确认没有违例。
+4. 跑 `python tools/gen_flowchart.py` 刷新 `docs/flowchart.md`（图跟着代码走）。
+
+---
+
+## 七、调试与检查
+
+| 想干什么 | 命令 |
+|---|---|
+| 看某一步的完整入参/出参（= state） | 直接开 `_msg/<步骤>.in.json` / `.out.json` |
+| 单步跑（**注意不跑前置步骤**，只有入参全靠文件的步骤能独立跑，如 `s1_build`） | `python pipe.py --part <零件> --only s1_build` |
+| 全链 trace（每步入参摘要/出参摘要/耗时/是否缓存/判定 → JSONL） | `python pipe.py --part <零件> --loop --trace` |
+| 忽略指纹缓存，强制重跑 | `--no-cache` |
+| 隔离自检（越界 import / 跨步骤 / 硬编码路径 / 无消息入口） | `python guard.py --steps <零件>/steps --steps steps` |
+| 看瓶颈 | 正常跑完即打印「耗时排行 + 缓存命中」 |
+| 流程图 | `python tools/gen_flowchart.py` → `docs/flowchart.md` |
+
+**`trace.jsonl` 的记录类型**（每行一条 JSON，写在 `_msg/trace.jsonl`，不入库）：
+
+- `{"kind":"run_start", part, argv, opt}` —— 本次运行开始
+- `{"kind":"step", seq, stage, action: run|cache|fail, dur, status, out:[role], files:[路径], data:{键→摘要}}` —— 每个步骤
+- `{"kind":"verdict", seq, round, verdict, n_items, items:[...], fixes}` —— 判定结果
+- `{"kind":"run_end", outcome, dur}` —— 收尾（outcome ∈ pass/suggest/manual/stuck/maxit/fail/only）
+

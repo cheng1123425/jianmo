@@ -14,6 +14,7 @@ r"""pipe.py —— 消息驱动器（全零件通用）
     python pipe.py --only s2_drawing            只跑某一段（调试）
     python pipe.py --no-guard                   跳过隔离检查（不推荐）
     python pipe.py --no-cache                   忽略指纹缓存，强制重跑
+    python pipe.py --trace                      每步入参/出参/耗时/判定写成 _msg/trace.jsonl
 
 链路由 10 步组成（s0 与 s9 是所有零件共用的「思考 + 记录」步骤）：
 
@@ -55,7 +56,7 @@ from msgio import PROTOCOL, read_json, write_json, ref_file, sha256   # noqa: E4
 # ---------------- 命令行 ----------------
 def parse_argv(argv):
     opt = dict(part=".", auto=False, loop=False, only=None, max_it=6,
-               guard=True, cache=True)
+               guard=True, cache=True, trace=False)
     for i, a in enumerate(argv):
         if a == "--part" and i + 1 < len(argv):
             opt["part"] = argv[i + 1]
@@ -75,6 +76,8 @@ def parse_argv(argv):
             opt["guard"] = False
         elif a == "--no-cache":
             opt["cache"] = False
+        elif a == "--trace":
+            opt["trace"] = True
     opt["loop"] = opt["loop"] or opt["auto"]
     return opt
 
@@ -150,10 +153,45 @@ class Driver(object):
         os.makedirs(self.msg_dir, exist_ok=True)
         self.timing = {}          # 步名 → 累计秒
         self.hits = {}            # 步名 → 缓存命中次数
+        # trace：把每一步的入参/出参/耗时/判定写成 JSONL（--trace 打开）
+        self.trace_on = False
+        self.trace_path = os.path.join(self.msg_dir, "trace.jsonl")
+        self.t_start = time.time()
+        self._trace_opened = False
 
     # -------- 工具 --------
     def _abs(self, p):
         return p if os.path.isabs(p) else os.path.join(self.part, p)
+
+    def _rel(self, p):
+        try:
+            return os.path.relpath(p, HERE).replace("\\", "/")
+        except Exception:
+            return p
+
+    @staticmethod
+    def _brief(v, n=70):
+        """把出参 data 压成一行摘要（列表/字典只报长度，长串截断）"""
+        if isinstance(v, (list, tuple)):
+            return "[%d 项]" % len(v)
+        if isinstance(v, dict):
+            return "{%d 键}" % len(v)
+        s = str(v)
+        return s if len(s) <= n else s[:n] + "…"
+
+    def trace(self, **rec):
+        """写一条 trace（--trace 未开则空转）。首次写会重建文件，避免历史累积。"""
+        if not self.trace_on:
+            return
+        rec["t"] = round(time.time() - self.t_start, 2)
+        rec.setdefault("ts", time.strftime("%Y-%m-%dT%H:%M:%S"))
+        mode = "a" if self._trace_opened else "w"
+        try:
+            with open(self.trace_path, mode, encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            self._trace_opened = True
+        except OSError:
+            pass
 
     def script_of(self, name):
         """零件自己的 steps/ 优先，没有就用根目录的通用 steps/（s0/s9 是共用的）"""
@@ -244,6 +282,13 @@ class Driver(object):
                     produced[name + ".data"] = old["out"]["data"]
                     self.hits[name] = self.hits.get(name, 0) + 1
                     print("    %-12s %5.1fs  (缓存命中，未起进程)" % (name, 0.0))
+                    self.trace(kind="step", seq=seq, stage=name, action="cache",
+                               dur=0.0, status="ok",
+                               out=[x["role"] for x in old["out"]["refs"]],
+                               files=[self._rel(self._abs(x["path"]))
+                                      for x in old["out"]["refs"]],
+                               data={k: self._brief(v)
+                                     for k, v in (old["out"]["data"] or {}).items()})
                     return old, ""
             cache.pop(name, None)
 
@@ -275,12 +320,18 @@ class Driver(object):
         if not os.path.exists(out_path):
             print("\n!!! %s 没有写出结果消息（进程退出码 %d）" % (name, r.returncode))
             print(out[-2500:])
+            self.trace(kind="step", seq=seq, stage=name, action="fail", dur=dt,
+                       status="no_out_msg", exit_code=r.returncode,
+                       error=(out[-400:] or "").strip())
             return None, out
 
         res = read_json(out_path)
         if res.get("seq") != seq or res.get("status") != "ok":
             print("\n!!! %s 执行失败（seq=%s status=%s）" % (name, res.get("seq"), res.get("status")))
             print((res.get("error") or "")[-2500:] or out[-2500:])
+            self.trace(kind="step", seq=seq, stage=name, action="fail", dur=dt,
+                       status=str(res.get("status")),
+                       error=((res.get("error") or "")[-400:] or out[-400:]).strip())
             return None, out
 
         produced[name] = {x["role"]: self._abs(x["path"]) for x in res["out"]["refs"]}
@@ -289,6 +340,11 @@ class Driver(object):
             cache[name] = fp
             self.save_cache(cache)
         print("    %-12s %5.1fs" % (name, dt))
+        self.trace(kind="step", seq=seq, stage=name, action="run", dur=round(dt, 2),
+                   status="ok", out=[x["role"] for x in res["out"]["refs"]],
+                   files=[self._rel(self._abs(x["path"])) for x in res["out"]["refs"]],
+                   data={k: self._brief(v)
+                         for k, v in (res["out"]["data"] or {}).items()})
         return res, out
 
     # -------- 闭环 --------
@@ -348,6 +404,7 @@ class Driver(object):
             verdict = dec.get("verdict")
             if verdict == "pass":
                 print("\n  ⇒ 通过：几何与标注全部相符")
+                self.trace(kind="verdict", seq=seq, round=it, verdict="pass", items=[])
                 return "pass", it, deferred
             if dec.get("diagnosis"):
                 print("\n  ⇒ %s" % dec["diagnosis"])
@@ -355,6 +412,10 @@ class Driver(object):
                 print("     ! %-22s 基准 %-9s 当前 %s" % (x["name"], x["base"], x["cur"]))
             fixes = dec.get("fixes") or {}
             n = len(dec.get("items", []))
+            self.trace(kind="verdict", seq=seq, round=it, verdict=verdict, n_items=n,
+                       items=[{"name": x.get("name"), "base": x.get("base"),
+                               "cur": x.get("cur")} for x in dec.get("items", [])],
+                       fixes=fixes, diagnosis=dec.get("diagnosis"))
 
             if verdict == "manual":
                 print("\n  【停】%s" % dec.get("reason"))
@@ -421,6 +482,9 @@ def main():
     opt = parse_argv(sys.argv[1:])
     drv = Driver(opt["part"])
     print("零件目录：%s" % os.path.relpath(drv.part, HERE).replace("\\", "/") or ".")
+    drv.trace_on = bool(opt.get("trace"))
+    drv.trace(kind="run_start", part=drv._rel(drv.part),
+              argv=sys.argv[1:], opt=opt)
 
     if opt["guard"]:
         drv.run_guard()
@@ -439,8 +503,12 @@ def main():
         res, _ = drv.run_step(BY_NAME[name], seq, produced, cache=cache)
         if res is None:
             print("\n失败。")
+            drv.trace(kind="run_end", outcome="fail", dur=round(time.time() - t0, 2))
             sys.exit(1)
         drv.report_timing()
+        drv.trace(kind="run_end", outcome="only", dur=round(time.time() - t0, 2))
+        if drv.trace_on:
+            print("    trace：", drv._rel(drv.trace_path))
         return
 
     for name in CHAIN:
@@ -474,6 +542,9 @@ def main():
     print("    消息目录：", drv.msg_dir)
     print("    方案/记录：", os.path.join(drv.part, "notes"))
     drv.report_timing()
+    drv.trace(kind="run_end", outcome=outcome, dur=round(time.time() - t0, 2))
+    if drv.trace_on:
+        print("    trace：", drv._rel(drv.trace_path))
     if outcome in ("manual", "stuck", "maxit", "fail"):
         sys.exit(2)
 

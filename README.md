@@ -27,6 +27,13 @@ D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/bracket --loop --a
 # 5) 想看瓶颈 / 想强制重跑
 ... pipe.py --part parts/bracket            # 跑完打印耗时排行
 ... pipe.py --no-cache                      # 忽略指纹缓存
+
+# 6) 调试：把每一步的入参/出参/耗时/判定写成 _msg/trace.jsonl
+... pipe.py --part parts/lbracket --loop --trace
+... pipe.py --part parts/lbracket --only s1_build --trace   # 单步（注意：--only 不跑前置步骤）
+
+# 7) 流程图（自动生成，勿手改）
+... python tools/gen_flowchart.py           # → docs/flowchart.md（Mermaid）
 ```
 
 **架构**：不再是 `make_all.py` 那种一个大脚本串子进程，而是**消息驱动的隔离流水线**——
