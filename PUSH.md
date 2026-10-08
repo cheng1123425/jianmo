@@ -88,3 +88,8 @@ git push origin main
 | 2026-09-30 | `2f77f52` | MSG.md：逐步输入/输出表 + 技能提问回路 + 「维护约定」 |
 | 2026-09-30 | `e631e6d` | README + lessons：补 lbracket 现状、缺 steps 静默回退警告、§7 尺寸链手法 |
 | 2026-09-30 | `dd59950` | 三件闭环产物（垫片 / 铰链支座 / L 形支座）重跑闭环 pass |
+| 2026-10-08 | `13f96af` | 新增流程图自动生成：tools/gen_flowchart.py 从 pipe.py 的 STEPS 生成 docs/flowchart.md |
+| 2026-10-08 | `ed5ff0d` | pipe.py 新增 --trace：每步入参/出参/耗时/判定写成 _msg/trace.jsonl |
+| 2026-10-08 | `42ed67b` | 闭环产物：回归验证（三条闭环 pass）产生的方案与记录 |
+| 2026-10-08 | `4492e46` | 新增 tools/trace_view.py：把 trace 画成「高亮路径」报告（直观调试） |
+| 2026-10-08 | 本次推送 | 复跑 3 条闭环（washer/bracket/lbracket 均 `闭环结局：pass`），刷新方案与记录；补 gen_flowchart/trace_view 上传记录 |
