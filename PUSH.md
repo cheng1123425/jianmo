@@ -92,4 +92,4 @@ git push origin main
 | 2026-10-08 | `ed5ff0d` | pipe.py 新增 --trace：每步入参/出参/耗时/判定写成 _msg/trace.jsonl |
 | 2026-10-08 | `42ed67b` | 闭环产物：回归验证（三条闭环 pass）产生的方案与记录 |
 | 2026-10-08 | `4492e46` | 新增 tools/trace_view.py：把 trace 画成「高亮路径」报告（直观调试） |
-| 2026-10-08 | 本次推送 | 复跑 3 条闭环（washer/bracket/lbracket 均 `闭环结局：pass`），刷新方案与记录；补 gen_flowchart/trace_view 上传记录 |
+| 2026-10-08 | 本次推送 | 代码专家加固 pipe.py：① 只有 s0_plan/s9_record 允许回落 root 通用实现，s1~s8 缺失改为启动即报错（根目录那几份是垫片副本，schema 对不上）；② 指纹缓存命中前核对产物是否存在/被改动，命中刷新 seq；③ MSG.md/README.md 同步。新增 tools/msg_view.py（消息线查看器，含轮次/回边，代码+中文命名对照）；三条闭环复跑均 pass。 |

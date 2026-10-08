@@ -128,6 +128,11 @@ STEPS = [
          in_data_from="s7_decide"),
 ]
 BY_NAME = {s["name"]: s for s in STEPS}
+
+# 唯一允许「零件没自带、回落根目录通用实现」的步骤（它们本来就不含零件几何）。
+# 其余步骤（s1~s8）必须由零件自带 —— 根目录那几份是垫片的副本，不是通用实现。
+SHARED_STEPS = {"s0_plan", "s9_record"}
+
 CHAIN = [s["name"] for s in STEPS if not s.get("loop")]          # s0,s1,s2,s3,s4
 # s5,s6,s7（s8 按需单独执行；s9 是每轮结尾的记录员，单独放 LOOP_TAIL）
 LOOP = [s["name"] for s in STEPS
@@ -153,6 +158,7 @@ class Driver(object):
         os.makedirs(self.msg_dir, exist_ok=True)
         self.timing = {}          # 步名 → 累计秒
         self.hits = {}            # 步名 → 缓存命中次数
+        self.fallbacks = []       # 用了通用实现的步名（跑完汇总，便于确认隔离是否真的生效）
         # trace：把每一步的入参/出参/耗时/判定写成 JSONL（--trace 打开）
         self.trace_on = False
         self.trace_path = os.path.join(self.msg_dir, "trace.jsonl")
@@ -194,13 +200,26 @@ class Driver(object):
             pass
 
     def script_of(self, name):
-        """零件自己的 steps/ 优先，没有就用根目录的通用 steps/（s0/s9 是共用的）"""
+        """零件自己的 steps/ 优先；**只有 s0_plan / s9_record 允许回落到根目录的通用实现**。
+
+        其余步骤（s1~s8）没自带就直接报错：根目录 steps/ 里那几份是「某个零件的副本」
+        （垫片专属，schema 与别的零件对不上），静默拿来顶替会在很后面、很远的地方炸，
+        报错还指向下游步骤，极难第一时间定位（lbracket 就因此卡了很久）。
+        """
         local = os.path.join(self.steps_dir, name + ".py")
         if os.path.exists(local):
             return local
         shared = os.path.join(HERE, "steps", name + ".py")
-        if os.path.exists(shared):
+        if os.path.exists(shared) and name in SHARED_STEPS:
+            rel = os.path.relpath(self.part, HERE).replace("\\", "/") or "."
+            self.fallbacks.append("%s ← 通用实现（%s 未自带）" % (name, rel))
             return shared
+        if os.path.exists(shared):
+            raise SystemExit(
+                "零件 %s 缺少步骤 %s。\n"
+                "  根目录 steps/%s.py 是某个零件的副本，不是通用实现，不能拿来顶替。\n"
+                "  请补上这个零件自己的 steps/%s.py（从已跑通的零件复制后再改即可）。"
+                % (self.part, name, name, name))
         raise SystemExit("找不到步骤脚本：%s（%s 或 %s）" % (name, local, shared))
 
     def load_cache(self):
@@ -272,24 +291,54 @@ class Driver(object):
         write_json(in_path, msg)
         fp = self.fingerprint(msg, script)
 
-        # ---- 指纹缓存：入参、入参数据、步骤脚本都没变 → 直接复用上次结果 ----
+        # ---- 指纹缓存：入参、入参数据、步骤脚本都没变 → 复用上次结果 ----
+        # 命中前必须核对两件事，否则「跳过」本身会变成 bug：
+        #   1) 产物文件还在不在 —— 手工删了图纸也必须重画，不能拿旧记录糊弄过去
+        #   2) 消息的 seq 属于哪一轮 —— 复用后刷新到当前轮，否则消息永远停在旧轮
         if cache is not None:
-            if cache.get(name) == fp and os.path.exists(out_path):
+            ent = cache.get(name)
+            hit = (ent == fp) or (isinstance(ent, dict) and ent.get("fp") == fp)
+            if hit and os.path.exists(out_path):
                 old = read_json(out_path)
-                if old.get("status") == "ok":
-                    produced[name] = {x["role"]: self._abs(x["path"])
-                                      for x in old["out"]["refs"]}
+                refs = (old.get("out") or {}).get("refs") or []
+                missing = [r["path"] for r in refs
+                           if not os.path.exists(self._abs(r["path"]))]
+                if old.get("status") == "ok" and not missing:
+                    # 「沿用第几轮的结果」以缓存记录为准；旧格式缓存没有 seq，退回消息里的
+                    src_seq = ent.get("seq") if isinstance(ent, dict) else None
+                    if src_seq is None:
+                        src_seq = old.get("seq")
+                    if src_seq is not None and src_seq != seq:
+                        old["seq"] = seq
+                        old["reused_from_seq"] = src_seq
+                        old["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+                        write_json(out_path, old)
+                    # 产物被手工改过：不强制重画（会抹掉人工微调），只如实提醒
+                    touched = [r["path"] for r in refs
+                               if os.path.exists(self._abs(r["path"]))
+                               and sha256(self._abs(r["path"])) != r.get("sha256")]
+                    produced[name] = {x["role"]: self._abs(x["path"]) for x in refs}
                     produced[name + ".data"] = old["out"]["data"]
                     self.hits[name] = self.hits.get(name, 0) + 1
-                    print("    %-12s %5.1fs  (缓存命中，未起进程)" % (name, 0.0))
+                    print("    %-12s %5.1fs  (缓存命中，未起进程%s)"
+                          % (name, 0.0,
+                             "，沿用第 %s 轮结果" % src_seq if src_seq != seq else ""))
+                    for t in touched:
+                        print("       ! 产物被改动过（未重画；想按新参数重画请加 --no-cache）：%s"
+                              % t)
                     self.trace(kind="step", seq=seq, stage=name, action="cache",
                                dur=0.0, status="ok",
-                               out=[x["role"] for x in old["out"]["refs"]],
-                               files=[self._rel(self._abs(x["path"]))
-                                      for x in old["out"]["refs"]],
+                               out=[x["role"] for x in refs],
+                               files=[self._rel(self._abs(x["path"])) for x in refs],
+                               reused_from_seq=src_seq, touched=touched,
                                data={k: self._brief(v)
                                      for k, v in (old["out"]["data"] or {}).items()})
+                    cache[name] = {"fp": fp, "seq": seq}
+                    self.save_cache(cache)
                     return old, ""
+                if missing:
+                    print("    %-12s          (缓存失效：产物已缺失 %s → 本次重跑)"
+                          % (name, ", ".join(missing)))
             cache.pop(name, None)
 
         cmd = ([PY] if step["runner"] == "py" else [FC]) + [script]
@@ -476,6 +525,8 @@ class Driver(object):
         if self.hits:
             print("    缓存命中：%s"
                   % ", ".join("%s×%d" % (k, v) for k, v in sorted(self.hits.items())))
+        if self.fallbacks:
+            print("    通用步骤回落：%s" % "，".join(self.fallbacks))
 
 
 def main():
