@@ -14,6 +14,9 @@ venv/
 _msg/
 _drawing.json
 
+# ---- 调试产物（由 trace 生成，每次运行不同，不进库）----
+docs/trace_report.html
+
 # ---- 建模中间产物（可重新生成）----
 # _bracket_data.json / _socket_data.json 是支架/球铰盖两个零件投影导出的特征数据，
 # 体积小且是它们校核脚本的直接输入，故保留进库；主流程（垫片）已改为消息架构，

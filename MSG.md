@@ -303,6 +303,7 @@ python guard.py --steps parts/bracket/steps --steps steps
 | 隔离自检（越界 import / 跨步骤 / 硬编码路径 / 无消息入口） | `python guard.py --steps <零件>/steps --steps steps` |
 | 看瓶颈 | 正常跑完即打印「耗时排行 + 缓存命中」 |
 | 流程图 | `python tools/gen_flowchart.py` → `docs/flowchart.md` |
+| **看本次实际路径（高亮）** | `python tools/trace_view.py --part <零件>` → `docs/trace_report.html`（浏览器打开） |
 
 **`trace.jsonl` 的记录类型**（每行一条 JSON，写在 `_msg/trace.jsonl`，不入库）：
 

@@ -32,8 +32,9 @@ D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/bracket --loop --a
 ... pipe.py --part parts/lbracket --loop --trace
 ... pipe.py --part parts/lbracket --only s1_build --trace   # 单步（注意：--only 不跑前置步骤）
 
-# 7) 流程图（自动生成，勿手改）
+# 7) 看图：流程图 + 本次运行的"高亮路径报告"
 ... python tools/gen_flowchart.py           # → docs/flowchart.md（Mermaid）
+... python tools/trace_view.py --part parts/lbracket   # → docs/trace_report.html（浏览器打开）
 ```
 
 **架构**：不再是 `make_all.py` 那种一个大脚本串子进程，而是**消息驱动的隔离流水线**——
