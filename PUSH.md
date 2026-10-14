@@ -111,9 +111,42 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
 ```
 
 这样远程会**新建独立分支**，`origin/sandbox-merge` 与 `origin/main` 都不受影响。
-（本地 `sandbox-merge` 仍会比远程多 6 个 commit；因为新分支 ref 建不了，
-若强行把 sandbox-merge 回退会让这 6 个 commit 失去引用，故保持不动。）
-| 2026-10-14 | `74a2c69` | **推 refactor/naming-and-layering 分支（非 main）**：① **命名规范化**——参数统一四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀（防"把 X 向宽度当 Z 高度用"那类静默 bug）；新增 `tools/check_naming.py`（规范的可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名，保注释保格式）；`docs/rename_maps/*.json` 存 4 个零件的改名映射（可反向撤销）。全项目命名 **0 error / 0 warning**（改名前 5 error / 91 warning）。② **逻辑分层**——`SHARED_STEPS` 由 5 扩到 9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`lib/collect.py` 按视图存在性自适应）；删 12 个零件副本，零件只保留 4 个含几何/标注的步骤。③ **s6b 检查修复**——容差 1e-6→1e-3（FreeCAD 投影噪声在 1e-4 量级，原容差把「37.000 vs 37.000」判成 error）；高度链检查要求 ≥2 段（单段不成链，属误报）。④ **垫片迁入 `parts/gasket/`**——根目录不再兼作零件，默认 `--part` 改为 `parts/gasket`；步骤脚本路径块改 `MPIPE_ROOT` 感知（原写法固定上溯两层，迁到深处会 ModuleNotFoundError）。四件闭环全 pass；guard 26/26。 |
+
+### 本地分支状态（2026-10-14 23:52 整理后）
+
+| 分支 / 标记 | 指向 | 与远程 |
+|---|---|---|
+| `main` | `029adbd` | ✅ 一致 |
+| `sandbox-merge` | `c69e466` | ⚠️ **领先 7 个 commit** |
+| tag `refactor-naming-and-layering-c69e466` | `c69e466` | 本地标记（防止 gc 丢失） |
+| 远程 `refactor/naming-and-layering` | `c69e466` | ✅ 已推送 |
+
+工作区 `git status` **干净**（0 改动）。
+
+**为什么本地 sandbox-merge 会领先**：沙箱不允许在 `refs/heads/` 下**新建** ref ——
+`git checkout -b` / `git branch -f` / `git update-ref` / bash 手写文件 **四种方式都试过，均不落盘**
+（`git branch -v` 看不到新分支）。所以这 7 个 commit 只能挂在已存在的 `sandbox-merge` 上。
+
+补充事实：**`refs/tags/` 下新建是允许的**（`git tag` 能落盘），故用 tag 把 `c69e466` 标住。
+**修改已存在的 ref 也是允许的**（`update-ref refs/heads/sandbox-merge <sha>` 有效）。
+
+⚠️ **不要 `git push origin sandbox-merge`** —— 会把重构直接推到该分支。
+
+**在真机（无沙箱限制）上整理**：
+
+```bash
+git branch -f refactor/naming-and-layering c69e466   # 建真正的本地分支
+git branch -f sandbox-merge c0f4a2e                  # 把 sandbox-merge 拉回与远程一致
+git checkout refactor/naming-and-layering
+git push -u origin refactor/naming-and-layering      # 之后可直接 push
+```
+
+也可以从远程取回：
+
+```bash
+git fetch origin refactor/naming-and-layering
+git checkout -b refactor/naming-and-layering FETCH_HEAD
+```
 
 ---
 
