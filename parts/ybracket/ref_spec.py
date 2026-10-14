@@ -13,8 +13,13 @@ r"""
                     中央 Ø32+Ø54 台阶孔、底座前端宽 66、中段 116
 """
 import math
+import os
 
-SRC_IMG = r"/workspace/验证报告/真实图纸测试/drawing.png"
+# 图纸副本：从沙箱 zip 的 /workspace/验证报告/真实图纸测试/drawing.png 落到本地
+# 工作区根的 验证报告/真实图纸测试/drawing.png。用相对本文件的路径，跨平台可用。
+SRC_IMG = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..",
+    "验证报告", "真实图纸测试", "drawing.png"))
 CALIB_NOTE = "双耳支座：R42 耳圆 → 直径 84mm ↔ 132px → 0.6364 mm/px（由 R42 反推）"
 TOL = 0.6                                       # 判定容差 (mm)
 

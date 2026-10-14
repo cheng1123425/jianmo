@@ -16,18 +16,28 @@ r"""pipe.py —— 消息驱动器（全零件通用）
     python pipe.py --no-cache                   忽略指纹缓存，强制重跑
     python pipe.py --trace                      每步入参/出参/耗时/判定写成 _msg/trace.jsonl
 
-链路由 10 步组成（s0 与 s9 是所有零件共用的「思考 + 记录」步骤）：
+链路由 13 步组成（s0 与 s9 是所有零件共用的「思考 + 记录」步骤）：
 
+    s0b_dwgread   **输入层**：读二维图纸 → 几何/标注/接地 → dwg_semantics
+                   （后面谁也不再直接碰原图；语义只能来自图纸，不能人事先告知）
     s0_plan    循环前读图：把图纸基准 / 尺寸关系 / 历史错误拼成本轮方案
     s1_build   build123d 建模 → STEP / STL
     s2_drawing FreeCAD 无界面出图 → FCStd + 投影数据
     s3_render  A3 矢量 PDF / PNG
     s4_table   尺寸对照表（参数值 vs 图纸实测值）
-    s5_collect 从投影里提炼特征（不判断）
-    s6_compare 当前投影 vs 原图基准 → 差异清单
-    s7_decide  差异 → 判定 + 修正建议（不动文件）
-    s8_apply   唯一被允许改 params.py 的步骤
-    s9_record  把本轮思路与错误写进 notes/
+    ---- 闭环（每轮都跑）----
+    s5_collect  从投影里提炼特征（不判断）
+    s5b_dimchain **尺寸链校验**（隔离）：Σ各段 = 总尺寸？漏标/重标/矛盾？
+    s6_compare  当前投影 vs 原图基准 → 差异清单
+    s6b_projection **投影原则校验**（隔离）：长对正 / 高平齐 / 宽相等
+    s7_decide   差异 → 判定 + 修正建议（不动文件）
+    s8_apply    唯一被允许改 params.py 的步骤
+    s9_record   把本轮思路与错误写进 notes/
+
+两个校验步（s5b / s6b）是**独立的隔离步骤**，各自只通过消息通信：
+  * s5b 回答「图纸本身说得通吗」—— 不依赖模型，模型没建好也能跑
+  * s6b 回答「三视图之间说得通吗」—— 属图纸规范，不是几何精度
+  把它们与 s6_compare 分开，"图纸错"和"模型错"才不会混为一谈。
 
 性能相关的两个开关（默认开启）：
     * 指纹缓存：入参 sha256 + 入参 data + 步骤脚本 sha256 都没变 → 直接复用上次
@@ -96,11 +106,18 @@ TD = os.environ.get("MPIPE_TD",
 #   in_data_from: 步名          把该步 out.data 整体并入本步入参 data
 #   out_dir  : 产物目录（相对零件目录）
 STEPS = [
+    # ---- 输入层：读原图（谁也不再直接碰 drawing.png；无图零件自动跳过）----
+    dict(name="s0b_dwgread", runner="py", out_dir="notes", head=True,
+         in_files=[("drawing_png", "?drawing.png"),
+                   ("dwg_semantics_prev", "?notes/dwg_semantics.json")],
+         in_data=[("known_scale", None), ("verbose", False)]),
     dict(name="s0_plan", runner="py", out_dir="notes", head=True,
          in_files=[("params", "params.py"), ("dims_spec", "dims_spec.py"),
                    ("ref_spec", "ref_spec.py"), ("plan_src", "notes/plan_src.md"),
                    ("errors_md", "?notes/errors.md"),
-                   ("skill_advice", "?notes/skill_advice.md")],
+                   ("skill_advice", "?notes/skill_advice.md"),
+                   ("feature_semantics", "?notes/feature_semantics.json"),
+                   ("dwg_semantics", "@s0b_dwgread", True)],
          in_data_from="s7_decide"),
     dict(name="s1_build", runner="py", out_dir="models",
          in_files=[("params", "params.py")]),
@@ -115,10 +132,25 @@ STEPS = [
     # ---- 闭环 ----
     dict(name="s5_collect", runner="py", out_dir=".", loop=True,
          in_files=[("drawing_json", "@s2_drawing")]),
+    # 尺寸链校验：不依赖模型，只看标注集合自洽不自洽
+    dict(name="s5b_dimchain", runner="py", out_dir=".", loop=True,
+         in_files=[("dwg_semantics", "@s0b_dwgread", True),
+                   ("dwg_semantics_file", "?notes/dwg_semantics.json"),
+                   ("drawing_json", "@s2_drawing", True),
+                   ("drawing_json_file", "?_drawing.json"),
+                   ("params", "params.py")]),
     dict(name="s6_compare", runner="py", out_dir=".", loop=True,
-         in_files=[("ref_spec", "ref_spec.py")], in_data_from="s5_collect"),
+         in_files=[("ref_spec", "ref_spec.py")],
+         in_data_from="s5_collect"),
+    # 投影原则校验：长对正 / 高平齐 / 宽相等（图纸规范，不是几何精度）
+    dict(name="s6b_projection", runner="py", out_dir=".", loop=True,
+         in_files=[("drawing_json", "@s2_drawing", True),
+                   ("drawing_json_file", "?_drawing.json")]),
+    # s7 的判定要同时看到三路校验：s6_compare（模型精度）、s5b（图纸自洽）、
+    # s6b（投影规范）。三个来源的 out.data 键已命名空间隔离，不会互相覆盖。
     dict(name="s7_decide", runner="py", out_dir=".", loop=True,
-         in_files=[("params", "params.py")], in_data_from="s6_compare"),
+         in_files=[("params", "params.py")],
+         in_data_from=["s6_compare", "s5b_dimchain", "s6b_projection"]),
     dict(name="s8_apply", runner="py", out_dir=".", loop=True, optional=True,
          in_files=[("params", "params.py")], in_data_from="s7_decide"),
     dict(name="s9_record", runner="py", out_dir="notes", loop=True, tail=True,
@@ -131,7 +163,11 @@ BY_NAME = {s["name"]: s for s in STEPS}
 
 # 唯一允许「零件没自带、回落根目录通用实现」的步骤（它们本来就不含零件几何）。
 # 其余步骤（s1~s8）必须由零件自带 —— 根目录那几份是垫片的副本，不是通用实现。
-SHARED_STEPS = {"s0_plan", "s9_record"}
+# s0b/s5b/s6b 是 v2.0 新增的**零件无关**步骤：读图算法、尺寸链算法、投影原则
+# 都与具体零件无关，放根目录一份即可，所有零件共用（含无图纸的零件，s0b 会
+# 自动产出空语义而不是报错）。
+SHARED_STEPS = {"s0_plan", "s9_record", "s0b_dwgread", "s5b_dimchain",
+                "s6b_projection"}
 
 CHAIN = [s["name"] for s in STEPS if not s.get("loop")]          # s0,s1,s2,s3,s4
 # s5,s6,s7（s8 按需单独执行；s9 是每轮结尾的记录员，单独放 LOOP_TAIL）
@@ -164,6 +200,30 @@ class Driver(object):
         self.trace_path = os.path.join(self.msg_dir, "trace.jsonl")
         self.t_start = time.time()
         self._trace_opened = False
+        # 启动即预检「零件必须自带的步骤」（s1~s8）是否齐全。
+        # 以前只靠 script_of 在某步真正执行时才校验，但 s0b_dwgread 是 SHARED 回落步骤、
+        # 又排在链首，新零件会先跑到它写产物时才因缺 notes/ 目录崩，缺 s1 的报错来不及触发。
+        self._check_owned_steps()
+
+    def _check_owned_steps(self):
+        """s1~s8 必须由零件自带；缺一个就在启动时明确报错（而不是跑到那一步才炸）。
+
+        只做静态检查，不看产物，所以哪怕今天只跑 `--only s0b` 也能提前发现零件不完整。
+        """
+        missing = []
+        for s in STEPS:
+            name = s["name"]
+            if name in SHARED_STEPS:
+                continue
+            if not os.path.exists(os.path.join(self.steps_dir, name + ".py")):
+                missing.append(name)
+        if missing:
+            raise SystemExit(
+                "零件 %s 不完整：缺少 %d 个必须自带的步骤 —— %s\n"
+                "  这些步骤（s1~s8）含零件几何，不能拿根目录那份顶替（那是别的零件的副本）。\n"
+                "  请补齐 %s/steps/*.py（从已跑通的零件复制后再改）。"
+                % (self._rel(self.part) or self.part, len(missing),
+                   "、".join(missing), self._rel(self.part) or ".", ))
 
     # -------- 工具 --------
     def _abs(self, p):
@@ -259,8 +319,10 @@ class Driver(object):
 
         data = dict(step.get("in_data") or {})
         data["out_dir"] = self._abs(step["out_dir"])
-        src_stage = step.get("in_data_from")
-        if src_stage:
+        src_stages = step.get("in_data_from") or []
+        if isinstance(src_stages, str):
+            src_stages = [src_stages]
+        for src_stage in src_stages:              # 支持多个来源（按声明顺序合并）
             data.update(produced.get(src_stage + ".data", {}) or {})
         if extra:
             data.update(extra)
@@ -440,6 +502,24 @@ class Driver(object):
                                        extra={"s0_fix": s0_fix}, cache=cache)
                 if res is None:
                     return "fail", it, deferred
+                if name == "s5b_dimchain":
+                    d = (produced.get("s5b_dimchain.data", {})
+                         .get("dimchain", {}))
+                    print("    尺寸链：线性链 %d 条｜径向链 %d 条｜error %d｜warn %d"
+                          % (d.get("n_chains", 0), d.get("n_radial", 0),
+                             d.get("n_error", 0), d.get("n_warn", 0)))
+                    for x in d.get("issues", []):
+                        if x.get("severity") != "ok":
+                            print("      ! [%s] %s" % (x.get("severity"),
+                                                      x.get("msg", "")))
+                if name == "s6b_projection":
+                    d = (produced.get("s6b_projection.data", {})
+                         .get("projection", {}))
+                    print("    投影原则：通过 %d 项｜error %d"
+                          % (d.get("n_ok", 0), d.get("n_error", 0)))
+                    for x in d.get("issues", []):
+                        if x.get("severity") == "error":
+                            print("      ! [error] %s" % x.get("msg", ""))
 
             # ③ 记录本轮思路与错误（无论成败都记）
             for name in LOOP_TAIL:
@@ -452,7 +532,12 @@ class Driver(object):
             dec = produced.get("s7_decide.data", {})
             verdict = dec.get("verdict")
             if verdict == "pass":
-                print("\n  ⇒ 通过：几何与标注全部相符")
+                dc = (produced.get("s5b_dimchain.data", {})
+                      .get("dimchain", {}))
+                pj = (produced.get("s6b_projection.data", {})
+                      .get("projection", {}))
+                print("\n  ⇒ 通过：几何与标注全部相符，图纸自洽（链 %d 条）且投影合规（%d 项）"
+                      % (dc.get("n_chains", 0), pj.get("n_ok", 0)))
                 self.trace(kind="verdict", seq=seq, round=it, verdict="pass", items=[])
                 return "pass", it, deferred
             if dec.get("diagnosis"):

@@ -13,3 +13,31 @@
 - 理由：几何与标注全部相符
 - 差异：无
 - 本轮方案：notes/plan.md（构造 6 阶段）
+
+## 第 1 轮 · 2026-10-14 13:53:18 · 判定=manual
+
+- 诊断：二维标注错
+- 理由：形状对、标注没跟上 → 查 s2_drawing.py 的边引用
+- 差异 7 项：
+  - `wall_t` 基准 20.0 / 当前 None（背板）
+  - `arm_t` 基准 32.0 / 当前 None（顶臂）
+  - `opening` 基准 96.0 / 当前 None（顶臂）
+  - `base_h` 基准 48.0 / 当前 None（底座）
+  - `ear_pitch` 基准 116.0 / 当前 None（双耳）
+  - `ear_hole` 基准 42.0 / 当前 None（双耳）
+  - `cbore_depth` 基准 22.0 / 当前 None（中央孔）
+- 本轮方案：notes/plan.md（构造 6 阶段）
+
+## 第 1 轮 · 2026-10-14 14:51:34 · 判定=manual
+
+- 诊断：二维标注错
+- 理由：形状对、标注没跟上 → 查 s2_drawing.py 的边引用
+- 差异 7 项：
+  - `wall_t` 基准 20.0 / 当前 None（背板）
+  - `arm_t` 基准 32.0 / 当前 None（顶臂）
+  - `opening` 基准 96.0 / 当前 None（顶臂）
+  - `base_h` 基准 48.0 / 当前 None（底座）
+  - `ear_pitch` 基准 116.0 / 当前 None（双耳）
+  - `ear_hole` 基准 42.0 / 当前 None（双耳）
+  - `cbore_depth` 基准 22.0 / 当前 None（中央孔）
+- 本轮方案：notes/plan.md（构造 6 阶段）

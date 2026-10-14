@@ -23,6 +23,7 @@ r"""s0_plan —— 每轮循环前的「读图 → 建模方案 → 失误定位
     ① 图上标了什么  ② 每个标注对应实体的哪一段  ③ 上一轮栽在哪一步
     摆出来，后面的 s5~s8 就有据可依，少走回头路。
 """
+import json
 import os
 import re
 import sys
@@ -152,6 +153,18 @@ def handler(in_msg):
     if has_role(in_msg, "errors_md"):
         errs = parse_errors(open(ref_path(in_msg, "errors_md"), encoding="utf-8").read())
 
+    # ---- ①'' 三维语义层（可选）----
+    # 若零件目录带了 notes/feature_semantics.json（可由 tools/z2c_distill.py
+    # 从 Zero-to-CAD 蒸馏、或人工编写），把它摆进方案，让"这是什么特征"
+    # 不再只靠 dims_spec 的尺寸映射。缺则整段跳过，不影响其它零件。
+    feats = []
+    if has_role(in_msg, "feature_semantics"):
+        try:
+            _fs = json.load(open(ref_path(in_msg, "feature_semantics"), encoding="utf-8"))
+            feats = ((_fs.get("semantics") or {}).get("features")) or _fs.get("features") or []
+        except Exception:
+            feats = []
+
     # ---- ①' 技能建议（mech-projection-analysis 的产物） ----
     skill_steps, skill_risks, skill_view_map = [], [], []
     if has_role(in_msg, "skill_advice"):
@@ -248,6 +261,17 @@ def handler(in_msg):
         w(l)
     if not read_lines:
         w("（notes/plan_src.md 缺少「## 读图」段）\n")
+    if feats:
+        w("\n## 1.1 特征语义（三维语义层）\n")
+        w("| 特征 | 角色 | 语义类型 | 尺寸参数 | 来源 |")
+        w("|---|---|---|---|---|")
+        for f in feats:
+            w("| %s | %s | %s | %s | %s |" % (
+                f.get("name") or "-", f.get("role") or "-",
+                f.get("type") or "-",
+                ", ".join("%s=%s" % (k, v) for k, v in (f.get("dims") or {}).items()) or "-",
+                f.get("source", "measures")))
+        w("")
     w("\n## 2. 构造顺序\n")
     if stages:
         for s in stages:
@@ -291,6 +315,9 @@ def handler(in_msg):
 
     print("[s0_plan] 第 %d 轮：构造 %d 阶段，预检不符 %d 项，疑似失误 %d 处，历史错误提示 %d 条"
           % (rd, len(stages), n_bad, len(suspects), len(risks)))
+    if feats:
+        print("      特征语义 %d 个：%s"
+              % (len(feats), "、".join(str(f.get("role") or f.get("type")) for f in feats)))
     for s in suspects:
         if s["stage"]:
             print("      阶段 %d「%s」← %s" % (s["stage"], s["stage_title"], s["name"]))
@@ -301,6 +328,8 @@ def handler(in_msg):
         "n_bad": n_bad,
         "n_suspect": len(suspects),
         "n_risk": len(risks),
+        "n_features": len(feats),
+        "features": feats,
         "n_skill_steps": len(skill_steps),
         "n_skill_risks": len(skill_risks),
         "precheck": pre,

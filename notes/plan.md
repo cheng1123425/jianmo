@@ -1,4 +1,4 @@
-# 建模方案（第 1 轮 · 2026-10-08 16:06:55）
+# 建模方案（第 1 轮 · 2026-10-14 15:23:01）
 
 ## 0. 投影技能建议（mech-projection-analysis）
 
@@ -45,6 +45,18 @@
 - 俯视同心圆：φ300 外弧 / φ200 中心凸台 / φ150 中心孔；侧台另有 φ75 孔
 - 前视：底板 50 厚；中心凸台再高 50（总 100，实测宽 ±100 → φ200）；侧凸台再高 20（总 70）
 - 共识：**同心圆一律按通孔处理**，中心 φ150 是贯通孔，不做沉孔
+
+## 1.1 特征语义（三维语义层）
+
+| 特征 | 角色 | 语义类型 | 尺寸参数 | 来源 |
+|---|---|---|---|---|
+| base | 底板 | base_plate | BASE_T=50.0 | measures |
+| boss_center | 中心凸台 | boss | R_BOSS=100.0, H_CEN=50.0 | measures |
+| wing | 侧凸台 | wing | R_SIDE=150.0, H_WING=20.0 | measures |
+| neck | 凹颈过渡 | neck | R_NECK=400.0 | measures |
+| hole_center | 中心通孔 | through_hole | D_HOLE_CEN=150.0 | measures |
+| hole_side | 侧通孔 | through_hole | D_HOLE_SIDE=75.0 | measures |
+
 
 ## 2. 构造顺序
 

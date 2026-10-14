@@ -178,14 +178,20 @@ def check(dw, tol=1e-6):
 
 def _load_json_opt(in_msg, *roles):
     """按 role 取入参（JSON 文件），支持多个候选 role 依序回落。
-    `@步名` 优先，文件形式（_file 后缀）兜底 —— 单步调试时也能跑。"""
+
+    路径**必须**经 msgio.ref_path 解析：它以 MPIPE_HERE 为基准展开相对路径并校验
+    sha256。不能直接 os.path.exists(r["path"]) —— 那是相对子进程 CWD（=项目根），
+    所有零件都会误读根目录垫片的 _drawing.json，表现为四件报出相同的假投影错误。
+    `@步名` 优先，文件形式（_file 后缀）兜底 —— 单步调试时也能跑。
+    """
     import json
-    refs = in_msg.get("in", {}).get("refs", [])
     for role in roles:
-        for r in refs:
-            if r["role"] == role and os.path.exists(r["path"]):
-                with open(r["path"], encoding="utf-8") as f:
-                    return json.load(f)
+        try:
+            ap = ref_path(in_msg, role)
+        except (KeyError, FileNotFoundError):
+            continue          # 该 role 未声明 / 文件不在 → 试下一个候选
+        with open(ap, encoding="utf-8") as f:
+            return json.load(f)
     return None
 
 
