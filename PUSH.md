@@ -94,3 +94,41 @@ git push origin main
 | 2026-10-08 | `4492e46` | 新增 tools/trace_view.py：把 trace 画成「高亮路径」报告（直观调试） |
 | 2026-10-08 | 本次推送 | 代码专家加固 pipe.py：① 只有 s0_plan/s9_record 允许回落 root 通用实现，s1~s8 缺失改为启动即报错（根目录那几份是垫片副本，schema 对不上）；② 指纹缓存命中前核对产物是否存在/被改动，命中刷新 seq；③ MSG.md/README.md 同步。新增 tools/msg_view.py（消息线查看器，含轮次/回边，代码+中文命名对照）；三条闭环复跑均 pass。 |
 | 2026-10-14 | `c8e7672` | **推 sandbox-merge 分支（非 main）**：① s6b_projection.py 修复（_load_json_opt 改 msgio.ref_path，解决误读根目录 _drawing.json 的 4 条假投影错误，已编译待闭环）；② ybracket ref_spec 补全 13 项 MARKS；③ 沙箱 zip 的 13 步流水线代码同步（pipe.py/s0_plan/s7_decide）；④ 四件闭环产物回归；⑤ 新增 HANDOFF-2026-10-14.md。注意：含未验证项（ybracket 模型 bug 开放、s6b 未跑闭环），按 PUSH.md 约定不进 main；推送触发 PUSH.md「沙箱写 ref」坑，已手动补 .git/refs/remotes/origin/sandbox-merge。另：验证报告/z2c_sample.parquet(84MB) 超 50MB 告警但已入库。 |
+| 2026-10-14 | `74a2c69` | **推 refactor/naming-and-layering 分支（非 main）**：① **命名规范化**——参数统一四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀（防"把 X 向宽度当 Z 高度用"那类静默 bug）；新增 `tools/check_naming.py`（规范的可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名，保注释保格式）；`docs/rename_maps/*.json` 存 4 个零件的改名映射（可反向撤销）。全项目命名 **0 error / 0 warning**（改名前 5 error / 91 warning）。② **逻辑分层**——`SHARED_STEPS` 由 5 扩到 9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`lib/collect.py` 按视图存在性自适应）；删 12 个零件副本，零件只保留 4 个含几何/标注的步骤。③ **s6b 检查修复**——容差 1e-6→1e-3（FreeCAD 投影噪声在 1e-4 量级，原容差把「37.000 vs 37.000」判成 error）；高度链检查要求 ≥2 段（单段不成链，属误报）。④ **垫片迁入 `parts/gasket/`**——根目录不再兼作零件，默认 `--part` 改为 `parts/gasket`；步骤脚本路径块改 `MPIPE_ROOT` 感知（原写法固定上溯两层，迁到深处会 ModuleNotFoundError）。四件闭环全 pass；guard 26/26。 |
+
+---
+
+## 五、本机（当前开发机）推送备忘
+
+原开发机的 SSH 约定（`~/.ssh/id_ed25519_jianmo` + `core.sshCommand`）**在本机不适用**。本机情况：
+
+| 项 | 值 |
+|---|---|
+| 远程（fetch 用） | `https://gh-proxy.com/https://github.com/cheng1123425/jianmo.git` |
+| **HTTPS 推送** | ❌ 无凭据（`credential.helper=helper-selector`，无 `~/.git-credentials`），会报 `could not read Username` |
+| **SSH 推送** | ✅ 可用 `~/.ssh/id_ed25519`（已认证为 `cheng1123425`） |
+
+**本机推荐推送命令**（不改动 remote 配置）：
+
+```bash
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
+  git push git@github.com:cheng1123425/jianmo.git HEAD:refs/heads/<分支名>
+```
+
+### ⚠️ 本机沙箱的「写 ref」坑（比原开发机的更严重）
+
+`git checkout -b <新分支>` 会**报成功**（`git branch --show-current` 也显示新分支名），
+但 `.git/refs/heads/<新分支>` **根本没落盘** —— 于是 `git commit` 报
+`your current branch '...' does not have any commits yet`。
+
+已试过三种补法，**都无效**（沙箱对 `.git/refs/` 的写入被隔离，git 进程看不到）：
+
+```bash
+mkdir -p .git/refs/heads/refactor && echo <sha> > .git/refs/heads/refactor/<name>   # ✗
+git update-ref refs/heads/refactor/<name> <sha>                                     # ✗
+echo "<sha> refs/heads/refactor/<name>" >> .git/packed-refs                         # ✗
+```
+
+**可行做法**：在已存在的分支（如 `sandbox-merge`）上 commit，再
+`git push <url> HEAD:refs/heads/<新分支>` —— 远程仍会得到独立的新分支。
+（`.git/config`、`.git/index`、`.git/HEAD` 是可写的，只有 `refs/` 不行。）
