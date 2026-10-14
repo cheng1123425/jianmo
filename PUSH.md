@@ -117,15 +117,16 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
 | 分支 / 标记 | 指向 | 与远程 |
 |---|---|---|
 | `main` | `029adbd` | ✅ 一致 |
-| `sandbox-merge` | `c69e466` | ⚠️ **领先 7 个 commit** |
-| tag `refactor-naming-and-layering-c69e466` | `c69e466` | 本地标记（防止 gc 丢失） |
-| 远程 `refactor/naming-and-layering` | `c69e466` | ✅ 已推送 |
+| `sandbox-merge` | `41c3b17` | ⚠️ **领先远程若干 commit**（8 个，`74a2c69`…`41c3b17`） |
+| tag `refactor-naming-and-layering-c69e466` | `c69e466` | 本地标记（防止 gc 丢失；注意它指向倒数第二个 commit） |
+| 远程 `refactor/naming-and-layering` | `41c3b17` | ✅ 已推送 |
 
 工作区 `git status` **干净**（0 改动）。
 
 **为什么本地 sandbox-merge 会领先**：沙箱不允许在 `refs/heads/` 下**新建** ref ——
 `git checkout -b` / `git branch -f` / `git update-ref` / bash 手写文件 **四种方式都试过，均不落盘**
-（`git branch -v` 看不到新分支）。所以这 7 个 commit 只能挂在已存在的 `sandbox-merge` 上。
+（`git branch -v` 看不到新分支）。所以这些 commit 只能挂在已存在的 `sandbox-merge` 上。
+（具体数字会随后续 commit 变化，看表时以 `git branch -v` 的实际输出为准。）
 
 补充事实：**`refs/tags/` 下新建是允许的**（`git tag` 能落盘），故用 tag 把 `c69e466` 标住。
 **修改已存在的 ref 也是允许的**（`update-ref refs/heads/sandbox-merge <sha>` 有效）。
