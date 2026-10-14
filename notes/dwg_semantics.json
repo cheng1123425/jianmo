@@ -1,0 +1,534 @@
+{
+  "mm_per_px": 0.340117,
+  "scale_method": "circle_vote(支持9/36)",
+  "summary": {
+    "circles": 6,
+    "lines": 85,
+    "annotations": 12,
+    "matched": 11,
+    "match_rate": 0.917
+  },
+  "circles": [
+    {
+      "cx": 1357.0,
+      "cy": 2325.0,
+      "r_px": 293.0,
+      "r_mm": 99.654,
+      "d_mm": 199.308
+    },
+    {
+      "cx": 1946.3,
+      "cy": 2323.4,
+      "r_px": 221.0,
+      "r_mm": 75.166,
+      "d_mm": 150.332
+    },
+    {
+      "cx": 765.0,
+      "cy": 2325.0,
+      "r_px": 221.0,
+      "r_mm": 75.166,
+      "d_mm": 150.332
+    },
+    {
+      "cx": 1357.0,
+      "cy": 2325.0,
+      "r_px": 220.0,
+      "r_mm": 74.826,
+      "d_mm": 149.651
+    },
+    {
+      "cx": 1946.3,
+      "cy": 2323.4,
+      "r_px": 111.0,
+      "r_mm": 37.753,
+      "d_mm": 75.506
+    },
+    {
+      "cx": 765.0,
+      "cy": 2325.0,
+      "r_px": 110.0,
+      "r_mm": 37.413,
+      "d_mm": 74.826
+    }
+  ],
+  "dims": [
+    {
+      "text": "50",
+      "type": "linear",
+      "values": [
+        50.0
+      ],
+      "box_px": [
+        2376.0,
+        722.0,
+        47.0,
+        37.0
+      ],
+      "center_px": [
+        2399.5,
+        740.5
+      ],
+      "grounded": true,
+      "kind": "distance",
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": 50.34,
+      "method": "dim_line+轮廓范围",
+      "confidence": 0.993,
+      "note": "轮廓范围",
+      "p1": [
+        2339.0,
+        666.0
+      ],
+      "p2": [
+        2339.0,
+        814.0
+      ],
+      "len_mm": 50.34,
+      "ends": [
+        {
+          "what": "outline",
+          "pt": [
+            2339.0,
+            666.0
+          ]
+        },
+        {
+          "what": "outline",
+          "pt": [
+            2339.0,
+            814.0
+          ]
+        }
+      ]
+    },
+    {
+      "text": "20",
+      "type": "linear",
+      "values": [
+        20.0
+      ],
+      "box_px": [
+        370.0,
+        826.0,
+        47.0,
+        36.0
+      ],
+      "center_px": [
+        393.5,
+        844.0
+      ],
+      "grounded": false,
+      "kind": null,
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": null,
+      "method": "unmatched",
+      "confidence": 0.0,
+      "note": null,
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "50",
+      "type": "linear",
+      "values": [
+        50.0
+      ],
+      "box_px": [
+        2376.0,
+        870.0,
+        47.0,
+        36.0
+      ],
+      "center_px": [
+        2399.5,
+        888.0
+      ],
+      "grounded": true,
+      "kind": "distance",
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": 50.34,
+      "method": "dim_line+轮廓范围",
+      "confidence": 0.993,
+      "note": "轮廓范围",
+      "p1": [
+        2339.0,
+        814.0
+      ],
+      "p2": [
+        2339.0,
+        962.0
+      ],
+      "len_mm": 50.34,
+      "ends": [
+        {
+          "what": "outline",
+          "pt": [
+            2339.0,
+            814.0
+          ]
+        },
+        {
+          "what": "outline",
+          "pt": [
+            2339.0,
+            962.0
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Φ150",
+      "type": "diameter",
+      "values": [
+        150.0
+      ],
+      "box_px": [
+        1908.0,
+        1640.0,
+        105.0,
+        48.0
+      ],
+      "center_px": [
+        1960.5,
+        1664.0
+      ],
+      "grounded": true,
+      "kind": "circle",
+      "cx": 1946.3,
+      "cy": 2323.4,
+      "r_px": 221.0,
+      "d_mm": 150.33,
+      "measured_mm": 150.33,
+      "method": "dia+radius",
+      "confidence": 0.998,
+      "note": null,
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "Φ300",
+      "type": "diameter",
+      "values": [
+        300.0
+      ],
+      "box_px": [
+        1338.0,
+        1657.0,
+        105.0,
+        49.0
+      ],
+      "center_px": [
+        1390.5,
+        1681.5
+      ],
+      "grounded": true,
+      "kind": "arc",
+      "cx": 1357.0,
+      "cy": 2325.0,
+      "r_px": 444.0,
+      "d_mm": 302.02,
+      "measured_mm": 302.02,
+      "method": "dia+leader/arc",
+      "confidence": 0.993,
+      "note": "外轮廓弧段（圆周覆盖 26%），非整圆",
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "R400",
+      "type": "radius",
+      "values": [
+        400.0
+      ],
+      "box_px": [
+        755.0,
+        1885.0,
+        97.0,
+        34.0
+      ],
+      "center_px": [
+        803.5,
+        1902.0
+      ],
+      "grounded": true,
+      "kind": "fillet",
+      "cx": 492.73891091199096,
+      "cy": 954.718404016782,
+      "r_px": 1176.1,
+      "d_mm": 800.0,
+      "measured_mm": 400.0,
+      "method": "rad+tangent",
+      "confidence": 1.0,
+      "note": "圆角：相切求解，弧上墨迹覆盖 100%",
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "Φ75",
+      "type": "diameter",
+      "values": [
+        75.0
+      ],
+      "box_px": [
+        435.0,
+        2047.0,
+        82.0,
+        48.0
+      ],
+      "center_px": [
+        476.0,
+        2071.0
+      ],
+      "grounded": true,
+      "kind": "circle",
+      "cx": 765.0,
+      "cy": 2325.0,
+      "r_px": 110.0,
+      "d_mm": 74.83,
+      "measured_mm": 74.83,
+      "method": "dia+leader",
+      "confidence": 0.998,
+      "note": null,
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "300",
+      "type": "linear",
+      "values": [
+        300.0
+      ],
+      "box_px": [
+        2352.0,
+        2308.0,
+        68.0,
+        36.0
+      ],
+      "center_px": [
+        2386.0,
+        2326.0
+      ],
+      "grounded": true,
+      "kind": "distance",
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": 301.34,
+      "method": "dim_line+轮廓范围",
+      "confidence": 0.996,
+      "note": "轮廓范围",
+      "p1": [
+        2316.0,
+        1883.0
+      ],
+      "p2": [
+        2316.0,
+        2769.0
+      ],
+      "len_mm": 301.34,
+      "ends": [
+        {
+          "what": "outline",
+          "pt": [
+            2316.0,
+            1883.0
+          ]
+        },
+        {
+          "what": "outline",
+          "pt": [
+            2316.0,
+            2769.0
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Φ150",
+      "type": "diameter",
+      "values": [
+        150.0
+      ],
+      "box_px": [
+        390.0,
+        2529.0,
+        106.0,
+        48.0
+      ],
+      "center_px": [
+        443.0,
+        2553.0
+      ],
+      "grounded": true,
+      "kind": "circle",
+      "cx": 765.0,
+      "cy": 2325.0,
+      "r_px": 221.0,
+      "d_mm": 150.33,
+      "measured_mm": 150.33,
+      "method": "dia+leader",
+      "confidence": 0.998,
+      "note": null,
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "200",
+      "type": "linear",
+      "values": [
+        200.0
+      ],
+      "box_px": [
+        1029.0,
+        2693.0,
+        68.0,
+        36.0
+      ],
+      "center_px": [
+        1063.0,
+        2711.0
+      ],
+      "grounded": true,
+      "kind": "distance",
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": 186.38,
+      "method": "dim_line+轮廓范围",
+      "confidence": 0.932,
+      "note": "轮廓范围",
+      "p1": [
+        789.0,
+        2768.0
+      ],
+      "p2": [
+        1337.0,
+        2768.0
+      ],
+      "len_mm": 186.38,
+      "ends": [
+        {
+          "what": "outline",
+          "pt": [
+            789.0,
+            2768.0
+          ]
+        },
+        {
+          "what": "outline",
+          "pt": [
+            1337.0,
+            2768.0
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Φ200",
+      "type": "diameter",
+      "values": [
+        200.0
+      ],
+      "box_px": [
+        1833.0,
+        2800.0,
+        105.0,
+        48.0
+      ],
+      "center_px": [
+        1885.5,
+        2824.0
+      ],
+      "grounded": true,
+      "kind": "circle",
+      "cx": 1357.0,
+      "cy": 2325.0,
+      "r_px": 293.0,
+      "d_mm": 199.31,
+      "measured_mm": 199.31,
+      "method": "dia+radius",
+      "confidence": 0.997,
+      "note": null,
+      "p1": null,
+      "p2": null,
+      "len_mm": null,
+      "ends": null
+    },
+    {
+      "text": "550",
+      "type": "linear",
+      "values": [
+        550.0
+      ],
+      "box_px": [
+        1324.0,
+        2929.0,
+        68.0,
+        37.0
+      ],
+      "center_px": [
+        1358.0,
+        2947.5
+      ],
+      "grounded": true,
+      "kind": "distance",
+      "cx": null,
+      "cy": null,
+      "r_px": null,
+      "d_mm": null,
+      "measured_mm": 552.01,
+      "method": "dim_line+轮廓范围",
+      "confidence": 0.996,
+      "note": "轮廓范围",
+      "p1": [
+        546.5,
+        2986.0
+      ],
+      "p2": [
+        2169.5,
+        2986.0
+      ],
+      "len_mm": 552.01,
+      "ends": [
+        {
+          "what": "outline",
+          "pt": [
+            546.5,
+            2986.0
+          ]
+        },
+        {
+          "what": "outline",
+          "pt": [
+            2169.5,
+            2986.0
+          ]
+        }
+      ]
+    }
+  ]
+}

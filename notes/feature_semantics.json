@@ -1,0 +1,101 @@
+{
+  "source": "manual:gasket(垫片)",
+  "semantics": {
+    "root_var": "gasket",
+    "features": [
+      {
+        "name": "base",
+        "path": "",
+        "type": "base_plate",
+        "role": "底板",
+        "dims": {
+          "BASE_T": 50.0
+        },
+        "members": [
+          "BASE_T"
+        ]
+      },
+      {
+        "name": "boss_center",
+        "path": "",
+        "type": "boss",
+        "role": "中心凸台",
+        "dims": {
+          "R_BOSS": 100.0,
+          "H_CEN": 50.0
+        },
+        "members": [
+          "R_BOSS",
+          "H_CEN"
+        ]
+      },
+      {
+        "name": "wing",
+        "path": "",
+        "type": "wing",
+        "role": "侧凸台",
+        "dims": {
+          "R_SIDE": 150.0,
+          "H_WING": 20.0
+        },
+        "members": [
+          "R_SIDE",
+          "H_WING"
+        ]
+      },
+      {
+        "name": "neck",
+        "path": "",
+        "type": "neck",
+        "role": "凹颈过渡",
+        "dims": {
+          "R_NECK": 400.0
+        },
+        "members": [
+          "R_NECK"
+        ]
+      },
+      {
+        "name": "hole_center",
+        "path": "",
+        "type": "through_hole",
+        "role": "中心通孔",
+        "dims": {
+          "D_HOLE_CEN": 150.0
+        },
+        "members": [
+          "D_HOLE_CEN"
+        ]
+      },
+      {
+        "name": "hole_side",
+        "path": "",
+        "type": "through_hole",
+        "role": "侧通孔",
+        "dims": {
+          "D_HOLE_SIDE": 75.0
+        },
+        "members": [
+          "D_HOLE_SIDE"
+        ]
+      }
+    ],
+    "n_features": 6
+  },
+  "structure": {
+    "ops_count": {
+      "主体": 1,
+      "加法": 2,
+      "减法": 2
+    },
+    "kinds": [
+      "主体",
+      "加法",
+      "减法"
+    ]
+  },
+  "drawing": null,
+  "stats": {
+    "n_semantic_features": 6
+  }
+}
