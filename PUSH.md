@@ -94,6 +94,25 @@ git push origin main
 | 2026-10-08 | `4492e46` | 新增 tools/trace_view.py：把 trace 画成「高亮路径」报告（直观调试） |
 | 2026-10-08 | 本次推送 | 代码专家加固 pipe.py：① 只有 s0_plan/s9_record 允许回落 root 通用实现，s1~s8 缺失改为启动即报错（根目录那几份是垫片副本，schema 对不上）；② 指纹缓存命中前核对产物是否存在/被改动，命中刷新 seq；③ MSG.md/README.md 同步。新增 tools/msg_view.py（消息线查看器，含轮次/回边，代码+中文命名对照）；三条闭环复跑均 pass。 |
 | 2026-10-14 | `c8e7672` | **推 sandbox-merge 分支（非 main）**：① s6b_projection.py 修复（_load_json_opt 改 msgio.ref_path，解决误读根目录 _drawing.json 的 4 条假投影错误，已编译待闭环）；② ybracket ref_spec 补全 13 项 MARKS；③ 沙箱 zip 的 13 步流水线代码同步（pipe.py/s0_plan/s7_decide）；④ 四件闭环产物回归；⑤ 新增 HANDOFF-2026-10-14.md。注意：含未验证项（ybracket 模型 bug 开放、s6b 未跑闭环），按 PUSH.md 约定不进 main；推送触发 PUSH.md「沙箱写 ref」坑，已手动补 .git/refs/remotes/origin/sandbox-merge。另：验证报告/z2c_sample.parquet(84MB) 超 50MB 告警但已入库。 |
+| 2026-10-14 | `74a2c69` → `dd5a3be`（共 6 个） | **推 `refactor/naming-and-layering` 分支（非 main）**：① **命名规范化**——参数改四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀；新增 `tools/check_naming.py`（可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名）；`docs/rename_maps/*.json` 存 4 个零件改名映射（可反向撤销）；命名 0 error/0 warning。② **逻辑分层**——`SHARED_STEPS` 5→9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`collect.py` / `drawing_fc.py` / `drawing_render.py`）；删 12 个零件副本，零件只留 4 个含几何/标注的步骤。③ **s6b 修复**——容差 1e-6→1e-3（FreeCAD 投影噪声 1e-4 量级），高度链要求 ≥2 段。④ **出图自动适配**——`s3_render` 分两遍绘制，保证视图/标注/文字不越图框（bracket/lbracket/ybracket 均已收进图框）。⑤ **垫片迁入 `parts/gasket/`**——根目录只剩框架，默认 `--part` 改 `parts/gasket`。⑥ **s2/s3 抽 lib**——3 个零件文件从 250~283 行缩到约 100 行，只声明视图布局与标注布置（s3 用数据清单 DIMS、s2 用 `place_marks` 回调）。**关键验证：每个零件「抽 lib 前 vs 后」像素对比全部 0 差异**（`tools/diff_images.py`）；四件闭环全 pass，guard 26/26。遗留见 `docs/遗留事项与下一步.md`（gasket 是另一套老实现未纳入、bracket 标注数字硬编码等）。 |
+
+### ⚠️ 本次推送的坑：本地分支 ref 建不了
+
+`git checkout -b refactor/naming-and-layering` **报成功**，但 `.git/refs/heads/refactor/naming-and-layering`
+**没落盘**（沙箱写 ref 的坑，见 §五）。结果这 6 个 commit 实际落在 **`sandbox-merge`** 上，
+`git branch --show-current` 显示的是 `sandbox-merge`（ahead 6）。
+
+**解法**：推送时**直接指定远程分支名**，不依赖本地 ref：
+
+```bash
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
+  git push git@github.com:cheng1123425/jianmo.git \
+  HEAD:refs/heads/refactor/naming-and-layering
+```
+
+这样远程会**新建独立分支**，`origin/sandbox-merge` 与 `origin/main` 都不受影响。
+（本地 `sandbox-merge` 仍会比远程多 6 个 commit；因为新分支 ref 建不了，
+若强行把 sandbox-merge 回退会让这 6 个 commit 失去引用，故保持不动。）
 | 2026-10-14 | `74a2c69` | **推 refactor/naming-and-layering 分支（非 main）**：① **命名规范化**——参数统一四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀（防"把 X 向宽度当 Z 高度用"那类静默 bug）；新增 `tools/check_naming.py`（规范的可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名，保注释保格式）；`docs/rename_maps/*.json` 存 4 个零件的改名映射（可反向撤销）。全项目命名 **0 error / 0 warning**（改名前 5 error / 91 warning）。② **逻辑分层**——`SHARED_STEPS` 由 5 扩到 9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`lib/collect.py` 按视图存在性自适应）；删 12 个零件副本，零件只保留 4 个含几何/标注的步骤。③ **s6b 检查修复**——容差 1e-6→1e-3（FreeCAD 投影噪声在 1e-4 量级，原容差把「37.000 vs 37.000」判成 error）；高度链检查要求 ≥2 段（单段不成链，属误报）。④ **垫片迁入 `parts/gasket/`**——根目录不再兼作零件，默认 `--part` 改为 `parts/gasket`；步骤脚本路径块改 `MPIPE_ROOT` 感知（原写法固定上溯两层，迁到深处会 ModuleNotFoundError）。四件闭环全 pass；guard 26/26。 |
 
 ---
