@@ -3,22 +3,22 @@
   "scale_method": "failed",
   "summary": {
     "circles": 2,
-    "lines": 80,
+    "lines": 79,
     "annotations": 0,
     "matched": 0,
     "match_rate": 0.0
   },
   "circles": [
     {
-      "cx": 1357.0,
-      "cy": 1997.0,
+      "cx": 1444.4,
+      "cy": 2062.4,
       "r_px": 255.0,
       "r_mm": 0.0,
       "d_mm": 0.0
     },
     {
-      "cx": 1357.0,
-      "cy": 1997.0,
+      "cx": 1444.4,
+      "cy": 2062.4,
       "r_px": 151.0,
       "r_mm": 0.0,
       "d_mm": 0.0

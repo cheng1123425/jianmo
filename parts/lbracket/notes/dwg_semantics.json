@@ -2,38 +2,45 @@
   "mm_per_px": 0.0,
   "scale_method": "failed",
   "summary": {
-    "circles": 4,
-    "lines": 137,
+    "circles": 5,
+    "lines": 157,
     "annotations": 0,
     "matched": 0,
     "match_rate": 0.0
   },
   "circles": [
     {
-      "cx": 2219.0,
+      "cx": 713.0,
+      "cy": 2501.0,
+      "r_px": 94.0,
+      "r_mm": 0.0,
+      "d_mm": 0.0
+    },
+    {
+      "cx": 3595.0,
       "cy": 717.0,
       "r_px": 94.0,
       "r_mm": 0.0,
       "d_mm": 0.0
     },
     {
-      "cx": 2833.0,
+      "cx": 2981.0,
       "cy": 717.0,
       "r_px": 94.0,
       "r_mm": 0.0,
       "d_mm": 0.0
     },
     {
-      "cx": 351.0,
+      "cx": 1113.0,
       "cy": 2195.0,
       "r_px": 94.0,
       "r_mm": 0.0,
       "d_mm": 0.0
     },
     {
-      "cx": 353.0,
+      "cx": 1113.0,
       "cy": 2809.0,
-      "r_px": 93.0,
+      "r_px": 94.0,
       "r_mm": 0.0,
       "d_mm": 0.0
     }
