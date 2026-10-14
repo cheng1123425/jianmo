@@ -22,8 +22,13 @@ def handler(in_msg):
     if not fixes:
         raise RuntimeError("没有可应用的修正（fixes 为空）——不该调用这一步")
 
-    P = exec_module(ppath, "gasket_params")
-    before = {k: getattr(P, k) for k in fixes}
+    P = exec_module(ppath, "part_params")
+    before = {}
+    for k in fixes:
+        try:
+            before[k] = getattr(P, k)
+        except AttributeError:
+            raise RuntimeError("params.py 没有参数 %s" % k)
     txt = open(ppath, encoding="utf-8").read()
 
     applied = {}

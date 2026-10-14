@@ -1,4 +1,4 @@
-# 建模方案（第 1 轮 · 2026-10-14 15:23:57）
+# 建模方案（第 1 轮 · 2026-10-14 22:41:01）
 
 ## 0. 投影技能建议（mech-projection-analysis）
 
@@ -76,20 +76,20 @@
 
 | 标注 | 分类 | 图上 | 当前 | 关系 | 判定 |
 |---|---|---|---|---|---|
-| L | 底板 | 62.0 | 62.0 | 标注 = L | OK |
-| W | 派生 | 46.0 | 46.0 | 标注 = END_Y − HEAD_Y + R_HEAD | OK |
-| T_base | 底板 | 8.0 | 8.0 | 标注 = T | OK |
-| arm_inner | 臂 | 16.0 | 16.0 | 标注 = ARM_GAP | OK |
-| arm_outer | 派生 | 28.0 | 28.0 | 标注 = ARM_GAP + 2 × ARM_T | OK |
-| R_head | 圆头 | 10.0 | 10.0 | 标注 = R_HEAD | OK |
-| head_h | 圆头 | 27.0 | 27.0 | 标注 = HEAD_Z | OK |
-| arm_h | 圆头 | 14.0 | 14.0 | 标注 = END_Z | OK |
-| arm_len | 派生 | 36.0 | 36.0 | 标注 = END_Y − HEAD_Y | OK |
-| D9 | 底板孔 | 9.0 | 9.0 | 标注 = D_9 | OK |
-| P9 | 底板孔 | 45.0 | 45.0 | 标注 = PITCH9 | OK |
-| dia_pin | 销孔 | 8.0 | 8.0 | 标注 = D_PIN | OK |
-| dia_cbore | 台阶孔 | 6.0 | 6.0 | 标注 = D_CB | OK |
-| dia_thru | 台阶孔 | 3.0 | 3.0 | 标注 = D_CS | OK |
+| L | 底板 | 62.0 | 62.0 | 标注 = BASE_L_X | OK |
+| W | 派生 | 46.0 | 46.0 | 标注 = ARM_END_C_Y − HEAD_C_Y + HEAD_R | OK |
+| T_base | 底板 | 8.0 | 8.0 | 标注 = BASE_T_Z | OK |
+| arm_inner | 臂 | 16.0 | 16.0 | 标注 = ARM_GAP_X | OK |
+| arm_outer | 派生 | 28.0 | 28.0 | 标注 = ARM_GAP_X + 2 × ARM_T_X | OK |
+| R_head | 圆头 | 10.0 | 10.0 | 标注 = HEAD_R | OK |
+| head_h | 圆头 | 27.0 | 27.0 | 标注 = HEAD_C_Z | OK |
+| arm_h | 圆头 | 14.0 | 14.0 | 标注 = ARM_END_C_Z | OK |
+| arm_len | 派生 | 36.0 | 36.0 | 标注 = ARM_END_C_Y − HEAD_C_Y | OK |
+| D9 | 底板孔 | 9.0 | 9.0 | 标注 = BASE_HOLE_D | OK |
+| P9 | 底板孔 | 45.0 | 45.0 | 标注 = BASE_HOLE_P | OK |
+| dia_pin | 销孔 | 8.0 | 8.0 | 标注 = PIN_HOLE_D | OK |
+| dia_cbore | 台阶孔 | 6.0 | 6.0 | 标注 = ARM_CBORE_D | OK |
+| dia_thru | 台阶孔 | 3.0 | 3.0 | 标注 = ARM_THRU_D | OK |
 
 ## 4. 上一轮差异 → 疑似失误的建模阶段
 

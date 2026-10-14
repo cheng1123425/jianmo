@@ -1,0 +1,20 @@
+{
+  "LEN_X": "BODY_L_X",
+  "DEPTH_Y": "BODY_L_Y",
+  "HEIGHT_Z": "BODY_H_Z",
+  "WALL_T": "WALL_T_Y",
+  "WALL_W": "WALL_W_X",
+  "WALL_CHAMF_Z": "WALL_CHAMF_H_Z",
+  "ARM_T": "ARM_T_Z",
+  "ARM_LEN": "ARM_L_Y",
+  "OPENING": "OPENING_L_Y",
+  "BASE_H": "BASE_H_Z",
+  "BASE_TAPER_Y0": "BASE_TAPER_C_Y",
+  "BASE_FRONT_W": "BASE_FRONT_W_X",
+  "EAR_T": "EAR_T_Z",
+  "EAR_PITCH": "EAR_HOLE_P",
+  "EAR_CY": "EAR_C_Y",
+  "D_THRU": "CBORE_THRU_D",
+  "D_CBORE": "CBORE_D",
+  "CBORE_DEPTH": "CBORE_T_Z"
+}

@@ -7,46 +7,46 @@ label 必须与 s2_drawing 实际产出的标注标签一致（s4 据 label 查�
 """
 DIMS = [
     # ---- 底板 ----
-    dict(key="BASE_L", cat="底板", label="L",
+    dict(key="BASE_L_X", cat="底板", label="L",
          solid="底板 X 方向全长（含左端 R9 圆头）",
-         rel="标注 = 9 + 17 + 22 + 8（尺寸链闭合）", style="lin", expr=lambda P: P.BASE_L),
-    dict(key="BASE_W", cat="底板", label="W",
+         rel="标注 = 9 + 17 + 22 + 8（尺寸链闭合）", style="lin", expr=lambda P: P.BASE_L_X),
+    dict(key="BASE_W_Y", cat="底板", label="W",
          solid="底板 Y 方向最大宽",
-         rel="标注 = W", style="lin", expr=lambda P: P.BASE_W),
-    dict(key="BASE_T", cat="底板", label="T_base",
+         rel="标注 = W", style="lin", expr=lambda P: P.BASE_W_Y),
+    dict(key="BASE_T_Z", cat="底板", label="T_base",
          solid="底板厚",
-         rel="标注 = T", style="lin", expr=lambda P: P.BASE_T),
-    dict(key="BASE_R_END", cat="底板", label="R_end",
+         rel="标注 = T", style="lin", expr=lambda P: P.BASE_T_Z),
+    dict(key="BASE_NOSE_R", cat="底板", label="R_end",
          solid="底板左端 R9 圆头半径（圆心 = 左孔心）",
-         rel="标注 = R9", style="rad", expr=lambda P: P.BASE_R_END),
+         rel="标注 = R9", style="rad", expr=lambda P: P.BASE_NOSE_R),
 
     # ---- 立板 ----
-    dict(key="WALL_H", cat="立板", label="H_total",
+    dict(key="WALL_H_Z", cat="立板", label="H_total",
          solid="立板自身高（不含底板）；总高 = BASE_T + WALL_H",
-         rel="总高标注 = T + WALL_H", style="lin",
-         expr=lambda P: P.BASE_T + P.WALL_H),
-    dict(key="WALL_L", cat="立板", label="W_wall",
+         rel="总高标注 = T + WALL_H_Z", style="lin",
+         expr=lambda P: P.BASE_T_Z + P.WALL_H_Z),
+    dict(key="WALL_W_Y", cat="立板", label="W_wall",
          solid="立板 Y 方向宽（= 底板最大宽）",
-         rel="标注 = WALL_L（与底板宽同）", style="lin", expr=lambda P: P.WALL_L),
+         rel="标注 = WALL_W_Y（与底板宽同）", style="lin", expr=lambda P: P.WALL_W_Y),
 
     # ---- 孔 ----
-    dict(key="D_HOLE", cat="孔", label="D",
+    dict(key="HOLE_D", cat="孔", label="D",
          solid="所有 φ8 孔直径",
-         rel="标注 = D", style="dia", expr=lambda P: P.D_HOLE),
+         rel="标注 = D", style="dia", expr=lambda P: P.HOLE_D),
     dict(key=None, cat="孔", label="pitch",
          solid="立板顶 2×φ8 孔心距（Y 方向）",
-         rel="标注 = 2 × WALL_HOLE_Y", style="lin",
-         expr=lambda P: 2.0 * P.WALL_HOLE_Y),
+         rel="标注 = 2 × WALL_HOLE_C_Y", style="lin",
+         expr=lambda P: 2.0 * P.WALL_HOLE_C_Y),
 
     # ---- 窗口 ----
-    dict(key="WIN_H", cat="窗口", label="win_h",
+    dict(key="WIN_H_Z", cat="窗口", label="win_h",
          solid="中央矩形窗口 Z 高",
-         rel="标注 = WIN_H", style="lin", expr=lambda P: P.WIN_H),
+         rel="标注 = WIN_H_Z", style="lin", expr=lambda P: P.WIN_H_Z),
 
     # ---- 派生 ----
     dict(key=None, cat="派生", label="wall_h",
          solid="立板自身高（不含底板）",
-         rel="标注 = H_total − T_base", style="lin", expr=lambda P: P.WALL_H),
+         rel="标注 = H_total − T_base", style="lin", expr=lambda P: P.WALL_H_Z),
 ]
 
 

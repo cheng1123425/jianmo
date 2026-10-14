@@ -1,0 +1,20 @@
+{
+  "L": "BASE_L_X",
+  "W": "BASE_W_Y",
+  "T": "BASE_T_Z",
+  "ARM_T": "ARM_T_X",
+  "ARM_GAP": "ARM_GAP_X",
+  "ARM_XI": "ARM_IN_C_X",
+  "ARM_XO": "ARM_OUT_C_X",
+  "R_HEAD": "HEAD_R",
+  "HEAD_Y": "HEAD_C_Y",
+  "HEAD_Z": "HEAD_C_Z",
+  "END_Y": "ARM_END_C_Y",
+  "END_Z": "ARM_END_C_Z",
+  "D_PIN": "PIN_HOLE_D",
+  "D_CB": "ARM_CBORE_D",
+  "D_CS": "ARM_THRU_D",
+  "CS_DEPTH": "ARM_CBORE_T_Y",
+  "PITCH9": "BASE_HOLE_P",
+  "D_9": "BASE_HOLE_D"
+}

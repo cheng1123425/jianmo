@@ -165,20 +165,20 @@ def add_extent(view, direction, X, Y, label):
 # ---- Top：L / W / 底板 φ8 ----
 add_extent(vt, 0, _y(vt.X) + 50, _y(vt.Y) + 5, "L")          # 40
 add_extent(vt, 1, _y(vt.X) - 5, _y(vt.Y) + 15, "W")         # 26
-k8t, _ = first_circle_r(vt, P.D_HOLE / 2.0)
+k8t, _ = first_circle_r(vt, P.HOLE_D / 2.0)
 if k8t is not None:
-    add_dia(vt, P.D_HOLE / 2.0, _y(vt.X) - 25, _y(vt.Y) - 30, "D8_base")
+    add_dia(vt, P.HOLE_D / 2.0, _y(vt.X) - 25, _y(vt.Y) - 30, "D8_base")
 
 # ---- Front：H_total（总高）/ 立板 φ8（两孔投影重合为 1 个圆）----
 add_extent(vf, 1, _y(vf.X) - 5, _y(vf.Y) + 15, "H_total")    # 39
-k8f, _ = first_circle_r(vf, P.D_HOLE / 2.0)
+k8f, _ = first_circle_r(vf, P.HOLE_D / 2.0)
 if k8f is not None:
-    add_dia(vf, P.D_HOLE / 2.0, _y(vf.X) + 25, _y(vf.Y) + 30, "D8_wall")
+    add_dia(vf, P.HOLE_D / 2.0, _y(vf.X) + 25, _y(vf.Y) + 30, "D8_wall")
 
 # ---- Right：pitch（立板两 φ8 在 Right 视图里 view2d-X 间距 = 世界 Y 心距）----
 rc = [k for k, e in enumerate(visible(vr))
       if "Circle" in e.Curve.__class__.__name__
-      and abs(_y(e.Curve.Radius) - P.D_HOLE / 2.0) < 0.3]
+      and abs(_y(e.Curve.Radius) - P.HOLE_D / 2.0) < 0.3]
 if len(rc) >= 2:
     c1 = visible(vr)[rc[0]].Curve
     c2 = visible(vr)[rc[1]].Curve

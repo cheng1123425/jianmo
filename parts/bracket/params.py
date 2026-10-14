@@ -24,35 +24,36 @@ r"""
   6. 台阶孔 = 两次拉伸（大径浅 + 小径深），用 `Mode.SUBTRACT`
 """
 # 底板尺寸
-L = 62.0          # 底板 X 方向长
-W = 24.0          # 底板 Y 方向宽
-T = 8.0           # 底板厚
+BASE_L_X = 62.0          # 底板 X 方向长
+BASE_W_Y = 24.0          # 底板 Y 方向宽
+BASE_T_Z = 8.0           # 底板厚
 
 # 臂尺寸
-ARM_T = 6.0       # 臂厚（X 方向）
-ARM_GAP = 16.0    # 两臂内侧间距 → 臂内侧 x = 8
-ARM_XI = ARM_GAP / 2          # 8
-ARM_XO = ARM_XI + ARM_T       # 14
+ARM_T_X = 6.0       # 臂厚（X 方向）
+ARM_GAP_X = 16.0    # 两臂内侧间距 → 臂内侧 x = 8
+ARM_IN_C_X = ARM_GAP_X / 2          # 8
+ARM_OUT_C_X = ARM_IN_C_X + ARM_T_X       # 14
 
 # 圆头铰接端（在 YZ 平面里是平面图形：圆 + 切线）
-R_HEAD = 10.0
-HEAD_Y = -12.0    # 圆头圆心 Y（左端外侧）
-HEAD_Z = 27.0     # 圆头圆心高（自底面算）
+HEAD_R = 10.0
+HEAD_C_Y = -12.0    # 圆头圆心 Y（左端外侧）
+HEAD_C_Z = 27.0     # 圆头圆心高（自底面算）
 
 # 臂右端
-END_Y = W         # 24（与底板 +Y 端齐平）
-END_Z = 14.0      # 右端总高 = 底板厚 + 臂厚
+ARM_END_C_Y = BASE_W_Y         # 24（与底板 +Y 端齐平）
+ARM_END_C_Z = 14.0      # 右端总高 = 底板厚 + 臂厚
 
 # 孔
-D_PIN = 8.0       # 2-φ8 横向销孔（贯穿两臂，轴沿 X）
-D_CB = 6.0        # 2-φ6 沉孔
-D_CS = 3.0        # 2-φ3 通孔
-CS_DEPTH = 3.0    # 沉孔深
-PITCH9 = 45.0     # 底板 2-φ9 孔心距
-D_9 = 9.0
+PIN_HOLE_D = 8.0       # 2-φ8 横向销孔（贯穿两臂，轴沿 X）
+ARM_CBORE_D = 6.0        # 2-φ6 沉孔
+ARM_THRU_D = 3.0        # 2-φ3 通孔
+ARM_CBORE_T_Y = 3.0    # 沉孔深
+BASE_HOLE_P = 45.0     # 底板 2-φ9 孔心距
+BASE_HOLE_D = 9.0
 
 # 输出
 TAG = "bracket"
+TITLE = "铰链支座"     # 尺寸对照表标题里的中文名（s4_table 用；零件无关步骤靠它区分）
 
 # ---------------- 派生 ----------------
 def tangent_point(P, C, R, upper=True):

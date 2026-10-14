@@ -1,0 +1,23 @@
+{
+  "BASE_L": "BASE_L_X",
+  "BASE_W": "BASE_W_Y",
+  "BASE_T": "BASE_T_Z",
+  "BASE_R_END": "BASE_NOSE_R",
+  "BASE_NOSE_CX": "BASE_NOSE_C_X",
+  "BASE_TAPER_X": "BASE_TAPER_END_C_X",
+  "WALL_X0": "WALL_C_X",
+  "WALL_T": "WALL_T_X",
+  "WALL_L": "WALL_W_Y",
+  "WALL_H": "WALL_H_Z",
+  "WIN_W": "WIN_W_Y",
+  "WIN_H": "WIN_H_Z",
+  "WIN_Z0": "WIN_BOT_C_Z",
+  "D_HOLE": "HOLE_D",
+  "BASE_HOLE_X": "BASE_HOLE_NOSE_C_X",
+  "BASE_HOLE_Y": "BASE_HOLE_NOSE_C_Y",
+  "BASE_HOLE2_X": "BASE_HOLE_MID_C_X",
+  "BASE_HOLE2_Y": "BASE_HOLE_MID_C_Y",
+  "WALL_HOLE_X": "WALL_HOLE_C_X",
+  "WALL_HOLE_Y": "WALL_HOLE_C_Y",
+  "WALL_HOLE_Z": "WALL_HOLE_C_Z"
+}

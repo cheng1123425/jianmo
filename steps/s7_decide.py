@@ -35,7 +35,10 @@ def handler(in_msg):
     proj_err = [x for x in proj_iss if x.get("severity") == "error"]
     chain_fixes = (dim.get("fixes") or {}).get("pitch_from_chain") or []
 
-    if not iss and not dim_iss and not proj_iss:
+    # 通过条件只看 **error**：s6b 恒产出 "ok" 项、s5b 的 under_dim 是 "warn"（咨询级），
+    # 若把 dim_iss / proj_iss 整表当作阻断，pass 分支永远不可达（与上方责任分级的
+    # 「有 error 才 manual」自相矛盾）。iss 是 s6_compare 的真实差异（无 severity）。
+    if not iss and not dim_err and not proj_err:
         return [], {"verdict": "pass", "fixes": {}, "diagnosis": "",
                     "reason": "几何与标注全部相符，图纸自洽且投影合规"}
 

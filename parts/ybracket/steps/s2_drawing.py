@@ -178,24 +178,41 @@ if k42t is not None:
     add_rad(vt, P.EAR_R, _y(vt.X) - 45, _y(vt.Y) + 45, "ear_R")        # R42
 else:
     p("[warn] Top 视图未找到 R42 圆头，跳过 ear_R 标注")
-k21t, _ = first_circle_r(vt, P.EAR_PITCH / 2.0)  # 耳孔半径 = 21
+k21t, _ = first_circle_r(vt, P.EAR_R / 2.0)      # 耳孔半径 = 21（Ø42）
 if k21t is not None:
-    add_dia(vt, P.EAR_PITCH / 2.0, _y(vt.X) - 30, _y(vt.Y) - 35, "ear_hole")  # 2-Ø42
+    add_dia(vt, P.EAR_R / 2.0, _y(vt.X) - 30, _y(vt.Y) - 35, "ear_hole")  # 2-Ø42
 else:
     p("[warn] Top 视图未找到 Ø42 耳孔，跳过 ear_hole 标注")
-k27t, _ = first_circle_r(vt, P.D_CBORE / 2.0)   # 沉孔半径 = 27
+k27t, _ = first_circle_r(vt, P.CBORE_D / 2.0)   # 沉孔半径 = 27
 if k27t is not None:
-    add_dia(vt, P.D_CBORE / 2.0, _y(vt.X) + 35, _y(vt.Y) + 35, "d_cbore")     # Ø54
+    add_dia(vt, P.CBORE_D / 2.0, _y(vt.X) + 35, _y(vt.Y) + 35, "d_cbore")     # Ø54
 else:
     p("[warn] Top 视图未找到 Ø54 沉孔，跳过 d_cbore 标注")
-k16t, _ = first_circle_r(vt, P.D_THRU / 2.0)    # 通孔半径 = 16
+k16t, _ = first_circle_r(vt, P.CBORE_THRU_D / 2.0)    # 通孔半径 = 16
 if k16t is not None:
-    add_dia(vt, P.D_THRU / 2.0, _y(vt.X) + 35, _y(vt.Y) - 35, "d_thru")       # Ø32
+    add_dia(vt, P.CBORE_THRU_D / 2.0, _y(vt.X) + 35, _y(vt.Y) - 35, "d_thru")       # Ø32
 else:
     p("[warn] Top 视图未找到 Ø32 通孔，跳过 d_thru 标注")
 
 # ---- Right：depth_y（外接水平）----
 add_extent(vr, 0, _y(vr.X) + 50, _y(vr.Y) - 15, "depth_y")     # 144
+
+# ---- Top：耳孔心距 ear_pitch（X 向 ±58 → 116）----
+add_distx(vt, -P.EAR_HOLE_P / 2.0, P.EAR_HOLE_P / 2.0,
+          _y(vt.X), _y(vt.Y) - 55, "ear_pitch")                # 116
+
+# ---- Right：剖视 Y 向线性（wall_t / opening）----
+add_disty(vr, 0.0, P.WALL_T_Y, _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")          # 20
+add_disty(vr, P.WALL_T_Y, P.ARM_L_Y, _y(vr.X) + 70, _y(vr.Y) - 25, "opening")   # 96
+
+# ---- Right：剖视 Z 向线性（base_h / arm_t / cbore_depth）----
+add_disty(vr, 0.0, P.BASE_H_Z, _y(vr.X) - 70, _y(vr.Y) - 25, "base_h")          # 48
+add_disty(vr, P.BODY_H_Z - P.ARM_T_Z, P.BODY_H_Z,
+          _y(vr.X) - 70, _y(vr.Y) + 25, "arm_t")                             # 32
+# cbore_depth 是内腔、标准三视图不可见（未开隐藏线）→ 用「点距法」：
+# 两点落在 Z=98 与 Z=120，值仍由 FreeCAD 实算，保证是真尺寸线而非角落文字。
+add_disty(vr, P.BODY_H_Z - P.CBORE_T_Z, P.BODY_H_Z,
+          _y(vr.X) - 70, _y(vr.Y), "cbore_depth")                            # 22
 
 doc.recompute()
 

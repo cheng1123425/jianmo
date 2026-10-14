@@ -6,7 +6,7 @@ r"""pipe.py —— 消息驱动器（全零件通用）
 
 用法
 ----
-    python pipe.py                              跑根零件（垫片）
+    python pipe.py                              跑默认零件（垫片 = parts/gasket）
     python pipe.py --part parts/bracket         跑铰链支座
     python pipe.py --part parts/bracket --loop  全链 + 闭环（只报不改）
     python pipe.py --part parts/bracket --loop --auto
@@ -65,7 +65,7 @@ from msgio import PROTOCOL, read_json, write_json, ref_file, sha256   # noqa: E4
 
 # ---------------- 命令行 ----------------
 def parse_argv(argv):
-    opt = dict(part=".", auto=False, loop=False, only=None, max_it=6,
+    opt = dict(part="parts/gasket", auto=False, loop=False, only=None, max_it=6,
                guard=True, cache=True, trace=False)
     for i, a in enumerate(argv):
         if a == "--part" and i + 1 < len(argv):
@@ -140,7 +140,7 @@ STEPS = [
                    ("drawing_json_file", "?_drawing.json"),
                    ("params", "params.py")]),
     dict(name="s6_compare", runner="py", out_dir=".", loop=True,
-         in_files=[("ref_spec", "ref_spec.py")],
+         in_files=[("ref_spec", "ref_spec.py"), ("model_step", "@s1_build")],
          in_data_from="s5_collect"),
     # 投影原则校验：长对正 / 高平齐 / 宽相等（图纸规范，不是几何精度）
     dict(name="s6b_projection", runner="py", out_dir=".", loop=True,
@@ -162,12 +162,15 @@ STEPS = [
 BY_NAME = {s["name"]: s for s in STEPS}
 
 # 唯一允许「零件没自带、回落根目录通用实现」的步骤（它们本来就不含零件几何）。
-# 其余步骤（s1~s8）必须由零件自带 —— 根目录那几份是垫片的副本，不是通用实现。
-# s0b/s5b/s6b 是 v2.0 新增的**零件无关**步骤：读图算法、尺寸链算法、投影原则
-# 都与具体零件无关，放根目录一份即可，所有零件共用（含无图纸的零件，s0b 会
-# 自动产出空语义而不是报错）。
+# 其余步骤（s1_build / s2_drawing / s3_render / s6_compare）必须由零件自带
+# —— 它们含零件几何构造、标注布置或校验项清单，根目录那几份是垫片的副本，不是通用实现。
+# s0b/s5b/s6b 是 v2.0 新增的**零件无关**步骤：读图算法、尺寸链算法、投影原则。
+# s4_table/s5_collect/s7_decide/s8_apply 是 v5（2026-10-14）提升的零件无关步骤：
+# 制表排版 / 投影特征提取 / 判定策略 / 参数写回 —— 逐对 diff 核实差异全是
+# docstring、路径块、模块名一类的噪音（详见 docs/v4-第2-3刀方案（待批）.md §2）。
 SHARED_STEPS = {"s0_plan", "s9_record", "s0b_dwgread", "s5b_dimchain",
-                "s6b_projection"}
+                "s6b_projection",
+                "s4_table", "s5_collect", "s7_decide", "s8_apply"}
 
 CHAIN = [s["name"] for s in STEPS if not s.get("loop")]          # s0,s1,s2,s3,s4
 # s5,s6,s7（s8 按需单独执行；s9 是每轮结尾的记录员，单独放 LOOP_TAIL）

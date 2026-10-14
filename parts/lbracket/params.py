@@ -18,37 +18,38 @@ L 形支座 —— 唯一数据源 (single source of truth)
   立板   X∈[48, 56] (WALL_X0=48, 厚 8), Y∈[-20, 20], Z∈[8, 39]
 """
 # ---------------- 底板（叶形） ----------------
-BASE_L = 56.0          # X 全长（尺寸链闭合：9 + 17 + 22 + 8）
-BASE_W = 40.0          # Y 最大宽
-BASE_T = 8.0           # Z 厚
-BASE_R_END = 9.0       # 左端 R9 圆头半径（圆心 = 左孔心）
-BASE_NOSE_CX = 9.0     # R9 圆心 X（= 左孔 X）
-BASE_TAPER_X = 26.0    # 斜边收束到全宽的 X（= 右孔 X）
+BASE_L_X = 56.0          # X 全长（尺寸链闭合：9 + 17 + 22 + 8）
+BASE_W_Y = 40.0          # Y 最大宽
+BASE_T_Z = 8.0           # Z 厚
+BASE_NOSE_R = 9.0       # 左端 R9 圆头半径（圆心 = 左孔心）
+BASE_NOSE_C_X = 9.0     # R9 圆心 X（= 左孔 X）
+BASE_TAPER_END_C_X = 26.0    # 斜边收束到全宽的 X（= 右孔 X）
 
 # ---------------- 立板 ----------------
-WALL_X0 = 48.0         # X 起点 = BASE_L - WALL_T
-WALL_T = 8.0           # X 厚
-WALL_L = 40.0          # Y 宽（= 底板最大宽）
-WALL_H = 31.0          # Z 高（不含底板）→ 总高 = 8 + 31 = 39
+WALL_C_X = 48.0         # X 起点 = BASE_L - WALL_T
+WALL_T_X = 8.0           # X 厚
+WALL_W_Y = 40.0          # Y 宽（= 底板最大宽）
+WALL_H_Z = 31.0          # Z 高（不含底板）→ 总高 = 8 + 31 = 39
 WALL_TOP_R = 7.0       # 顶外角 R7
 WALL_INNER_R = 6.5     # 双耳中间 R6,5 凹弧
 
 # ---------------- 中央矩形窗口 ----------------
-WIN_W = 8.0            # Y 宽
-WIN_H = 14.0           # Z 高
-WIN_Z0 = 16.5          # 窗口底 Z（居中：8 + (31-14)/2）
+WIN_W_Y = 8.0            # Y 宽
+WIN_H_Z = 14.0           # Z 高
+WIN_BOT_C_Z = 16.5          # 窗口底 Z（居中：8 + (31-14)/2）
 
 # ---------------- 孔 ----------------
-D_HOLE = 8.0
+HOLE_D = 8.0
 # 底板 3×φ8（轴沿 Z）
-BASE_HOLE_X = 9.0      # 左孔 X（与 R9 同心）
-BASE_HOLE_Y = 0.0      # 左孔 Y
-BASE_HOLE2_X = 26.0    # 右 2 孔 X
-BASE_HOLE2_Y = 13.0    # 右 2 孔 Y（±）
+BASE_HOLE_NOSE_C_X = 9.0      # 左孔 X（与 R9 同心）
+BASE_HOLE_NOSE_C_Y = 0.0      # 左孔 Y
+BASE_HOLE_MID_C_X = 26.0    # 右 2 孔 X
+BASE_HOLE_MID_C_Y = 13.0    # 右 2 孔 Y（±）
 # 立板 2×φ8（轴沿 X）
-WALL_HOLE_X = WALL_X0 + WALL_T / 2.0    # = 52
-WALL_HOLE_Y = 13.0                      # ±
-WALL_HOLE_Z = 32.0                      # 销孔中心高
+WALL_HOLE_C_X = WALL_C_X + WALL_T_X / 2.0    # = 52
+WALL_HOLE_C_Y = 13.0                      # ±
+WALL_HOLE_C_Z = 32.0                      # 销孔中心高
 
 # ---------------- 输出 ----------------
 TAG = "lbracket"
+TITLE = "L 形支座"     # 尺寸对照表标题里的中文名（s4_table 用；零件无关步骤靠它区分）

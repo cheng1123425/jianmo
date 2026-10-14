@@ -1,0 +1,14 @@
+{
+  "R_OUT_CEN": "CEN_ARC_R",
+  "R_SIDE": "SIDE_BOSS_R",
+  "D_SIDE": "SIDE_BOSS_P",
+  "R_NECK": "NECK_R",
+  "BASE_T": "BASE_T_Z",
+  "H_WING": "SIDE_BOSS_H",
+  "H_CEN": "CEN_BOSS_H",
+  "R_BOSS": "CEN_BOSS_R",
+  "D_HOLE_CEN": "CEN_HOLE_D",
+  "D_HOLE_SIDE": "SIDE_HOLE_D",
+  "SIDE_BOSS_H": "SIDE_BOSS_H_Z",
+  "CEN_BOSS_H": "CEN_BOSS_H_Z"
+}

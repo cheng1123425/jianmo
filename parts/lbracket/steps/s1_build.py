@@ -40,10 +40,10 @@ def handler(in_msg):
                     os.path.basename(ref_path(in_msg, "params"))[:-3])
     out_dir = ref_data(in_msg, "out_dir")
 
-    hw = P.BASE_W / 2.0                 # 20
-    rn = P.BASE_R_END                   # 9（R9 圆头）
-    ncx = P.BASE_NOSE_CX                # 9（R9 圆心 = 左孔心）
-    tap = P.BASE_TAPER_X                # 26（渐宽收束 X = 右孔 X）
+    hw = P.BASE_W_Y / 2.0                 # 20
+    rn = P.BASE_NOSE_R                   # 9（R9 圆头）
+    ncx = P.BASE_NOSE_C_X                # 9（R9 圆心 = 左孔心）
+    tap = P.BASE_TAPER_END_C_X                # 26（渐宽收束 X = 右孔 X）
 
     with BuildPart() as p:                       # noqa: F405
         # ============== 1. 底板（叶形） ==============
@@ -51,19 +51,19 @@ def handler(in_msg):
         # 左端 R9 半圆：从 (ncx, +rn) 经 (ncx-rn, 0) 到 (ncx, -rn)（逆时针穿 180°）
         pts += _arc(ncx, 0.0, rn, 90, 270, n=16)
         # 斜边渐宽 → 全宽矩形 → 右端
-        pts += [(tap, -hw), (P.BASE_L, -hw), (P.BASE_L, hw), (tap, hw)]
+        pts += [(tap, -hw), (P.BASE_L_X, -hw), (P.BASE_L_X, hw), (tap, hw)]
         with BuildSketch(Plane.XY) as s_base:    # noqa: F405
             Polygon(*pts, align=None)            # noqa: F405
-        extrude(amount=P.BASE_T)                 # noqa: F405
+        extrude(amount=P.BASE_T_Z)                 # noqa: F405
 
         # ============== 2. 立板（顶部双耳） ==============
-        wy = P.WALL_L / 2.0                 # 20
-        eh = P.WALL_HOLE_Y                  # 13（耳心 Y）
+        wy = P.WALL_W_Y / 2.0                 # 20
+        eh = P.WALL_HOLE_C_Y                  # 13（耳心 Y）
         hr = P.WALL_TOP_R                   # 7（耳 R7）
         ir = P.WALL_INNER_R                 # 6.5（中凹 R6,5）
-        zc = P.WALL_HOLE_Z                  # 32（耳心 Z）
-        ztop = P.BASE_T + P.WALL_H          # 39（耳顶）
-        zbot = P.BASE_T                     # 8（立板底）
+        zc = P.WALL_HOLE_C_Z                  # 32（耳心 Z）
+        ztop = P.BASE_T_Z + P.WALL_H_Z          # 39（耳顶）
+        zbot = P.BASE_T_Z                     # 8（立板底）
         prof = []
         prof.append((-wy, zbot))
         prof.append((wy, zbot))
@@ -79,39 +79,39 @@ def handler(in_msg):
         prof += _arc(0.0, c_dip, ir, a0, a1, n=10)
         # 左耳 R7：0° → 180°（(-x_dip,zc) → (-eh,ztop) → (-wy,zc)）
         prof += _arc(-eh, zc, hr, 0, 180, n=10)
-        with BuildSketch(Plane.YZ.offset(P.WALL_X0)) as s_wall:   # noqa: F405
+        with BuildSketch(Plane.YZ.offset(P.WALL_C_X)) as s_wall:   # noqa: F405
             Polygon(*prof, align=None)           # noqa: F405
-        extrude(amount=P.WALL_T)                 # noqa: F405（沿 +X）
+        extrude(amount=P.WALL_T_X)                 # noqa: F405（沿 +X）
 
         # ============== 3. 三角筋（XZ 平面，沿 Y 贯穿立板全长） ==============
         rib_h = 22.0
         rib_l = 20.0
         with BuildSketch(Plane.XZ.offset(-wy)) as s_rib:   # noqa: F405
             with BuildLine() as rib_line:                  # noqa: F405
-                Line((P.WALL_X0, zbot), (P.WALL_X0, zbot + rib_h))       # noqa: F405
-                Line((P.WALL_X0, zbot + rib_h), (P.WALL_X0 - rib_l, zbot))  # noqa: F405
-                Line((P.WALL_X0 - rib_l, zbot), (P.WALL_X0, zbot))       # noqa: F405
+                Line((P.WALL_C_X, zbot), (P.WALL_C_X, zbot + rib_h))       # noqa: F405
+                Line((P.WALL_C_X, zbot + rib_h), (P.WALL_C_X - rib_l, zbot))  # noqa: F405
+                Line((P.WALL_C_X - rib_l, zbot), (P.WALL_C_X, zbot))       # noqa: F405
             make_face()                                    # noqa: F405
-        extrude(amount=P.WALL_L)                           # noqa: F405
+        extrude(amount=P.WALL_W_Y)                           # noqa: F405
 
     part = p.part
 
     # ============== 4. 孔（后段切除） ==============
     tools = []
     # 底板 3×φ8（轴 Z）
-    for hx, hy in [(P.BASE_HOLE_X, P.BASE_HOLE_Y),
-                   (P.BASE_HOLE2_X, P.BASE_HOLE2_Y),
-                   (P.BASE_HOLE2_X, -P.BASE_HOLE2_Y)]:
-        tools.append(Pos(hx, hy, P.BASE_T / 2.0)
-                     * Cylinder(P.D_HOLE / 2.0, P.BASE_T + 2.0))       # noqa: F405
+    for hx, hy in [(P.BASE_HOLE_NOSE_C_X, P.BASE_HOLE_NOSE_C_Y),
+                   (P.BASE_HOLE_MID_C_X, P.BASE_HOLE_MID_C_Y),
+                   (P.BASE_HOLE_MID_C_X, -P.BASE_HOLE_MID_C_Y)]:
+        tools.append(Pos(hx, hy, P.BASE_T_Z / 2.0)
+                     * Cylinder(P.HOLE_D / 2.0, P.BASE_T_Z + 2.0))       # noqa: F405
     # 立板 2×φ8（轴 X）
-    for hy in (P.WALL_HOLE_Y, -P.WALL_HOLE_Y):
-        tools.append(Pos(P.WALL_HOLE_X, hy, P.WALL_HOLE_Z)
-                     * Cylinder(P.D_HOLE / 2.0, P.WALL_T + 4.0,          # noqa: F405
+    for hy in (P.WALL_HOLE_C_Y, -P.WALL_HOLE_C_Y):
+        tools.append(Pos(P.WALL_HOLE_C_X, hy, P.WALL_HOLE_C_Z)
+                     * Cylinder(P.HOLE_D / 2.0, P.WALL_T_X + 4.0,          # noqa: F405
                                 rotation=(0, 90, 0)))
     # 中央矩形窗口（贯穿立板厚 X）
-    tools.append(Pos(P.WALL_HOLE_X, 0.0, P.WIN_Z0 + P.WIN_H / 2.0)
-                 * Box(P.WALL_T + 4.0, P.WIN_W, P.WIN_H))                # noqa: F405
+    tools.append(Pos(P.WALL_HOLE_C_X, 0.0, P.WIN_BOT_C_Z + P.WIN_H_Z / 2.0)
+                 * Box(P.WALL_T_X + 4.0, P.WIN_W_Y, P.WIN_H_Z))                # noqa: F405
     for t in tools:
         part = part - t
 

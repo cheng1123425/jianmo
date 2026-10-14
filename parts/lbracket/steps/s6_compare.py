@@ -14,8 +14,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.environ.get("MPIPE_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(HERE))          # 兼容
+sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 from msgio import run_stage, ref_path, ref_data, exec_module
+from facelevels import check_face_levels
 
 
 def handler(in_msg):
@@ -74,6 +76,9 @@ def handler(in_msg):
             add("issue", label, bv, None, None, "图纸上缺少该标注")
         elif abs(cv - bv) > TOL:
             add("issue", label, bv, cv, None, "标注值与原图不符")
+
+    # ---- 端面标高（系统性）：补「geom 只测圆+包围盒、不测面到面距离」的盲区 ----
+    check_face_levels(R, ref_path(in_msg, "model_step"), TOL, add)
 
     n_geom = sum(1 for x in iss if x["kind"] == "geom")
     return [], {"issues": iss, "n_geom": n_geom, "n_mark": len(iss) - n_geom,

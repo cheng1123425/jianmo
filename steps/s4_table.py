@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-r"""
-【第 4 段 / 尺寸对照表】
-读 params.py（参数）+ _td_data.json（FreeCAD 实测）→ 生成：
+r"""s4_table —— 尺寸对照表（零件无关 · SHARED）
+
+读 params.py（参数）+ _drawing.json（FreeCAD 实测）→ 生成：
     dims_table.md / dims_table.png / dims_table.pdf  (A3 横向)
-每次 make_all.py 都会重新生成，跟着图纸一起更新。
+
+每轮都会重新生成，跟着图纸一起更新。
+标题里的零件名取自 params.py 的 TITLE（可选，不定义就用通用标题）。
 """
 import json
 import os
@@ -22,9 +24,15 @@ from msgio import boot, finish, ref_path, ref_data, exec_module    # noqa: E402
 
 # ---- 输入只来自消息：params 与 dims_spec 都按消息声明加载 ----
 IN = boot("s4_table")
-P = exec_module(ref_path(IN, "params"), "gasket_params")
+P = exec_module(ref_path(IN, "params"), "part_params")
 S = exec_module(ref_path(IN, "dims_spec"), "dims_spec")
 OUT_DIR = ref_data(IN, "out_dir")
+
+# 标题里的零件名：零件可在 params.py 里定义 TITLE（如 TITLE = "铰链支座"）；
+# 不定义就用通用标题 —— 同一份实现既能被通用零件用，也能带零件名区分。
+TITLE = "尺寸命名与推导对照表"
+if getattr(P, "TITLE", ""):
+    TITLE += " · " + P.TITLE
 
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
@@ -64,9 +72,9 @@ n_ok = sum(1 for r in rows if r["ok"] == "OK")
 stamp = time.strftime("%Y-%m-%d %H:%M")
 
 # ---------------- Markdown ----------------
-md = ["# 尺寸命名与推导对照表", "",
+md = ["# " + TITLE, "",
       "- 生成时间：%s" % stamp,
-      "- 参数来源：`params.py`　实测来源：FreeCAD 从三维实体实测（`_td_data.json`）",
+      "- 参数来源：`params.py`　实测来源：FreeCAD 从三维实体实测（`_drawing.json`）",
       "- 校验：%d/%d 全部一致" % (n_ok, len(rows)), "",
       "| # | 参数名 | 分类 | 三维建模含义 | 图纸标注 | 参数 → 标注 的关系 | 参数值 | 图纸实测 | 校验 |",
       "|---|---|---|---|---|---|---|---|---|"]
@@ -122,7 +130,7 @@ def cell(x, y, w, h, text, size=7.6, weight="normal", bg=None, align="left"):
 
 
 # 标题
-ax.text(X0, A3H - 14, "尺寸命名与推导对照表", fontsize=15, fontweight="bold", va="center")
+ax.text(X0, A3H - 14, TITLE, fontsize=15, fontweight="bold", va="center")
 ax.text(X0, A3H - 21, "参数：params.py      实测：FreeCAD TechDraw 1.1.0 从三维实体读取"
         "      校验：%d/%d 一致      生成：%s" % (n_ok, len(rows), stamp),
         fontsize=8, color="#444", va="center")

@@ -29,35 +29,40 @@ def handler(in_msg):
                     os.path.basename(ref_path(in_msg, "params"))[:-3])
     out_dir = ref_data(in_msg, "out_dir")
 
-    hw = P.WALL_W / 2.0            # 58（中央块半宽）
-    z_arm0 = P.HEIGHT_Z - P.ARM_T  # 88（顶臂底）
+    hw = P.WALL_W_X / 2.0            # 58（中央块半宽）
+    z_arm0 = P.BODY_H_Z - P.ARM_T_Z  # 88（顶臂底）
 
     with BuildPart() as p:                       # noqa: F405
         # ============== 1. 背板 ==============
         with BuildSketch(Plane.YZ) as s_wall:    # noqa: F405（YZ 平面，法向 +X）
             with BuildLine() as wl:              # noqa: F405
-                Polyline((0, 0), (P.WALL_T, 0), (P.WALL_T, P.HEIGHT_Z),
-                         (0, P.HEIGHT_Z - P.WALL_CHAMF_Z), (0, 0))   # noqa: F405
+                Polyline((0, 0), (P.WALL_T_Y, 0), (P.WALL_T_Y, P.BODY_H_Z),
+                         (0, P.BODY_H_Z - P.WALL_CHAMF_H_Z), (0, 0))   # noqa: F405
             make_face()                          # noqa: F405
         extrude(amount=hw, both=True)            # noqa: F405（沿 ±X 各 58）
 
         # ============== 2. 顶臂 ==============
         with BuildSketch(Plane.YZ.offset(-hw)) as s_arm:   # noqa: F405
             with BuildLine() as al:              # noqa: F405
-                Polyline((0, z_arm0), (P.ARM_LEN, z_arm0), (P.ARM_LEN, P.HEIGHT_Z),
-                         (0, P.HEIGHT_Z), (0, z_arm0))               # noqa: F405
+                Polyline((0, z_arm0), (P.ARM_L_Y, z_arm0), (P.ARM_L_Y, P.BODY_H_Z),
+                         (0, P.BODY_H_Z), (0, z_arm0))               # noqa: F405
             make_face()                          # noqa: F405
-        extrude(amount=P.WALL_W)                 # noqa: F405（沿 +X 116）
+        extrude(amount=P.WALL_W_X)                 # noqa: F405（沿 +X 116）
 
-        # ============== 3. 底座（带前部斜削） ==============
-        taper_y1 = P.DEPTH_Y                     # 144
-        hw_f = P.BASE_FRONT_W / 2.0              # 33（前端半宽）
-        with BuildSketch(Plane.YZ.offset(-hw)) as s_base:   # noqa: F405
+        # ============== 3. 底座（俯视轮廓沿 Z 拉伸，前部 X 向斜削 116→66） ==============
+        # 原 bug：把 hw(=WALL_W/2=58) 当 Z 高度用，且建在 Plane.YZ 沿 X 拉伸，
+        # 于是底座高 58（应为 BASE_H=48）、且变不出「俯视前部 X 向斜削」。
+        # 正确：俯视外轮廓建在 X-Y 平面（法向 +Z），再沿 +Z 拉伸 BASE_H=48：
+        #   后半段 Y∈[0, BASE_TAPER_Y0] 全宽 X∈[-hw, hw]；
+        #   前段 Y∈[BASE_TAPER_Y0, DEPTH_Y] 斜削收成 X∈[-hw_f, hw_f]（116→66）。
+        hw_f = P.BASE_FRONT_W_X / 2.0              # 33（前端半宽）
+        with BuildSketch(Plane.XY) as s_base:    # noqa: F405（俯视轮廓，法向 +Z）
             with BuildLine() as bl:              # noqa: F405
-                Polyline((0, 0), (taper_y1, 0), (taper_y1, hw_f),
-                         (P.BASE_TAPER_Y0, hw), (0, hw), (0, 0))     # noqa: F405
+                Polyline((-hw, 0), (hw, 0), (hw, P.BASE_TAPER_C_Y),
+                         (hw_f, P.BODY_L_Y), (-hw_f, P.BODY_L_Y),
+                         (-hw, P.BASE_TAPER_C_Y), (-hw, 0))           # noqa: F405
             make_face()                          # noqa: F405
-        extrude(amount=P.WALL_W)                 # noqa: F405
+        extrude(amount=P.BASE_H_Z)                 # noqa: F405（沿 +Z 拉伸 48）
 
         # ============== 4. 双耳（R42 圆头，厚 32） ==============
         # 耳圆头圆心 X=±58（中央块边缘）、Y=72（总深一半），半径 42：
@@ -65,24 +70,29 @@ def handler(in_msg):
         # 圆头与中央块在 X=±58 相切，直接作为 R42 圆盘拉伸即可自然融合。
         for sx in (+1, -1):
             with BuildSketch(Plane.XY) as s_ear:  # noqa: F405
-                with Locations((sx * P.EAR_PITCH / 2.0, P.EAR_CY)):   # noqa: F405
+                with Locations((sx * P.EAR_HOLE_P / 2.0, P.EAR_C_Y)):   # noqa: F405
                     Circle(P.EAR_R)              # noqa: F405
-            extrude(amount=P.EAR_T)              # noqa: F405
+            extrude(amount=P.EAR_T_Z)              # noqa: F405
 
     part = p.part
 
     # ============== 5. 孔（后段切除） ==============
     tools = []
     # 顶臂中央台阶孔（轴 Z，心 (0, 72)）
-    cy = P.EAR_CY
-    tools.append(Pos(0, cy, P.HEIGHT_Z - P.CBORE_DEPTH / 2.0)
-                 * Cylinder(P.D_CBORE / 2.0, P.CBORE_DEPTH + 2.0))       # noqa: F405
-    tools.append(Pos(0, cy, z_arm0 + P.ARM_T / 2.0)
-                 * Cylinder(P.D_THRU / 2.0, P.ARM_T + 4.0))              # noqa: F405
-    # 双耳 2-Ø42（轴 Z，贯穿耳厚）
+    cy = P.EAR_C_Y
+    # 沉孔：原 bug 把切除体居中放在 Z=HEIGHT_Z-CBORE_DEPTH/2，底面落到 Z=97→深 23。
+    # 正确：底面落到 HEIGHT_Z-CBORE_DEPTH=98（深 22），顶面多切 2 保证切穿上表面。
+    cb_h = P.CBORE_T_Z + 2.0
+    cb_bot = P.BODY_H_Z - P.CBORE_T_Z          # 98
+    cb_top = P.BODY_H_Z + 2.0                    # 122
+    tools.append(Pos(0, cy, (cb_top + cb_bot) / 2.0)
+                 * Cylinder(P.CBORE_D / 2.0, cb_h))                          # noqa: F405
+    tools.append(Pos(0, cy, z_arm0 + P.ARM_T_Z / 2.0)
+                 * Cylinder(P.CBORE_THRU_D / 2.0, P.ARM_T_Z + 4.0))              # noqa: F405
+    # 双耳 2-Ø42（轴 Z，贯穿耳厚）：半径 = EAR_R/2 = 21（原为硬编码 42.0/2.0）
     for sx in (+1, -1):
-        tools.append(Pos(sx * P.EAR_PITCH / 2.0, cy, P.EAR_T / 2.0)
-                     * Cylinder(42.0 / 2.0, P.EAR_T + 4.0))              # noqa: F405
+        tools.append(Pos(sx * P.EAR_HOLE_P / 2.0, cy, P.EAR_T_Z / 2.0)
+                     * Cylinder(P.EAR_R / 2.0, P.EAR_T_Z + 4.0))              # noqa: F405
     for t in tools:
         part = part - t
 

@@ -16,6 +16,14 @@ s6_compare 比对的是「模型 vs 原图基准」（零件做得对不对）�
 5. **中心共线** 各视图的对称中心落在同一条投影线上
 6. **图尺相符** 视图包围盒必须装得下它的尺寸标注（放不下的尺寸是错的）
 
+容差与判别力
+------------
+几何比较的默认容差 `tol=1e-3` mm：FreeCAD 投影的数值噪声在 **1e-4 mm 量级**
+（几何运算的累积误差），而原来的 1e-6 会把「37.000 vs 37.000」（实际差 ~4e-5）
+判成不等 —— 报错信息还显示「差 -0.000」，看着自相矛盾。对 mm 单位的零件图，
+1e-3 远小于任何可制造公差（真错的尺寸至少差 0.1 mm 量级），足以吸收噪声
+又不丧失判别力。
+
 隔离约定
 --------
 * 只通过消息通信：入参走 refs，sha256 不符即报错
@@ -54,7 +62,7 @@ def _dim_of(dw, label):
     return None
 
 
-def check(dw, tol=1e-6):
+def check(dw, tol=1e-3):
     """返回 issues 列表"""
     issues = []
     views = {v["name"]: v for v in dw.get("views", []) if v["name"] != "Iso"}
@@ -161,9 +169,12 @@ def check(dw, tol=1e-6):
                 dim=d["value"], view=size)
 
     # ---- 附加：前视高度链之和必须等于主视图总高 ----
+    # 「链」至少要有 2 段：只有 1 条高度标注时谈不上闭合，拿它去比总高没有意义
+    # （曾是误报来源：bracket 主视图只标了底板厚 8，总高 37，于是恒判「不闭合」）。
+    # 高度标注分散在侧视图是正常制图习惯，不该因此报错。
     hs = [d for d in dw.get("dims", [])
           if d.get("kind") == "distY" and d.get("view") == "Front"]
-    if hs and "Front" in ext:
+    if len(hs) >= 2 and "Front" in ext:
         total = ext["Front"]["y"][1] - ext["Front"]["y"][0]
         s = sum(d["value"] for d in hs)
         if abs(s - total) > max(1e-6, 0.02 * total):

@@ -11,12 +11,13 @@
 
 ```bash
 # 1) 改参数（唯一数据源）
-notepad params.py                       # 垫片
+notepad parts\gasket\params.py          # 垫片
 notepad parts\bracket\params.py         # 铰链支座
 
 # 2) 全链：三维 → STEP → 工程图 → PDF → 尺寸表
-D:\3d\build123d\.venv\Scripts\python.exe pipe.py
+D:\3d\build123d\.venv\Scripts\python.exe pipe.py            # 默认零件 = 垫片（parts/gasket）
 D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/bracket
+D:\3d\build123d\.venv\Scripts\python.exe pipe.py --part parts/gasket    # 显式指定垫片
 
 # 3) 全链 + 闭环校核（对照原图自动检出差异，只报不改）
 D:\3d\build123d\.venv\Scripts\python.exe pipe.py --loop
@@ -145,7 +146,7 @@ python -m venv .venv
 
 | 目录 | 零件 | 状态 |
 |---|---|---|
-| （根目录） | 加工垫片 | ✅ 主流水线（`pipe.py`，闭环 pass） |
+| `parts/gasket/` | 加工垫片 | ✅ **默认零件**（`pipe.py`，闭环 pass）|
 | `parts/bracket/` | 铰链支座（双耳） | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 pass） |
 | `parts/lbracket/` | L 形支座（单立板双耳） | ✅ 已建完整流水线（`pipe.py --part parts/lbracket`，闭环 pass；按原图重修：叶形底板 56×40 + 顶双耳 R7/R6,5 + 中央窗口 8×14 + 3×φ8） |
 | `parts/socket/` | 多耳球铰盖 | ⏳ **未迁入**（`parts/socket/steps/` 为空 —— 现在跑会**直接报错**提示补齐，不会再静默拿垫片那份顶上；旧脚本 `socket_*.py` 在根目录）。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） |
@@ -163,9 +164,14 @@ parts/<零件>/
   models/          STEP / STL
 ```
 
-> ⚠️ **每个零件必须有完整的 `steps/` 副本**（s1~s8）。只有 `s0_plan` / `s9_record` 允许回落到
-> 根目录的通用实现；其余步骤缺了会**在启动时立刻报错**并告诉你怎么补（2026-10-08 起不再静默回退
-> —— 以前会悄悄拿垫片那份顶上，然后在很后面炸，报错还指错方向）。
+> ⚠️ **零件只需自带 4 个含几何 / 标注的步骤**：`s1_build` / `s2_drawing` / `s3_render` / `s6_compare`。
+> 其余 9 步是**零件无关**的，自动回落到根目录的通用实现 —— 包括 `s4_table`（制表）、
+> `s5_collect`（投影特征提取，实现见 `lib/collect.py`）、`s7_decide`（判定策略）、
+> `s8_apply`（参数写回）。缺 s1~s4 那四个会在**启动时立刻报错**并告诉你怎么补
+> （2026-10-08 起不再静默回退 —— 以前会悄悄拿垫片那份顶上，然后在很后面炸，报错还指错方向）。
+>
+> 📌 **根目录只有框架**：`pipe.py` / `msgio.py` / `guard.py` / `lib/` / `steps/`（9 个共享步骤）/ `tools/`。
+> 所有零件（含垫片）都在 `parts/<零件>/` 下，地位平等。
 
 ---
 

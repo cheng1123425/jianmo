@@ -146,43 +146,43 @@ def add_extent(view, direction, X, Y, label):
 # ================= 标注（参数语义名 = label） =================
 # ---- Front ----
 # 28（两臂外宽 = ARM_XO × 2）
-add_distx(vf, -P.ARM_XO, P.ARM_XO, _y(vf.X) + 50, _y(vf.Y) + 5, "arm_outer")
+add_distx(vf, -P.ARM_OUT_C_X, P.ARM_OUT_C_X, _y(vf.X) + 50, _y(vf.Y) + 5, "arm_outer")
 # 16（内距 = ARM_GAP）
-add_distx(vf, -P.ARM_XI, P.ARM_XI, _y(vf.X) + 50, _y(vf.Y) + 20, "arm_inner")
+add_distx(vf, -P.ARM_IN_C_X, P.ARM_IN_C_X, _y(vf.X) + 50, _y(vf.Y) + 20, "arm_inner")
 # 8（底板厚 = T）
-add_disty(vf, 0, P.T, _y(vf.X) - 5, _y(vf.Y) + 15, "T_base")
+add_disty(vf, 0, P.BASE_T_Z, _y(vf.X) - 5, _y(vf.Y) + 15, "T_base")
 # 45（底板 2-φ9 孔心距）—— 用底板两 φ9 圆心
-add_distx(vf, -P.PITCH9 / 2, P.PITCH9 / 2, _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
+add_distx(vf, -P.BASE_HOLE_P / 2, P.BASE_HOLE_P / 2, _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
 # 62（底板总长 = L）
 add_extent(vf, 0, _y(vf.X) + 50, _y(vf.Y) - 25, "L")
 # 2-φ6 引出（Front 视图里 φ6 沉孔是圆）
-k6, _ = first_circle_r(vf, P.D_CB / 2)
+k6, _ = first_circle_r(vf, P.ARM_CBORE_D / 2)
 if k6 is not None:
     e = visible(vf)[k6]
     c = e.Curve
-    add_dia(vf, P.D_CB / 2, _y(vf.X) - 25, _y(vf.Y) - 30, "dia_cbore")
+    add_dia(vf, P.ARM_CBORE_D / 2, _y(vf.X) - 25, _y(vf.Y) - 30, "dia_cbore")
 # 2-φ3 引出
-k3, _ = first_circle_r(vf, P.D_CS / 2)
+k3, _ = first_circle_r(vf, P.ARM_THRU_D / 2)
 if k3 is not None:
-    add_dia(vf, P.D_CS / 2, _y(vf.X) + 25, _y(vf.Y) + 30, "dia_thru")
+    add_dia(vf, P.ARM_THRU_D / 2, _y(vf.X) + 25, _y(vf.Y) + 30, "dia_thru")
 
 # ---- Right ----
 # 27（圆心高）
-add_disty(vr, 0, P.HEAD_Z, _y(vr.X) - 5, _y(vr.Y) + 5, "head_h")
+add_disty(vr, 0, P.HEAD_C_Z, _y(vr.X) - 5, _y(vr.Y) + 5, "head_h")
 # 14（右端总高 = END_Z）
-add_disty(vr, 0, P.END_Z, _y(vr.X) - 5, _y(vr.Y) - 5, "arm_h")
+add_disty(vr, 0, P.ARM_END_C_Z, _y(vr.X) - 5, _y(vr.Y) - 5, "arm_h")
 # 36（臂水平总长 = END_Y − HEAD_Y = 24 − (−12) = 36）
-add_distx(vr, P.HEAD_Y, P.END_Y, _y(vr.X) + 50, _y(vr.Y) - 8, "arm_len")
+add_distx(vr, P.HEAD_C_Y, P.ARM_END_C_Y, _y(vr.X) + 50, _y(vr.Y) - 8, "arm_len")
 # 46（侧视外接 = END_Y − HEAD_Y + R_HEAD = 36 + 10 = 46；用 extent 取更稳）
 add_extent(vr, 0, _y(vr.X) + 50, _y(vr.Y) - 25, "W")
 # R10 圆头
-add_rad(vr, P.R_HEAD, _y(vr.X) - 50, _y(vr.Y) + 5, "R_head")
+add_rad(vr, P.HEAD_R, _y(vr.X) - 50, _y(vr.Y) + 5, "R_head")
 # 2-φ8 销孔
-add_dia(vr, P.D_PIN / 2, _y(vr.X) + 30, _y(vr.Y) - 30, "dia_pin")
+add_dia(vr, P.PIN_HOLE_D / 2, _y(vr.X) + 30, _y(vr.Y) - 30, "dia_pin")
 
 # ---- Top ----
 # 2-φ9 引出（Top 视图里 φ9 孔是圆）
-add_dia(vt, P.D_9 / 2, _y(vt.X) + 35, _y(vt.Y) + 10, "D9")
+add_dia(vt, P.BASE_HOLE_D / 2, _y(vt.X) + 35, _y(vt.Y) + 10, "D9")
 
 doc.recompute()
 
