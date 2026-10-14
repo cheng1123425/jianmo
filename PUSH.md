@@ -93,3 +93,4 @@ git push origin main
 | 2026-10-08 | `42ed67b` | 闭环产物：回归验证（三条闭环 pass）产生的方案与记录 |
 | 2026-10-08 | `4492e46` | 新增 tools/trace_view.py：把 trace 画成「高亮路径」报告（直观调试） |
 | 2026-10-08 | 本次推送 | 代码专家加固 pipe.py：① 只有 s0_plan/s9_record 允许回落 root 通用实现，s1~s8 缺失改为启动即报错（根目录那几份是垫片副本，schema 对不上）；② 指纹缓存命中前核对产物是否存在/被改动，命中刷新 seq；③ MSG.md/README.md 同步。新增 tools/msg_view.py（消息线查看器，含轮次/回边，代码+中文命名对照）；三条闭环复跑均 pass。 |
+| 2026-10-14 | `c8e7672` | **推 sandbox-merge 分支（非 main）**：① s6b_projection.py 修复（_load_json_opt 改 msgio.ref_path，解决误读根目录 _drawing.json 的 4 条假投影错误，已编译待闭环）；② ybracket ref_spec 补全 13 项 MARKS；③ 沙箱 zip 的 13 步流水线代码同步（pipe.py/s0_plan/s7_decide）；④ 四件闭环产物回归；⑤ 新增 HANDOFF-2026-10-14.md。注意：含未验证项（ybracket 模型 bug 开放、s6b 未跑闭环），按 PUSH.md 约定不进 main；推送触发 PUSH.md「沙箱写 ref」坑，已手动补 .git/refs/remotes/origin/sandbox-merge。另：验证报告/z2c_sample.parquet(84MB) 超 50MB 告警但已入库。 |
