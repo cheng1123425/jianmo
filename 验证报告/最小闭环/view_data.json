@@ -1,0 +1,47 @@
+{
+  "dia_from_ir": 8,
+  "count_from_ir": 4,
+  "visible_edges": 12,
+  "detected_circles": [
+    [
+      "circle",
+      1,
+      6.0
+    ],
+    [
+      "circle",
+      3,
+      6.0
+    ],
+    [
+      "circle",
+      5,
+      6.0
+    ],
+    [
+      "circle",
+      7,
+      6.0
+    ],
+    [
+      "circle",
+      8,
+      4.0
+    ],
+    [
+      "circle",
+      9,
+      4.0
+    ],
+    [
+      "circle",
+      10,
+      4.0
+    ],
+    [
+      "circle",
+      11,
+      4.0
+    ]
+  ]
+}
