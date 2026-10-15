@@ -725,13 +725,18 @@ class DrawingBuilder(object):
     def finalize(self, verbose=True):
         self.doc.recompute()
         for rec in self.dims:
-            dv = rec.pop("_d")
-            rec["value"] = round(float(dv.getRawValue()), 4)
+            # ⚠️ 「没找到」的锚点（circle/extent 谓词落空）不会生成
+            # DrawViewDimension，因此没有 `_d` —— 这类要**如实上报
+            # value=None / found=False**，而不是在这里 KeyError 把整条流水线炸掉。
+            dv = rec.pop("_d", None)
+            rec["value"] = None if dv is None else round(float(dv.getRawValue()), 4)
         if verbose:
             print("[dims] FreeCAD 计算值：")
             for rec in self.dims:
-                print("   %-6s Edge%-4s -> %8.2f      %s"
-                      % (rec["kind"], rec.get("_edge", "-"), rec["value"], rec["label"]))
+                v = rec["value"]
+                print("   %-6s Edge%-4s -> %8s      %s"
+                      % (rec["kind"], rec.get("_edge", "-"),
+                         ("%.2f" % v) if v is not None else "(未接地)", rec["label"]))
         for rec in self.dims:
             for k in ("_edge", "_e1", "_e2"):
                 rec.pop(k, None)

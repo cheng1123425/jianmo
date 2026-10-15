@@ -1,0 +1,66 @@
+{
+  "_note": "2D↔3D 语义锚点（正向标注）。每个锚点把一个图纸标注绑到 IR 特征 + 一个可重放的几何谓词（不存 Edge#N）。geom.kind ∈ extent/circle/level_pair。 ⚠️ 本版只声明谓词词汇表支持得住的三类（extent / circle）；内腔 Ø22 只在剖视里可见、法兰厚是子区间，暂未纳入（见 notes/plan_src.md 待确认）。",
+  "part": "waizhao",
+  "anchors": [
+    {
+      "label": "D_flange",
+      "fid": "F1",
+      "semantic": "底法兰外径",
+      "view": "Top",
+      "dim_kind": "extentH",
+      "geom": {
+        "kind": "extent",
+        "axis": "x"
+      },
+      "expected": 47.8
+    },
+    {
+      "label": "H_total",
+      "fid": "F1",
+      "semantic": "总高",
+      "view": "Front",
+      "dim_kind": "extentV",
+      "geom": {
+        "kind": "extent",
+        "axis": "z"
+      },
+      "expected": 48.0
+    },
+    {
+      "label": "D_base_hole",
+      "fid": "F5",
+      "semantic": "底法兰通孔（4×）",
+      "view": "SecA",
+      "dim_kind": "dia",
+      "geom": {
+        "kind": "circle",
+        "r": 2.25
+      },
+      "expected": 4.5
+    },
+    {
+      "label": "D_top_hole",
+      "fid": "F4",
+      "semantic": "顶部小孔",
+      "view": "Top",
+      "dim_kind": "dia",
+      "geom": {
+        "kind": "circle",
+        "r": 3.25
+      },
+      "expected": 6.5
+    },
+    {
+      "label": "D_bore",
+      "fid": "F3",
+      "semantic": "内腔孔径（水平剖可见）",
+      "view": "SecA",
+      "dim_kind": "dia",
+      "geom": {
+        "kind": "circle",
+        "r": 11.0
+      },
+      "expected": 22.0
+    }
+  ]
+}
