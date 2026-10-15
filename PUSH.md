@@ -190,3 +190,4 @@ echo "<sha> refs/heads/refactor/<name>" >> .git/packed-refs                     
 **可行做法**：在已存在的分支（如 `sandbox-merge`）上 commit，再
 `git push <url> HEAD:refs/heads/<新分支>` —— 远程仍会得到独立的新分支。
 （`.git/config`、`.git/index`、`.git/HEAD` 是可写的，只有 `refs/` 不行。）
+| 2026-10-15 | `d87ea4b` | **IR 路线 C/D/E/G 四阶段落地 + 修 s5b 误读**（本地提交，未推）：以「零件=回归夹具、架构=产品」定位。C=IR→build123d 生成器 `tools/ir2build.py`（往返体积差 0.0）；D=IR→FreeCAD PartDesign 真特征树 `tools/ir2partdesign.py`（lbracket 9 特征 diff 0.0 + Spreadsheet 表达式绑参）；E=FreeCAD→IR 回读 `tools/partdesign_readback.py`（参数联动实证 + 圆柱面翻几何谓词）；G=2D↔3D 语义锚点（3 零件 `ir_anchors.json` + `lib/drawing_fc.py::add_anchor_dim` 谓词找边绑边 + `tools/anchor_verify.py` 存在性/指对性双校核，12 锚点全 PASS 证通用架构能力；顺带修 D8_wall 静默跳过）。修 `steps/s5b_dimchain.py` 与 s6b 同源误读 bug。闭环：lbracket/gasket pass，bracket/ybracket manual（夹具自身 s5b 尺寸链问题）。guard 9/13 全过。 |
