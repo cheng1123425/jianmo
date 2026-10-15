@@ -98,9 +98,11 @@ def place_marks(b, P):
     b.add_extent(vr, 0, _y(vr.X) + 50, _y(vr.Y) - 15, "depth_y")
 
     # ---- Top：耳孔心距（X 向 ±58 → 116）---- 已由锚点生成则跳过
+    # 2026-10-15：原来是 `add_distx` 传两个死坐标点（值算出来），
+    # 现改为**绑圆心的投影顶点**（值由 FreeCAD 从投影几何实测，随 3D 跟随）。
     if "ear_pitch" not in covered:
-        b.add_distx(vt, -P.EAR_HOLE_P / 2.0, P.EAR_HOLE_P / 2.0,
-                    _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
+        b.distx_by_centers(vt, P.EAR_R / 2.0,
+                           _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
 
     # ---- Right：剖视 Y 向线性 ----
     # 2026-10-15 全部迁到绑边（遗留 §1.4 第②步）：传两条**边**而不是两个点，

@@ -89,10 +89,12 @@ def place_marks(b, P):
           if "Circle" in e.Curve.__class__.__name__
           and abs(_y(e.Curve.Radius) - P.HOLE_D / 2.0) < 0.3]
     if len(rc) >= 2:
-        c1 = b.visible(vr)[rc[0]].Curve
-        c2 = b.visible(vr)[rc[1]].Curve
-        b.add_distx(vr, _y(c1.Center.x), _y(c2.Center.x),
-                    _y(vr.X) + 50, _y(vr.Y) - 8, "pitch")
+        # 2026-10-15：原来取两个圆的圆心 x 传死坐标点（值是算出来的），
+        # 现改为**绑圆心的投影顶点** —— 圆心在 TechDraw 投影几何里本身就是
+        # Vertex，绑它值就由 FreeCAD 实测，改 3D 自动跟随。
+        # `optional=True`：圆心对不上投影顶点时跳过这一条，不让整图失败。
+        b.distx_by_centers(vr, P.HOLE_D / 2.0,
+                           _y(vr.X) + 50, _y(vr.Y) - 8, "pitch", optional=True)
 
 
 # ================= 主流程（通用） =================

@@ -21,24 +21,25 @@ r"""lib/drawing_fc.py —— FreeCAD 出图的**通用骨架**（零件无关）
 ---------------------------------------------------------
 | 方式 | 方法 | 尺寸值来源 | 谁在用 |
 |---|---|---|---|
-| **绑边**（项目目标） | `add_dia` / `add_rad` / `dia_by_center` / `rad_by_center` / `disty_by_edge` / `distx_by_edge` | FreeCAD 从投影边**实测** | 全部轮廓尺寸（臂宽、板厚、壁厚、高度、长度） |
-| **点距**（正当保留） | `add_distx` / `add_disty` | 传两个坐标点，**算出来** | **孔心距**一类无法用边表达的量 |
+| **绑边**（项目目标） | `add_dia` / `add_rad` / `dia_by_center` / `rad_by_center` / `disty_by_edge` / `distx_by_edge` | FreeCAD 从投影边**实测** | 轮廓尺寸（臂宽、板厚、壁厚、高度、长度） |
+| **绑圆心顶点** | `distx_by_centers` / `disty_by_centers` | FreeCAD 从投影顶点**实测** | **孔心距**（φ9 孔心距45 / φ8 孔心距 26 / 双耳孔心距 116） |
+| 点距（过渡兜底） | `add_distx` / `add_disty` | 传两个坐标点，**算出来** | **已零调用**，保留作兜底 |
 
-README 承诺的是绑边。迁移已完成（2026-10-15）：bracket 6 处、ybracket 5 处全部迁完，
-每处都验证了「FreeCAD 实测值不变 + `tools/diff_images.py` 像素 0 差异」。
+README 承诺的是「改三维→尺寸自动跟随」。**迁移已全部完成（2026-10-15）**：
+bracket 6 处 + ybracket 5 处轮廓尺寸迁到绑边，3 处孔心距迁到绑顶点，
+每处都验了「FreeCAD 实测值不变 + `tools/diff_images.py` 像素 0 差异」。
+**四个零件已无任何 `add_distx` / `add_disty` 调用。**
 
-**⚠️ 原计划的第③步「删掉两点距离那套」已确认不可执行**（2026-10-15 实测）：
-剩余 3 处调用全是**两孔圆心距** —— 圆心不是投影边，`References2D` 绑不上：
+**孔心距为什么也能绑**（实测得出，不是猜的）：原先以为「圆心不是投影边，绑不上」，
+但**圆心在 TechDraw 的投影几何里本身就是一个 Vertex** —— HLR 投影时把圆心输出为顶点，
+所以 `References2D = [(view, "VertexN")]` 能直接绑到它。且投影几何每次 recompute
+都从 3D 重新生成 ⇒ 顶点天然随 3D 跟随。实测：pitch 45 → 60，标注引用一个字没动，
+尺寸值自动从 45.00 变 60.00。另测模型绕 Z 转 90° 几何重排后，原Vertex 下标
+**仍指向同一对孔心** ⇒ 下标稳定。
 
-| 零件 | 保留的调用 | 语义 |
-|---|---|---|
-| bracket | `add_distx(vf, ±BASE_HOLE_P/2, ...)` | 底板 2×φ9 孔心距 45 |
-| lbracket | `add_distx(vr, c1.Center.x, c2.Center.x, ...)` | 立板顶 2×φ8 孔心距 |
-| ybracket | `add_distx(vt, ±EAR_HOLE_P/2, ...)` | 双耳孔心距 116 |
-
-gasket 早就给出了正确命名：绑边那套叫 `disty`、点距那套叫 `distx_pts`，注释写明
-「用于圆心距这类**无法用边表达**的量」。所以终态是**各归其位**而非删除 ——
-`add_distx` / `add_disty` 作为点距正当保留，本文档已标清它们的适用范围。
+`add_distx` / `add_disty` 现在零产品依赖；按 §〇 纪律 3，删除前仍需跑
+`python tools/arch_impact.py --strict` 确认 0 依赖并刷新基线。本轮**暂不删**
+（留作兜底：将来遇到真·既无边也无顶点的量仍需要点距）。
 
 为什么标注布置用「回调」而不是「数据清单」
 ------------------------------------
@@ -237,23 +238,27 @@ class DrawingBuilder(object):
                 best = (k, (min(a.y, b.y), max(a.y, b.y)), ln)
         return (best[0], best[1]) if best else (None, None)
 
-    def _bound_dim(self, view, type_str, edge_ks, X, Y, kind, label, extra=None):
-        """建一个**绑边**尺寸：`References2D` 指向给定的可见边下标。
+    def _bound_dim(self, view, type_str, refs, X, Y, kind, label, extra=None):
+        """建一个**绑边/绑顶点**尺寸：`References2D` 指向给定的可见边或投影顶点。
 
-        公共收口 —— `disty_by_edge` / `distx_by_edge` / `dia_by_center` / `rad_by_center`
-        都走这里，保证 `_rec` 记出来的结构一致（下游 s5/s6 只认结构不认来源）。
+        公共收口—— `disty_by_edge` / `distx_by_edge` 用 `EdgeN`；
+        `distx_by_centers` / `disty_by_centers` 用 `VertexN`。
+        `refs` 形如 `["Edge3"]` 或 `["Vertex6"]`，两者对 FreeCAD 都只是
+        `References2D` 里的一个字符串，语义由调用方保证。
+
+        保证 `_rec` 记出来的结构一致（下游 s5/s6 只认结构不认来源）。
         """
         d = self.doc.addObject("TechDraw::DrawViewDimension",
                                "Dim%d" % len(self.dims))
         d.Type = type_str
-        d.References2D = [(view, "Edge%d" % k) for k in edge_ks]
+        d.References2D = [(view, ref) for ref in refs]
         self.page.addView(d)
         d.X, d.Y = X, Y
         rec = {"label": label, "_d": d}
-        if len(edge_ks) == 2:
-            rec["_e1"], rec["_e2"] = edge_ks
+        if len(refs) == 1:
+            rec["_edge"] = refs[0]
         else:
-            rec["_edge"] = edge_ks[0]
+            rec["_e1"], rec["_e2"] = refs
         rec.update(extra or {})
         return self._rec(view, kind, X, Y, 0, rec)
 
@@ -268,7 +273,8 @@ class DrawingBuilder(object):
         k2, r2 = self.find_hline(view, y2)
         if k1 is None or k2 is None:
             raise RuntimeError("找不到水平边 y=%.2f / y=%.2f -> %s" % (y1, y2, label))
-        return self._bound_dim(view, "DistanceY", [k1, k2], X, Y, "distY", label,
+        return self._bound_dim(view, "DistanceY", ["Edge%d" % k1, "Edge%d" % k2],
+                               X, Y, "distY", label,
                                {"y1": float(y1), "y2": float(y2)})
 
     def distx_by_edge(self, view, x1, x2, X, Y, label):
@@ -277,7 +283,8 @@ class DrawingBuilder(object):
         k2, r2 = self.find_vline(view, x2)
         if k1 is None or k2 is None:
             raise RuntimeError("找不到竖直边 x=%.2f / x=%.2f -> %s" % (x1, x2, label))
-        return self._bound_dim(view, "DistanceX", [k1, k2], X, Y, "distX", label,
+        return self._bound_dim(view, "DistanceX", ["Edge%d" % k1, "Edge%d" % k2],
+                               X, Y, "distX", label,
                                {"x1": float(x1), "x2": float(x2)})
 
     def dia_by_center(self, view, r, cx, cy, X, Y, label, optional=False):
@@ -337,6 +344,111 @@ class DrawingBuilder(object):
                 continue
             return k, c
         return None, None
+
+    # ==================================================================
+    # 圆心顶点绑定（2026-10-15 新增）
+    #
+    # 要解决的问题：孔心距这类尺寸，端点落在**圆心**上，而圆心不是投影边，
+    # 所以 `References2D` 绑不上边 —— 2026-10-15 之前只能退回「传两个坐标点」
+    # （`add_distx`），值是算出来的，改 3D 不一定跟着变。
+    #
+    # 关键洞察（实测得出，不是猜的）：**圆心在TechDraw 的投影几何里本身就是
+    # 一个顶点**。HLR 从 3D 投影时把圆心输出为 Vertex，所以
+    # `References2D = [(view, "VertexN")]` 能直接绑到它，且因为投影几何每次
+    # recompute 都从 3D 重新生成，顶点**天然随 3D 跟随**。
+    #
+    # 实测证据（freecadcmd，底板两φ9 孔）：
+    #   pitch=45 → 引用 Vertex6/Vertex9，尺寸值 45.00
+    #   把 3D 改成 pitch=60（标注引用一个字没动）→ Vertex6 移到 (-30, 0)，
+    #   尺寸值自动变60.00
+    # 另测：模型绕Z 转 90°（几何完全重排）后，原Vertex14/Vertex17 仍指向
+    # 同一对孔心 ⇒ **下标稳定**，不是巧合。
+    #
+    # 用法：`distx_by_centers(view, r, X, Y, label)` —— 按**半径**找同半径的圆，
+    # 取它们圆心绑上。调用方不写 Vertex 下标（几何一变下标就没意义了）。
+    # ==================================================================
+
+    def vertex_index_at(self, view, x, y, tol=1e-4):
+        """找投影几何里最接近 (x, y) 的顶点下标；找不到返回 None。
+
+        `tol` 默认很严（1e-4）：圆心在投影结果里是精确重合的，
+        放宽会把邻近的真实顶点误认成圆心。
+        """
+        try:
+            vts = view.getVisibleVertexes()
+        except Exception:
+            return None
+        best, best_d = None, None
+        for i, q in enumerate(vts):
+            d = (q.x - x) ** 2 + (q.y - y) ** 2
+            if best_d is None or d < best_d:
+                best, best_d = i, d
+        if best_d is not None and best_d ** 0.5 <= tol:
+            return best
+        return None
+
+    def _center_vertex_indices(self, view, r, tol=0.3, n=2, pick="outer", axis=0):
+        """找 n 个同半径圆的圆心所对应的投影顶点下标。
+
+        `pick`：`"outer"` 取该轴向最外侧 n 个（孔心距的常规画法）；
+        `"first"` 按发现顺序取前 n 个。
+        返回下标列表；不足 n 个时返回空列表（调用方负责报错）。
+        """
+        circles = []
+        for e in self.visible(view):
+            c = e.Curve
+            if "Circle" not in c.__class__.__name__:
+                continue
+            if abs(c.Radius - r) > tol:
+                continue
+            circles.append(c)
+        if len(circles) < n:
+            return []
+        if pick == "outer":
+            circles.sort(key=lambda c: -getattr(c.Center, "xyz"[axis]))
+        picked = circles[:n]
+        out = []
+        for c in picked:
+            idx = self.vertex_index_at(view, c.Center.x, c.Center.y)
+            if idx is None:
+                return []            # 有圆心找不到对应顶点 → 整体失败，不做半吊子
+            out.append(idx)
+        return out
+
+    def distx_by_centers(self, view, r, X, Y, label, tol=0.3, n=2,
+                         pick="outer", optional=False):
+        """孔心距 —— **绑到两个圆心的投影顶点**（替代 `add_distx` 的传点法）。
+
+        按半径 `r` 找出视图里同半径的圆，取 `n` 个（默认最外侧 2 个），
+        把尺寸绑到它们的圆心顶点上。改 3D 的孔心距，尺寸值自动跟随。
+
+        与 `add_distx` 的区别：`add_distx` 传死坐标点（值算出来）；
+        本方法绑投影顶点（值由 FreeCAD 从投影几何实测）。
+        """
+        idxs = self._center_vertex_indices(view, r, tol=tol, n=n, pick=pick, axis=0)
+        if len(idxs) < n:
+            if optional:
+                return None
+            raise RuntimeError(
+                "视图 %s 里找不到 %d 个 r≈%.2f 的圆心顶点（找到 %d 个）-> %s"
+                % (view.Name, n, r, len(idxs), label))
+        return self._bound_dim(view, "DistanceX",
+                               ["Vertex%d" % i for i in idxs], X, Y, "distX", label,
+                               {"r": float(r), "n": n, "by": "centers"})
+
+    def disty_by_centers(self, view, r, X, Y, label, tol=0.3, n=2,
+                         pick="outer", optional=False):
+        """竖直方向的圆心距 —— `distx_by_centers` 的Y 向对应物。"""
+        idxs = self._center_vertex_indices(view, r, tol=tol, n=n, pick=pick, axis=1)
+        if len(idxs) < n:
+            if optional:
+                return None
+            raise RuntimeError(
+                "视图 %s 里找不到 %d 个 r≈%.2f 的圆心顶点（找到 %d 个）-> %s"
+                % (view.Name, n, r, len(idxs), label))
+        return self._bound_dim(view, "DistanceY",
+                               ["Vertex%d" % i for i in idxs], X, Y, "distY", label,
+                               {"r": float(r), "n": n, "by": "centers"})
 
     # ---------------- 锚点驱动（G 阶段：2D↔3D 语义绑定）----------------
     def add_anchor_dim(self, anchor, X, Y):

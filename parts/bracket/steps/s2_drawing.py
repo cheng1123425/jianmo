@@ -91,9 +91,11 @@ def place_marks(b, P):
     if "L" not in covered:
         b.add_extent(vf, 0, _y(vf.X) + 50, _y(vf.Y) - 25, "L")
     # 45（底板 2-φ9 孔心距）—— 已由锚点生成则跳过
+    # 2026-10-15：原来是 `add_distx` 传两个死坐标点（值算出来），
+    # 现改为**绑圆心的投影顶点**（值由 FreeCAD 从投影几何实测）——
+    #   圆心在TechDraw 投影几何里本身就是 Vertex，绑它就能随 3D 跟随。
     if "P9" not in covered:
-        b.add_distx(vf, -P.BASE_HOLE_P / 2, P.BASE_HOLE_P / 2,
-                    _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
+        b.distx_by_centers(vf, P.BASE_HOLE_D / 2, _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
     # 2-φ6 / 2-φ3（Front 视图里这两个孔是圆）—— 找不到对应半径就跳过，不报错
     k6, _ = b.first_circle_r(vf, P.ARM_CBORE_D / 2)
     if k6 is not None:
