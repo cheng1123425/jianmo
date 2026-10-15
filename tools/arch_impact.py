@@ -161,14 +161,37 @@ def cmd_report(strict=False):
         for sym in o:
             if sym not in n:
                 removed.append((mod, sym))
-            elif o[sym].get("args") != n[sym].get("args"):
+                continue
+            if o[sym].get("args") != n[sym].get("args"):
                 changed.append((mod, sym, o[sym].get("args"), n[sym].get("args")))
-            elif o[sym].get("kind") == "class" and \
-                    o[sym].get("methods") != n[sym].get("methods"):
-                changed.append((mod, sym, None, None))
+                continue
+            if o[sym].get("kind") == "class":
+                om = o[sym].get("methods") or {}
+                nm = n[sym].get("methods") or {}
+                # 类的"方法集合变了"要分两种情况（2026-10-15 修正）：
+                #   · 只**新增**方法 → 良性，正是 MSG.md §〇-1「只增不改」推荐的做法，
+                #     绝不能报成破坏性变更，否则纪律反而被工具拦住。
+                #   · **删除**方法，或改动已有方法的参数 → 才是真破坏。
+                # 注意 methods 的值是**参数名列表**（不是 {"args": [...]}）。
+                gone = [m for m in om if m not in nm]
+                re_sig = [m for m in om if m in nm and om[m] != nm[m]]
+                if gone or re_sig:
+                    detail = []
+                    if gone:
+                        detail.append("删除方法 %s" % ", ".join(sorted(gone)))
+                    if re_sig:
+                        detail.append("改参数 %s" % ", ".join(sorted(re_sig)))
+                    changed.append((mod, sym, "; ".join(detail), None))
         for sym in n:
             if sym not in o:
                 added.append((mod, sym))
+        # 新增的方法（含类内）单独报为「新增」，不算变更
+        for sym in o:
+            if o[sym].get("kind") == "class" and sym in n \
+                    and n[sym].get("kind") == "class":
+                for m in (n[sym].get("methods") or {}):
+                    if m not in (o[sym].get("methods") or {}):
+                        added.append(("%s.%s" % (mod, sym), m))
 
     print("=" * 60)
     print("架构改动影响面报告")
@@ -194,7 +217,10 @@ def cmd_report(strict=False):
             files = impacted_files(deps, mod, sym)
             hit.update(files)
             print("  %s.%s" % (mod, sym))
-            if oa is not None:
+            if isinstance(oa, str) and na is None:
+                # 类的方法集合：只报真正破坏性的那部分
+                print("      %s" % oa)
+            elif oa is not None:
                 print("      (%s) → (%s)" % (", ".join(oa), ", ".join(na)))
             for f in files:
                 print("      ! %s" % f)

@@ -13,14 +13,26 @@ r"""lib/drawing_fc.py —— FreeCAD 出图的**通用骨架**（零件无关）
 
 本模块负责：
   * 建 FreeCAD 文档 / 载入 STEP / 建视图 / 套 A3 模板
-  * 标注工具（`add_dia` / `add_rad` / `add_distx` / `add_disty` / `add_extent`）
+  * 标注工具（见下「两套标注方式」）
   * 收尾取值（`finalize()`：recompute 后从标注对象读 FreeCAD 实算值）
   * 导出（`_drawing.json` + `.FCStd`）
 
+两套标注方式（2026-10-15 起并存，遗留 §1.4 的收敛对象）
+---------------------------------------------------------
+| 方式 | 方法 | 尺寸值来源 | 谁在用 |
+|---|---|---|---|
+| **绑边**（项目目标） | `add_dia` / `add_rad` / `dia_by_center` / `rad_by_center` / `disty_by_edge` / `distx_by_edge` | FreeCAD 从投影边**实测** | gasket（全线）；另三个零件正在迁移 |
+| 两点距离（过渡态） | `add_distx` / `add_disty` | 传两个坐标点，**算出来** | bracket / lbracket / ybracket |
+
+README 承诺的是绑边。收敛顺序：① 两种并存（本文档）→ ② 逐零件迁移 + 像素对比
+→ ③ `arch_impact.py --strict` 报 0 依赖后删掉两点距离那套。
+**在 ③ 完成前不要删 `add_distx` / `add_disty`。**
+
 为什么标注布置用「回调」而不是「数据清单」
 ------------------------------------
-`s3_render` 那边的标注可以完全数据化（DIMS 列表），但 s2 的标注牵涉
-「按半径找投影边」「找不到就跳过」这类逻辑，硬塞进数据表反而失真。所以这里用一个
+`s3_render` 那边的标注可以完全数据化（现已下沉为共享层的 `steps/s3_render.py` +
+零件的 `draw_spec.py`），但 s2 的标注牵涉「按半径找投影边」「按坐标找水平边」
+「找不到就跳过」这类逻辑，硬塞进数据表反而失真。所以这里用一个
 `place_marks(builder, P)` 回调 —— 分层目标照样达到：
 **lib 管「怎么建图」，零件管「画什么」**。
 """
@@ -150,6 +162,160 @@ class DrawingBuilder(object):
         d.X, d.Y = X, Y
         return self._rec(view, "extentH" if direction == 0 else "extentV", X, Y, 0,
                          {"label": label, "_d": d})
+
+    # ==================================================================
+    # 绑边标注（2026-10-15 新增，遗留 §1.4 第①步）
+    #
+    # 为什么要加：`add_distx` / `add_disty` 走 `TechDraw.makeDistanceDim(view, type, v1, v2)`，
+    #   传的是**两个坐标点** —— 尺寸值是"算出来的"，改三维后不一定跟着变。
+    #   而 gasket 那套（`find_hline` 找边 + `d.References2D = [(view,"EdgeN"), ...]`）
+    #   是**把尺寸绑到投影边上**，值由 FreeCAD 从边实测 —— 这才是 README 承诺的做法：
+    #   "每个尺寸都是 DrawViewDimension，用 References2D 引用投影边，改三维自动跟随"。
+    #
+    # 为什么**新增方法而不是改 add_disty 的签名**（MSG.md §〇 纪律 1「只增不改」）：
+    #   三个零件（bracket/lbracket/ybracket）正在用 add_distx/add_disty，改签名会
+    #   让它们同时断线。两种方式先在 lib 里并存，逐个零件迁移完再收敛（§1.4 第③步）。
+    #
+    # 下游注意：`d.References2D` 的边号是 **0-based 的可见边下标**
+    #   （对应 `enumerate(view.getVisibleEdges())`），不是 TechDraw 内部 1-based 编号。
+    # ==================================================================
+
+    def find_hline(self, view, y, tol=0.5):
+        """找**水平边**（两端 y 相同），返回最长的那条。
+
+        返回 (下标, (x_lo, x_hi))；找不到返回 (None, None)。
+        同名的多条水平边时取最长的一条 —— 尺寸线引出的那条通常就是主轮廓边。
+        """
+        best = None
+        for k, e in enumerate(self.visible(view)):
+            c = e.Curve
+            if "Circle" in c.__class__.__name__:
+                continue                       # 圆不是"线"
+            a = e.valueAt(e.FirstParameter)
+            b = e.valueAt(e.LastParameter)
+            if abs(a.y - y) > tol or abs(b.y - y) > tol:
+                continue
+            ln = abs(a.x - b.x)
+            if best is None or ln > best[2]:
+                best = (k, (min(a.x, b.x), max(a.x, b.x)), ln)
+        return (best[0], best[1]) if best else (None, None)
+
+    def find_vline(self, view, x, tol=0.5):
+        """找**竖直边**（两端 x 相同），返回最长的那条。返回 (下标, (y_lo, y_hi))。"""
+        best = None
+        for k, e in enumerate(self.visible(view)):
+            c = e.Curve
+            if "Circle" in c.__class__.__name__:
+                continue
+            a = e.valueAt(e.FirstParameter)
+            b = e.valueAt(e.LastParameter)
+            if abs(a.x - x) > tol or abs(b.x - x) > tol:
+                continue
+            ln = abs(a.y - b.y)
+            if best is None or ln > best[2]:
+                best = (k, (min(a.y, b.y), max(a.y, b.y)), ln)
+        return (best[0], best[1]) if best else (None, None)
+
+    def _bound_dim(self, view, type_str, edge_ks, X, Y, kind, label, extra=None):
+        """建一个**绑边**尺寸：`References2D` 指向给定的可见边下标。
+
+        公共收口 —— `disty_by_edge` / `distx_by_edge` / `dia_by_center` / `rad_by_center`
+        都走这里，保证 `_rec` 记出来的结构一致（下游 s5/s6 只认结构不认来源）。
+        """
+        d = self.doc.addObject("TechDraw::DrawViewDimension",
+                               "Dim%d" % len(self.dims))
+        d.Type = type_str
+        d.References2D = [(view, "Edge%d" % k) for k in edge_ks]
+        self.page.addView(d)
+        d.X, d.Y = X, Y
+        rec = {"label": label, "_d": d}
+        if len(edge_ks) == 2:
+            rec["_e1"], rec["_e2"] = edge_ks
+        else:
+            rec["_edge"] = edge_ks[0]
+        rec.update(extra or {})
+        return self._rec(view, kind, X, Y, 0, rec)
+
+    def disty_by_edge(self, view, y1, y2, X, Y, label):
+        """竖直距离尺寸 —— **绑到两条水平边**（gasket `disty` 的通用化）。
+
+        替代 `add_disty`（两点距离）。用法：`y1`/`y2` 是**视图 2D 坐标**里的 y
+        （不是模型 z —— 视图可能翻转，gasket 那边用 YMAP 先换算过一次；
+        本方法直接吃 2D 坐标，零件自己负责换算）。
+        """
+        k1, r1 = self.find_hline(view, y1)
+        k2, r2 = self.find_hline(view, y2)
+        if k1 is None or k2 is None:
+            raise RuntimeError("找不到水平边 y=%.2f / y=%.2f -> %s" % (y1, y2, label))
+        return self._bound_dim(view, "DistanceY", [k1, k2], X, Y, "distY", label,
+                               {"y1": float(y1), "y2": float(y2)})
+
+    def distx_by_edge(self, view, x1, x2, X, Y, label):
+        """水平距离尺寸 —— **绑到两条竖直边**。替代 `add_distx`（两点距离）。"""
+        k1, r1 = self.find_vline(view, x1)
+        k2, r2 = self.find_vline(view, x2)
+        if k1 is None or k2 is None:
+            raise RuntimeError("找不到竖直边 x=%.2f / x=%.2f -> %s" % (x1, x2, label))
+        return self._bound_dim(view, "DistanceX", [k1, k2], X, Y, "distX", label,
+                               {"x1": float(x1), "x2": float(x2)})
+
+    def dia_by_center(self, view, r, cx, cy, X, Y, label, optional=False):
+        """直径尺寸 —— 按**半径 + 圆心**找圆并绑边。
+
+        与 `add_dia` 的区别：后者只按半径找（`first_circle_r`），同半径的孔有多个时
+        会拿到第一个；本方法多一个圆心约束，能精确选中目标孔。
+        绑定方式与 `add_dia` 相同（`References2D` 单边），**不是新增能力而是更精确的定位**。
+        """
+        k, c = self.first_circle_r(view, r, tol=0.5)
+        if k is not None and cx is not None and abs(c.Center.x - cx) > 0.5:
+            k, c = self._circle_at(view, r, cx, cy)
+        if k is None:
+            if optional:
+                return None
+            raise RuntimeError("找不到 r=%.2f @ (%.2f,%.2f) -> %s" % (r, cx, cy, label))
+        d = self.doc.addObject("TechDraw::DrawViewDimension",
+                               "Dim%d" % len(self.dims))
+        d.Type = "Diameter"
+        d.References2D = [(view, "Edge%d" % k)]
+        self.page.addView(d)
+        d.X, d.Y = X, Y
+        return self._rec(view, "dia", X, Y, 0,
+                         {"r": _y(c.Radius), "cx": _y(c.Center.x), "cy": _y(c.Center.y),
+                          "label": label, "_d": d, "_edge": k})
+
+    def rad_by_center(self, view, r, cx, cy, X, Y, label, optional=False):
+        """半径尺寸 —— 按半径 + 圆心找圆并绑边（`add_rad` 的精确版）。"""
+        k, c = self.first_circle_r(view, r, tol=0.5)
+        if k is not None and cx is not None and abs(c.Center.x - cx) > 0.5:
+            k, c = self._circle_at(view, r, cx, cy)
+        if k is None:
+            if optional:
+                return None
+            raise RuntimeError("找不到 r=%.2f @ (%.2f,%.2f) -> %s" % (r, cx, cy, label))
+        d = self.doc.addObject("TechDraw::DrawViewDimension",
+                               "Dim%d" % len(self.dims))
+        d.Type = "Radius"
+        d.References2D = [(view, "Edge%d" % k)]
+        self.page.addView(d)
+        d.X, d.Y = X, Y
+        return self._rec(view, "rad", X, Y, 0,
+                         {"r": _y(c.Radius), "cx": _y(c.Center.x), "cy": _y(c.Center.y),
+                          "label": label, "_d": d, "_edge": k})
+
+    def _circle_at(self, view, r, cx, cy, tol=0.5):
+        """按半径 + 圆心找圆边，返回 (下标, 曲线)；找不到 (None, None)。"""
+        for k, e in enumerate(self.visible(view)):
+            c = e.Curve
+            if "Circle" not in c.__class__.__name__:
+                continue
+            if abs(c.Radius - r) > tol:
+                continue
+            if cx is not None and abs(c.Center.x - cx) > tol:
+                continue
+            if cy is not None and abs(c.Center.y - cy) > tol:
+                continue
+            return k, c
+        return None, None
 
     # ---------------- 锚点驱动（G 阶段：2D↔3D 语义绑定）----------------
     def add_anchor_dim(self, anchor, X, Y):
