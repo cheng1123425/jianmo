@@ -118,15 +118,15 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
 
 这样远程会**新建独立分支**，`origin/sandbox-merge` 与 `origin/main` 都不受影响。
 
-### 本地分支状态（2026-10-15 08:30 更新）
+### 本地分支状态（2026-10-15 16:40 更新）
 
 | 分支 / 标记 | 指向 | 与远程 |
 |---|---|---|
 | `main` | `029adbd` | ✅ 一致（很久没动） |
-| `sandbox-merge` | `703a619` | ⚠️ 领先 `origin/sandbox-merge` **10 个 commit** |
+| `sandbox-merge` | `c1cc32c` | ⚠️ 沙箱不能在 `refs/heads/` 下新建 ref，故本地这个 ref **实际承载 feature 分支的工作**；领先 `origin/sandbox-merge` 23 个 commit |
 | tag `refactor-naming-and-layering-c69e466` | `c69e466` | 本地标记 |
-| 远程 `refactor/naming-and-layering` | `41c3b17` | ✅ 已推送 |
-| **远程 `feature/ir-feature-tree`** | `703a619` | ✅ **本次新建并推送** |
+| 远程 `refactor/naming-and-layering` | `59d35c3` | ✅ 已推送 |
+| **远程 `feature/ir-feature-tree`** | `c1cc32c` | ✅ 已推送（2026-10-15，快进 `2ff1c06` → `c1cc32c`，共 12 个 commit） |
 
 工作区 `git status` **干净**（0 改动）。
 
@@ -196,3 +196,21 @@ echo "<sha> refs/heads/refactor/<name>" >> .git/packed-refs                     
 `git push <url> HEAD:refs/heads/<新分支>` —— 远程仍会得到独立的新分支。
 （`.git/config`、`.git/index`、`.git/HEAD` 是可写的，只有 `refs/` 不行。）
 | 2026-10-15 | `d87ea4b` | **IR 路线 C/D/E/G 四阶段落地 + 修 s5b 误读**（本地提交，未推）：以「零件=回归夹具、架构=产品」定位。C=IR→build123d 生成器 `tools/ir2build.py`（往返体积差 0.0）；D=IR→FreeCAD PartDesign 真特征树 `tools/ir2partdesign.py`（lbracket 9 特征 diff 0.0 + Spreadsheet 表达式绑参）；E=FreeCAD→IR 回读 `tools/partdesign_readback.py`（参数联动实证 + 圆柱面翻几何谓词）；G=2D↔3D 语义锚点（3 零件 `ir_anchors.json` + `lib/drawing_fc.py::add_anchor_dim` 谓词找边绑边 + `tools/anchor_verify.py` 存在性/指对性双校核，12 锚点全 PASS 证通用架构能力；顺带修 D8_wall 静默跳过）。修 `steps/s5b_dimchain.py` 与 s6b 同源误读 bug。闭环：lbracket/gasket pass，bracket/ybracket manual（夹具自身 s5b 尺寸链问题）。guard 9/13 全过。 |
+| 2026-10-15 | `4de98f2` … `ae10129`（8 个） | **阶段 0 + 阶段 1（解耦）**（随本次推送一起上传）：① 接口演进纪律（MSG.md §〇）+ `tools/arch_impact.py --strict` 硬检查；② `a2af6b3` 几何接 IR + 标注清单数据化；③ `2fc494b` 轮廓尺寸全部迁到绑边标注；④ `cc5de1c` 孔心距也绑上（圆心在投影几何里本就是 Vertex）；⑤ `ae10129` 闭环加「交付 PDF 图面文字」校验（`lib/pdf_marks.py`，堵住遗留 #2 的硬编码检测缺口）。 |
+| 2026-10-15 | `77cb1e0` | **阶段 1 验收通过**：三个共享步骤 `steps/s1_build.py`（IR 驱动建模）/ `s2_drawing.py`（数据驱动出图）/ `s6_compare.py`（ref_spec 驱动校验）加入 `SHARED_STEPS`；`tools/new_part.py` 一键生成纯数据零件；新增 `parts/acc_plate/`（**无 steps/、0 行 Python**）闭环 pass 作证据。**真剖视图**：`lib/drawing_fc.py` +45/-0 支持 `type=="section"`（DrawViewSection + DrawHatch），解决「内腔不可见挂不上标注」的旧短板，剖视成为数据选项。含产物刷新与 `docs/s1-IR化方案.md` 草案。 |
+| 2026-10-15 | `c1cc32c` | **z2c 算子挖掘与转化实验区**（独立于主干）：`tools/z2c_fetch_ops.py`（hf-mirror 列投影抓 210 分片 → 42.7MB/100516 行，已 gitignore）、`tools/z2c_mine_ops.py`（三层挖掘，10 万零件 23 秒；全量榜与 430 样本榜一致 ⇒ 小样本可信；完备度 K=30→84%）、`验证报告/z2c_conv/`（`op_lib.py` 15 个可 dispatch 算子 + `verify_ops.py` 19 条独立几何验证全 PASS）、`验证报告/z2c_mined{,_full}/` 候选算子榜。**18 个算子全部只在实验区，0 个接入主干**。 |
+
+### ⚠️ 本次推送的两个坑（记下来省下次）
+
+1. **本机两把 SSH key，用错会报 `denied to deploy key`**：
+   - `~/.ssh/id_ed25519` = **只读 deploy key** → push 报 `ERROR: Permission to cheng1123425/jianmo.git denied to deploy key`（exit 128）；
+   - `~/.ssh/id_ed25519_jianmo` = **可写**（已配在 `core.sshCommand`）→ 用 `git push origin HEAD:refs/heads/<分支>` 即走它。公钥指纹见 `.pub`。
+   - 另：`ssh -T git@github.com` 偶发 `Connection reset ... port 22`，**但 git push 仍成功**（不必据此判定失败）。
+2. **沙箱写 ref 依旧**：`git push <url> HEAD:refs/heads/feature/ir-feature-tree` 报成功、远程 tip 正确，但本地 `origin/*` 不落盘 → 需手写：
+   ```bash
+   mkdir -p .git/refs/remotes/origin
+   printf <远程sha> > .git/refs/remotes/origin/sandbox-merge
+   mkdir -p .git/refs/remotes/origin/feature
+   printf <远程sha> > .git/refs/remotes/origin/feature/ir-feature-tree
+   ```
+   （注意：`origin/sandbox-merge` 要写**远程 tip `c0f4a2e`**，不是 HEAD —— 本地 `sandbox-merge` 实际承载的是 feature 分支的工作，写 HEAD 会掩盖这个事实。）
