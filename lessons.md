@@ -334,3 +334,105 @@ extrude(amount=ARM_T)                    # 沿 X 拉出臂厚
   磁盘上一直是旧图（排查耗时很久）。→ 改渲染后**先确认产物 mtime 变了**，或先输出到新文件名。
 - **零件缺 `steps/` 会静默回退到 root**（root 的 s6_compare 是垫片专属，schema 对不上才炸，
   很难第一时间定位）——lbracket 卡住的真因之一。
+
+---
+
+## 八、2026-10-15 补充：IR 路线 / 算子挖掘 / 归档与环境坑
+
+> 本节来源：`.workbuddy/memory/2026-10-15.md`（60KB 会话记录）的蒸馏。
+> 主题从"怎么把零件画对"扩展到"怎么让**系统本身**不说谎"。
+
+### 8.1 归档与环境的坑（会吃掉半天的那种）
+
+| # | 现象 | 根因 | 正解 |
+|---|---|---|---|
+| E1 | `rm .git/index.lock` **失败**，导致 `&&` 链断在第一步，后续 `git reset` 根本没跑 | 执行沙箱把**文件删除**强制路由到回收站（`genie-trash`），失败即 fail-closed 拒绝删除 | 用 **`mv` 挪开**（重命名不走回收站）：`mv .git/index.lock .git/index.lock.stale` |
+| E2 | `git push` 报成功、远程 tip 也对，但本地 `git status` 显示 `[gone]`；甚至写好的 loose ref **会自己消失** | 沙箱对 `.git/refs/` 的写入被隔离，git 进程看不到 | **`git ls-remote` 才是权威**；本地 ref 手写 `.git/refs/remotes/origin/<branch>` 只能临时恢复 |
+| E3 | `git push` 报 `Permission ... denied to deploy key` | 本机有**两把 key**：`~/.ssh/id_ed25519` 是**只读 deploy key** | 用 `~/.ssh/id_ed25519_jianmo`（已配 `core.sshCommand`）→ 直接 `git push origin HEAD:refs/heads/<分支>` |
+| E4 | 大量写文件的命令（`git checkout`/`merge` 动 160 个文件）**中途被杀**，留下半更新工作树 | 前台命令有硬超时 | 放**后台**跑；先清锁再操作 |
+| E5 | `git branch -b` / `update-ref` / 手写 ref 文件**四种方式都建不出新分支** | 沙箱不允许在 `refs/heads/` 下新建 | 在**已存在的分支**上 commit，推时用**显式 refspec** 指定远程分支名（`HEAD:refs/heads/<新名>`）|
+
+### 8.2 「假通过」的第三次重演 —— 同源 bug 只修一处
+
+| 项 | 内容 |
+|---|---|
+| **现象** | `s6b_projection` 与 `s5b_dimchain` 里各有一份**一模一样**的 `_load_json_opt`；修了 s6b 那份，漏了 s5b |
+| **后果** | s5b 仍在读**根目录垫片**的 `_drawing.json`（`pipe.py` 不给子进程设 cwd，`os.path.exists(相对路径)` 落到项目根）→ **bracket 拿垫片的干净数据做检查 → 判 pass** |
+| **危险性** | 闭环是**绿的**。比报错危险——**它剥夺了你发现问题的能力**（详见 D2/D3 的同一主題） |
+| **正解** | 用 `msgio.ref_path(in_msg, role)` 解析，**不要** `os.path.exists(r["path"])` |
+| **判据（很重要）** | 修完后若出现"回归"，**先看报错里的参数名属于哪个零件**：属于自己 = 自己的真问题（bug 只是移除了遮蔽）；属于垫片 = 还在读错文件 |
+| **纪律** | 发现同源 bug 要**搜全仓**（`grep -rn` 同名函数），不要只修眼前这一处 |
+
+### 8.3 尺寸链校验：**不要隐含假设**
+
+| 项 | 内容 |
+|---|---|
+| **现象** | `check_value_groups` 把同一 `(view, axis)` 下**所有** distX/distY 求和 vs 视图跨度 → bracket `head_h`(0→27)+`arm_h`(0→14)=41 > 跨度 37 → 报 error |
+| **根因** | 隐含假设"这组标注是**首尾相接的链**"。但图纸还有**同一基准的并联/嵌套标注**（坐标式标注）：两段都从底面量起 / 都关于中心对称 → **求和没有几何意义** |
+| **正解** | ① 用 `_drawing.json` 里**已有的几何端点**（`x1/x2`、`y1/y2`、锚点 `coords`）判链；② **有重叠就不是链** → 只记 `info` |
+| **★ 配套纪律** | **放宽校验时必须补回等价检测力**，否则是净损失。本次补了 `seg_exceeds_span`（单条标注长度 > 视图跨度 → error）。这类"检测力下降"**没有任何指标会显示** |
+| **判据备忘** | `s7_decide` 只把 `severity=="error"` 当阻断；warn/info 不影响 pass。所以"降级为 warn"能解 manual——**但必须先确认那是假报** |
+
+### 8.4 freecadcmd / build123d / TechDraw 新坑（C 类续）
+
+| # | 坑 | 正解 |
+|---|---|---|
+| C17 | **`freecadcmd` 把 `__name__` 设成【模块名】**（不是 `"__main__"`）→ `if __name__ == "__main__":` 守卫**永不触发**，脚本静默什么都不干、还返回 exit 0 | fc 的步骤脚本**必须模块级直接调用** |
+| C18 | **build123d 靠【调用帧】找父 Builder** → 在**辅助函数**里写 `with BuildSketch(...)` 会丢 `BuildPart` 上下文，`extrude` 报 `A face or sketch must be provided` | 自带上下文造独立 cutter：`with BuildPart() as sub: ...` + `add(sub.part, mode=Mode.SUBTRACT)`；**草图算子（`ThreePointArc`/`Spline`）必须在 `BuildLine()` 内词法内联**，做不成运行时函数 |
+| C19 | `CounterSinkHole` 的 `depth` 是**【孔深】不是【沉孔深】**（传 `depth=3` 把孔钻成 3mm 盲孔） | 要钻通就**别传 `depth`**；沉孔形状由 `counter_sink_angle` + `cs_d` 决定。且它是**圆锥**（底 `cs_r`、高 `cs_r−r`），用圆台公式差 `π(cs_r−r)r²` |
+| C20 | 选边谓词用**同一个轴**过滤 → 全通过（X 向边的 `center().X` 全≈0）→ 倒角结果**翻倍** | 分**方向轴 `dir`** + **位置轴 `pos_axis`** 两个独立谓词 |
+| C21 | `chamfer`/`fillet` 是**顶层函数**，不是边列表的方法 | `chamfer(edges, length=...)` |
+| C22 | `TechDraw::DrawViewPart` **不挂在带 Template 的 `DrawPage` 上就没有几何**（`getVisibleEdges()` 空） | 建 `DrawPage` + `DrawSVGTemplate` 并挂上 |
+| C23 | 真剖视图 `DrawViewSection`：不设 `BaseView` → **0 条边**；`SectionOrigin` 设在零件**表面** → 切空（0 边） | `BaseView` **必须设**；`SectionOrigin` 要落在**实体内部**；剖面线属性名是 **`Source`**（`= (view, [edges])`，不是 `Sources`）；`XDirection` **不能设 None** |
+| C24 | FreeCAD 的**视图/相机在 Gui 层**（`ViewObject`），材料/单位/文件属性在 **App 层** | 回读只看 `doc.Objects`（App 层）→ 视图状态**根本流不过来**（headless 更是从未生成）；而材料/单位**读得到**，必须**显式决定纳入或忽略**（+白名单挡 `TechDraw::DrawPage` 这类 App 层非建模对象）|
+
+### 8.5 几何谓词锚点：把「绑边」从按下标升级为按查询
+
+| 项 | 内容 |
+|---|---|
+| **做法** | 标注不存 `Edge#12`（拓扑命名 TNP 一改参数就错位），改存**可重放的几何谓词**：`{kind: circle, r:4}` / `{kind: extent, axis:x}` / `{kind: level_pair, r:4, axis:x}` |
+| **落地** | `lib/drawing_fc.py::add_anchor_dim`（谓词找边 + `References2D` 绑边）；`parts/*/ir_anchors.json` 存锚点数据 |
+| **校核** | `tools/anchor_verify.py` 做**存在性 + 指对性**双校核（原闭环只看"有个 r=4 的圆就算过"） |
+| **★ 立刻抓到的真 bug** | `D8_wall` 一直在 **Front 视图**找 r=4 的圆，但该孔**轴沿 X**、Front 沿 Y 看 → 孔不是圆 → `first_circle_r` 返回 None → **该标注从加进来那天起被静默跳过**，而闭环一直报 pass |
+| **意义** | **只有几何谓词锚点能暴露"视图选错"这类错误**——旧代码因为宽容地跳过，把它藏了很久 |
+
+### 8.6 从 Zero-to-CAD 挖算子：方法与纪律
+
+| 项 | 内容 |
+|---|---|
+| **料** | 数据集 28.3GB / 210 分片（10 万零件）。**挖算子只需 `cadquery_ops_json` 一列 = 全量的 0.3%** |
+| **抓取** | HF 直连**超时** → 走 `hf-mirror.com` + pyarrow **列投影（HTTP Range）**；实测最优 **`block_size=256KB` + `workers=4`**（1MB 块更慢、8 并发被限流）→ 210 分片 0 失败、384s、42.7MB |
+| **挖掘** | 三层统计：leaf op / 链式路径（`function` 天然编码惯用法）/ n-gram 序列。10 万零件 **23 秒** |
+| **★ 完备度曲线** | "零件的几何算子全在 top-K 表内"的占比：**K=20→65%、K=30→84%、K=50→88.5%、K=100→94.5%** ⇒ **做 30~50 就够，长尾留手写逃生口**（不追长尾的数据依据） |
+| **样本可信** | 430 样本榜与 10 万全量榜**几乎一致**（extrude 86/84%、chamfer 74/73%、hole 58/58%）⇒ 以后不必每次抓全量 |
+| **转化四步** | 惯用法 → ①定性（具名参数 + 几何谓词数据）→ ②实现（build123d）→ ③**独立验证**（解析算期望值比对） |
+| **★ 关键纪律** | **不能拿样本 `step_file` 当校验基准**：Zero-to-CAD 是"**图 → 代码生成**"数据集，`step_file` 是**目标模型**、`cadquery_file` 是 **agent 生成的代码**，两者**不保证一致**（实测同一 uuid：代码描述 100 宽，step 只有 70 宽）⇒ **一律独立验证** |
+
+### 8.7 架构认知：同步点与单源生成
+
+| 项 | 内容 |
+|---|---|
+| **同步点** | 一个算子概念要写在 **≥4 处**：`lib/ir.py::TREE_OPS`（声明）+ `tools/ir2build.py`（build123d）+ `tools/ir2partdesign.py`（FreeCAD）+ 验证 |
+| **危害** | ① 漏改一处 = **静默错误**（见 8.2）；② 回归成本高 → 人会**跳过验证** → 加速劣化；③ 语义重叠 → **模型选错**；④ 校验层放宽 → **检测力悄悄下降且无指标** |
+| **★ 实测硬伤** | `TREE_OPS` 声明 6 个算子，其中 **`Pocket`/`Fillet`/`Chamfer`/`Hole` 在生成器里没有实现**（`Fillet/Chamfer` 在 ir2build 只打 `# PLACEHOLDER` 注释）；而 **`validate()` 只校验 tree 层、从不看 impl**（`lib/ir.py:158-161`）→ **"校验通过" ≠ "能生成"**，且 `ir2build` exit 0、不打警告 |
+| **判据** | **"加一个算子要改几个文件？"** —— 是 **1** 就随便加；是 **4** 就先做单源生成（我们现在是 4） |
+| **单源生成** | 算子定义只写**一处**（注册表条目含 `tree_op` / `build123d` 表达式 / `freecad` 映射 / 验证），词表与两个生成器**从它派生** → 4 处压到 1 处。`验证报告/z2c_conv/op_lib.py` 的 `DISPATCH` 已是雏形 |
+
+### 8.8 三个大认知（范式层）
+
+| 认知 | 说明 |
+|---|---|
+| **内核相同 ≠ 能同步** | OCCT 只存**结果**（`TopoDS_Shape`），不存**特征历史 / 参数名 / 命名引用**。参数化模型 = 那三样，它们**从来不在内核里**（build123d 放在 Python 脚本里，FreeCAD 放在特征树里）。类比：**同一块屏幕显示同样的像素，但 PNG 里没有 PS 的图层栈**。所以"双向实时同步"**概念上不成立**（两边没有可同步的共同结构 + 需要单一真相源）；正解是**单源 + 单向生成** |
+| **零件 = 回归夹具，架构 = 产品** | 判据：**任何"只有某个零件能跑、换个零件就跑不了"的代码 = 架构污染**。验证架构通用性必须让**多个夹具跑同一份 lib 代码**（本次用 3 个零件 12 个锚点全 PASS 证明锚点机制是通用能力，而非 lbracket 特例） |
+| **SW ≠ 我们的范式** | SW 是**约束驱动**（几何关系求解），我们是**显式定位 + 标注层**（文档 §3 已定"无约束求解"）。**别为"像 SW"引入约束求解**——那会重开已定架构决策，且写约束的代码量是写坐标的数倍（对 LLM 更不友好）。SW 命令表 18 条里 **14 条我们已覆盖**；且 SW 的"异形孔向导"= 一个复合命令，我们 = **两个正交算子**（孔型 × 布点）组合 |
+
+### 8.9 待办（本次新增）
+
+| # | 事项 | 状态 |
+|---|---|---|
+| 1 | **一致性检查**：断言 `TREE_OPS` 每个名字被两个生成器**真实现**（能立刻抓出 `Pocket/Fillet/Chamfer/Hole` 漂移） | 待办（用户要求**先不加**）|
+| 2 | **让 `validate()` 校验 `impl` op 名**，使"校验通过"与"能生成"对齐 | 待办（同上）|
+| 3 | **把实验区 18 个算子接入主干**（`lib/ir.py` 词表 + `ir2build`/`ir2partdesign` 分发），现 **0/18** 接入 | 待办 |
+| 4 | **单源生成**（注册表驱动，把 4 处压到 1 处）—— 要做 #3 之前先做，否则是给未来埋债 | 待办 |
+| 5 | 词表**规范形 / 分区**（一概念一算子；基元层 / 惯用法层，菜单只暴露上层） | 待办 |
+| 6 | 长尾算子（`rib` 0.2% / `draft` ≈0% / `wrap` ≈0% / `boundary` ≈0%）—— **数据证明不值得做**，留 `s1_build.py` 逃生口 | 已判定不做 |
