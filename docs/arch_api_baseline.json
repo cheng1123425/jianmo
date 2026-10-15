@@ -1,0 +1,437 @@
+{
+  "msgio": {
+    "abspath": {
+      "kind": "func",
+      "args": [
+        "path"
+      ]
+    },
+    "relpath": {
+      "kind": "func",
+      "args": [
+        "path"
+      ]
+    },
+    "sha256": {
+      "kind": "func",
+      "args": [
+        "path",
+        "buf"
+      ]
+    },
+    "ref_file": {
+      "kind": "func",
+      "args": [
+        "path",
+        "role"
+      ]
+    },
+    "ref_path": {
+      "kind": "func",
+      "args": [
+        "msg",
+        "role"
+      ]
+    },
+    "ref_data": {
+      "kind": "func",
+      "args": [
+        "msg",
+        "key",
+        "default"
+      ]
+    },
+    "read_json": {
+      "kind": "func",
+      "args": [
+        "path"
+      ]
+    },
+    "write_json": {
+      "kind": "func",
+      "args": [
+        "path",
+        "obj"
+      ]
+    },
+    "exec_module": {
+      "kind": "func",
+      "args": [
+        "path",
+        "name"
+      ]
+    },
+    "_parse_argv": {
+      "kind": "func",
+      "args": [
+        "argv"
+      ]
+    },
+    "boot": {
+      "kind": "func",
+      "args": [
+        "stage"
+      ]
+    },
+    "finish": {
+      "kind": "func",
+      "args": [
+        "out_refs",
+        "out_data"
+      ]
+    },
+    "run_stage": {
+      "kind": "func",
+      "args": [
+        "stage",
+        "handler"
+      ]
+    }
+  },
+  "facelevels": {
+    "plane_levels": {
+      "kind": "func",
+      "args": [
+        "step_path",
+        "tol_normal"
+      ]
+    },
+    "check_face_levels": {
+      "kind": "func",
+      "args": [
+        "ref",
+        "step_path",
+        "tol",
+        "add"
+      ]
+    }
+  },
+  "lib.ir": {
+    "new_feature": {
+      "kind": "func",
+      "args": [
+        "fid",
+        "semantic",
+        "structural",
+        "params",
+        "impl",
+        "tree",
+        "deps",
+        "drawing",
+        "note"
+      ]
+    },
+    "new_part_ir": {
+      "kind": "func",
+      "args": [
+        "part",
+        "features",
+        "source",
+        "meta"
+      ]
+    },
+    "feature_index": {
+      "kind": "func",
+      "args": [
+        "ir"
+      ]
+    },
+    "feature_of": {
+      "kind": "func",
+      "args": [
+        "ir",
+        "fid"
+      ]
+    },
+    "validate": {
+      "kind": "func",
+      "args": [
+        "ir"
+      ]
+    },
+    "dump": {
+      "kind": "func",
+      "args": [
+        "ir",
+        "path"
+      ]
+    },
+    "load": {
+      "kind": "func",
+      "args": [
+        "path"
+      ]
+    }
+  },
+  "lib.collect": {
+    "_span": {
+      "kind": "func",
+      "args": [
+        "v",
+        "i"
+      ]
+    },
+    "_circles": {
+      "kind": "func",
+      "args": [
+        "v"
+      ]
+    },
+    "_height_chain": {
+      "kind": "func",
+      "args": [
+        "vf"
+      ]
+    },
+    "collect": {
+      "kind": "func",
+      "args": [
+        "data"
+      ]
+    }
+  },
+  "lib.drawing_fc": {
+    "_y": {
+      "kind": "func",
+      "args": [
+        "v"
+      ]
+    },
+    "DrawingBuilder": {
+      "kind": "class",
+      "methods": {
+        "__init__": [
+          "self",
+          "doc_name",
+          "step_path",
+          "tag",
+          "template",
+          "view_specs"
+        ],
+        "visible": [
+          "self",
+          "view"
+        ],
+        "first_circle_r": [
+          "self",
+          "view",
+          "r",
+          "tol"
+        ],
+        "_rec": [
+          "self",
+          "view",
+          "kind",
+          "X",
+          "Y",
+          "value",
+          "extra"
+        ],
+        "add_dia": [
+          "self",
+          "view",
+          "r",
+          "X",
+          "Y",
+          "label",
+          "optional"
+        ],
+        "add_rad": [
+          "self",
+          "view",
+          "r",
+          "X",
+          "Y",
+          "label",
+          "optional"
+        ],
+        "add_distx": [
+          "self",
+          "view",
+          "x1",
+          "x2",
+          "X",
+          "Y",
+          "label"
+        ],
+        "add_disty": [
+          "self",
+          "view",
+          "y1",
+          "y2",
+          "X",
+          "Y",
+          "label"
+        ],
+        "add_extent": [
+          "self",
+          "view",
+          "direction",
+          "X",
+          "Y",
+          "label"
+        ],
+        "add_anchor_dim": [
+          "self",
+          "anchor",
+          "X",
+          "Y"
+        ],
+        "finalize": [
+          "self",
+          "verbose"
+        ],
+        "edges_json": [
+          "self",
+          "view",
+          "n"
+        ],
+        "circles_json": [
+          "self",
+          "view"
+        ],
+        "hlines_json": [
+          "self",
+          "view"
+        ],
+        "export": [
+          "self",
+          "out_dir",
+          "tag"
+        ]
+      }
+    }
+  },
+  "lib.drawing_render": {
+    "Renderer": {
+      "kind": "class",
+      "methods": {
+        "__init__": [
+          "self",
+          "view_lw",
+          "lw",
+          "ar"
+        ],
+        "_setup": [
+          "self"
+        ],
+        "ln": [
+          "self",
+          "x0",
+          "y0",
+          "x1",
+          "y1",
+          "w",
+          "c",
+          "z",
+          "shift",
+          "gid"
+        ],
+        "poly": [
+          "self",
+          "xs",
+          "ys",
+          "color",
+          "lw",
+          "z"
+        ],
+        "arrow": [
+          "self",
+          "tip",
+          "deg",
+          "size"
+        ],
+        "txt": [
+          "self",
+          "x",
+          "y",
+          "s",
+          "size",
+          "c",
+          "ha",
+          "va",
+          "rot",
+          "shift",
+          "gid"
+        ],
+        "draw_frame": [
+          "self",
+          "title"
+        ],
+        "content_bbox": [
+          "self"
+        ],
+        "fit_shift": [
+          "self"
+        ],
+        "reset": [
+          "self"
+        ],
+        "save": [
+          "self",
+          "out_dir"
+        ]
+      }
+    },
+    "_view_yminmax": {
+      "kind": "func",
+      "args": [
+        "v"
+      ]
+    },
+    "draw_views": {
+      "kind": "func",
+      "args": [
+        "r",
+        "views",
+        "place",
+        "view_order"
+      ]
+    },
+    "_paper_at": {
+      "kind": "func",
+      "args": [
+        "bb",
+        "view",
+        "at"
+      ]
+    },
+    "_M": {
+      "kind": "func",
+      "args": [
+        "r",
+        "views",
+        "place",
+        "nm",
+        "u",
+        "w"
+      ]
+    },
+    "draw_dims": {
+      "kind": "func",
+      "args": [
+        "r",
+        "views",
+        "place",
+        "bb",
+        "dims",
+        "meas"
+      ]
+    },
+    "render": {
+      "kind": "func",
+      "args": [
+        "data",
+        "out_dir",
+        "place",
+        "view_order",
+        "title",
+        "dims",
+        "labels",
+        "label_style",
+        "meas",
+        "verbose"
+      ]
+    }
+  }
+}

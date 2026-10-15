@@ -19,13 +19,18 @@ python pipe.py --loop
 # 3) 铰链支座：全链 + 闭环
 python pipe.py --part parts/bracket --loop
 
-# 4) 看本地改动，确认没有把临时产物/密钥带进去
+# 4) 架构影响面：有没有"删了/改了仍有产品依赖"的破坏性变更
+#    退出码 2 = 禁止上传（见 MSG.md §〇 接口演进纪律）
+python tools/arch_impact.py --strict
+
+# 5) 看本地改动，确认没有把临时产物/密钥带进去
 git status --short
 git diff --stat
 ```
 
-判定标准：两步闭环都输出 `闭环结局：pass`，且 `git status` 里没有 `_msg/`、
-`*.FCBak`、`__pycache__`、`.cache.json` 之类的运行时文件。
+判定标准：三步闭环都输出 `闭环结局：pass`；`arch_impact.py --strict` **退出码 0**
+（有破坏性变更时退出码 2，此时要么把老函数改成转发、要么先迁完产品）；
+且 `git status` 里没有 `_msg/`、`*.FCBak`、`__pycache__`、`.cache.json` 之类的运行时文件。
 
 ---
 
