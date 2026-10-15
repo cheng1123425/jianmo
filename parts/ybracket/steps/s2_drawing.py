@@ -103,16 +103,20 @@ def place_marks(b, P):
                     _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
 
     # ---- Right：剖视 Y 向线性 ----
-    b.add_disty(vr, 0.0, P.WALL_T_Y, _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")
-    b.add_disty(vr, P.WALL_T_Y, P.ARM_L_Y, _y(vr.X) + 70, _y(vr.Y) - 25, "opening")
+    # 2026-10-15 全部迁到绑边（遗留 §1.4 第②步）：传两条**边**而不是两个点，
+    # 值由 FreeCAD 从投影边实测。find_hline 找不到边会明确报错，不会静默出错误值。
+    # ——不迁的：上面的 ear_pitch（两圆**心**间距，圆心不是边，绑不了）
+    b.disty_by_edge(vr, 0.0, P.WALL_T_Y, _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")
+    b.disty_by_edge(vr, P.WALL_T_Y, P.ARM_L_Y,
+                    _y(vr.X) + 70, _y(vr.Y) - 25, "opening")
 
     # ---- Right：剖视 Z 向线性 ----
-    b.add_disty(vr, 0.0, P.BASE_H_Z, _y(vr.X) - 70, _y(vr.Y) - 25, "base_h")
-    b.add_disty(vr, P.BODY_H_Z - P.ARM_T_Z, P.BODY_H_Z,
-                _y(vr.X) - 70, _y(vr.Y) + 25, "arm_t")
-    # cbore_depth 是内腔 → 用「点距法」：两点落在 Z=98 与 Z=120，值由 FreeCAD 实算
-    b.add_disty(vr, P.BODY_H_Z - P.CBORE_T_Z, P.BODY_H_Z,
-                _y(vr.X) - 70, _y(vr.Y), "cbore_depth")
+    b.disty_by_edge(vr, 0.0, P.BASE_H_Z, _y(vr.X) - 70, _y(vr.Y) - 25, "base_h")
+    b.disty_by_edge(vr, P.BODY_H_Z - P.ARM_T_Z, P.BODY_H_Z,
+                    _y(vr.X) - 70, _y(vr.Y) + 25, "arm_t")
+    # cbore_depth 是内腔台阶：底面 Z=BODY_H−CBORE_T（孔底那条边）、顶面 Z=BODY_H（上表面）
+    b.disty_by_edge(vr, P.BODY_H_Z - P.CBORE_T_Z, P.BODY_H_Z,
+                    _y(vr.X) - 70, _y(vr.Y), "cbore_depth")
 
 
 # ================= 主流程（通用） =================

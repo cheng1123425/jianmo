@@ -21,12 +21,24 @@ r"""lib/drawing_fc.py —— FreeCAD 出图的**通用骨架**（零件无关）
 ---------------------------------------------------------
 | 方式 | 方法 | 尺寸值来源 | 谁在用 |
 |---|---|---|---|
-| **绑边**（项目目标） | `add_dia` / `add_rad` / `dia_by_center` / `rad_by_center` / `disty_by_edge` / `distx_by_edge` | FreeCAD 从投影边**实测** | gasket（全线）；另三个零件正在迁移 |
-| 两点距离（过渡态） | `add_distx` / `add_disty` | 传两个坐标点，**算出来** | bracket / lbracket / ybracket |
+| **绑边**（项目目标） | `add_dia` / `add_rad` / `dia_by_center` / `rad_by_center` / `disty_by_edge` / `distx_by_edge` | FreeCAD 从投影边**实测** | 全部轮廓尺寸（臂宽、板厚、壁厚、高度、长度） |
+| **点距**（正当保留） | `add_distx` / `add_disty` | 传两个坐标点，**算出来** | **孔心距**一类无法用边表达的量 |
 
-README 承诺的是绑边。收敛顺序：① 两种并存（本文档）→ ② 逐零件迁移 + 像素对比
-→ ③ `arch_impact.py --strict` 报 0 依赖后删掉两点距离那套。
-**在 ③ 完成前不要删 `add_distx` / `add_disty`。**
+README 承诺的是绑边。迁移已完成（2026-10-15）：bracket 6 处、ybracket 5 处全部迁完，
+每处都验证了「FreeCAD 实测值不变 + `tools/diff_images.py` 像素 0 差异」。
+
+**⚠️ 原计划的第③步「删掉两点距离那套」已确认不可执行**（2026-10-15 实测）：
+剩余 3 处调用全是**两孔圆心距** —— 圆心不是投影边，`References2D` 绑不上：
+
+| 零件 | 保留的调用 | 语义 |
+|---|---|---|
+| bracket | `add_distx(vf, ±BASE_HOLE_P/2, ...)` | 底板 2×φ9 孔心距 45 |
+| lbracket | `add_distx(vr, c1.Center.x, c2.Center.x, ...)` | 立板顶 2×φ8 孔心距 |
+| ybracket | `add_distx(vt, ±EAR_HOLE_P/2, ...)` | 双耳孔心距 116 |
+
+gasket 早就给出了正确命名：绑边那套叫 `disty`、点距那套叫 `distx_pts`，注释写明
+「用于圆心距这类**无法用边表达**的量」。所以终态是**各归其位**而非删除 ——
+`add_distx` / `add_disty` 作为点距正当保留，本文档已标清它们的适用范围。
 
 为什么标注布置用「回调」而不是「数据清单」
 ------------------------------------
@@ -132,7 +144,12 @@ class DrawingBuilder(object):
                           "label": label, "_d": d, "_edge": k})
 
     def add_distx(self, view, x1, x2, X, Y, label):
-        """用两点做水平距离"""
+        """水平点距：传**两个 x 坐标**（两点法，值算出来）。
+
+        **适用范围（2026-10-15 迁移后收窄）**：只用于**孔心距**这类
+        「端点落在圆心、不是投影边」的量 —— 圆心无法用 `References2D` 绑。
+        轮廓尺寸（臂宽、板厚、…）请改用 `distx_by_edge`，值由 FreeCAD 从边实测。
+        """
         App = self.App
         v1 = App.Vector(_y(x1), 0, 0)
         v2 = App.Vector(_y(x2), 0, 0)
@@ -144,7 +161,11 @@ class DrawingBuilder(object):
                          {"x1": float(x1), "x2": float(x2), "label": label, "_d": d})
 
     def add_disty(self, view, y1, y2, X, Y, label):
-        """用两点做竖直距离"""
+        """竖直点距：传**两个 y 坐标**（两点法，值算出来）。
+
+        **适用范围同 `add_distx`**：只用于端点不是投影边的量；
+        轮廓高度请改用 `disty_by_edge`（绑边，FreeCAD 实测）。
+        """
         App = self.App
         v1 = App.Vector(0, _y(y1), 0)
         v2 = App.Vector(0, _y(y2), 0)
