@@ -76,8 +76,12 @@ def _dims_from_sem(sem):
 
 def _dims_from_drawing(dw):
     """把 _drawing.json 的 dims（当前模型的标注）转成 dimchain 格式。
-    模型侧**只有数值、没有像素端点**，因此不造假 p1/p2 —— 端点重合构链
-    只属于原图侧；模型侧走按 (view, axis) 分组的数值闭合（见 handler）。"""
+
+    模型侧**没有像素端点**（画在图纸上的是 FreeCAD 尺寸对象），但**有几何端点**：
+      * `add_distx/add_disty` 写的 `x1/x2` 或 `y1/y2`
+      * 锚点 `level_pair` 写的 `coords`
+    这两个是"这条尺寸量的是哪两点"，用于判断一组标注**是不是链式**（见下）。
+    端点缺失时保留 None —— 此时无法判链，只能退回数值闭合。"""
     out = []
     for d in dw.get("dims", []):
         out.append({
@@ -87,8 +91,35 @@ def _dims_from_drawing(dw):
             "value_mm": d.get("value"),
             "view": d.get("view"),
             "kind": d.get("kind"),
+            "x1": d.get("x1"), "x2": d.get("x2"),
+            "y1": d.get("y1"), "y2": d.get("y2"),
+            "coords": d.get("coords"),
         })
     return out
+
+
+def _seg_interval(d, ax):
+    """一条线性标注测得的那一段区间 (lo, hi)；端点缺失返回 None。"""
+    a = d.get("x1" if ax == "x" else "y1")
+    b = d.get("x2" if ax == "x" else "y2")
+    if a is None or b is None:
+        c = d.get("coords")
+        if isinstance(c, (list, tuple)) and len(c) >= 2:
+            a, b = c[0], c[1]
+    if a is None or b is None:
+        return None
+    return (min(a, b), max(a, b))
+
+
+def _has_overlap(ivs, tol):
+    """任意两段有明显重叠 → 这组不是"首尾相接的链"。"""
+    for i in range(len(ivs)):
+        for j in range(i + 1, len(ivs)):
+            a1, b1 = ivs[i]
+            a2, b2 = ivs[j]
+            if min(b1, b2) - max(a1, a2) > tol:
+                return True
+    return False
 
 
 def _view_extent_mm(v):
@@ -107,6 +138,15 @@ def check_value_groups(mdims, ext, tol_ratio=0.02, min_tol_mm=0.5):
     抓两类问题：
       * closure   段值之和装不进投影（重复标注 / 数值与几何矛盾）
       * under_dim 段值之和小於跨度（有未标注的凸出）
+
+    ★ 前提：这组标注得是**首尾相接的链**，Σ段值才等于总尺寸。
+    但图纸里还有另一种合法写法——**同一基准的并联/嵌套标注**（坐标式标注）：
+      * bracket 的 `head_h`(0→27) 与 `arm_h`(0→14) 都从底板底面量起
+      * bracket 的 `arm_outer`(−14→14) 与 `arm_inner`(−8→8) 都关于中心对称
+    这类标注**互相重叠**，Σ 是 41/44 这种无意义的和，照旧判会误报
+    「装不进投影」（2026-10-15：修 s5b 误读 bug 后 bracket 才暴露出来的假 error）。
+    因此先用几何端点判链——**有重叠就不是链**，只记 info 不做闭合判定。
+
     dia/rad 不参与线性闭合（它们是径向量，归径向链管）。
     """
     issues = []
@@ -123,9 +163,36 @@ def check_value_groups(mdims, ext, tol_ratio=0.02, min_tol_mm=0.5):
         span = e[ax][1] - e[ax][0]
         if span <= 0:
             continue
-        s = sum(float(d.get("value_mm") or 0.0) for d in segs)
         tol = max(min_tol_mm, tol_ratio * span)
         names = "+".join(str(d.get("text")) for d in segs)
+
+        # 判链：所有段都有几何端点、且存在重叠 → 同基准并联标注，不做求和校验。
+        # 但也别就此放过 —— 换成一条**与链无关**的精确判据：
+        # 任何单条标注的实测长度都不可能超过该视图在该方向的整体跨度
+        # （跨度=零件在该轴上的总尺寸），超了就是数值与几何直接矛盾。
+        ivs = [_seg_interval(d, ax) for d in segs]
+        for d, iv in zip(segs, ivs):
+            if iv is not None and (iv[1] - iv[0]) > span + tol:
+                issues.append({
+                    "kind": "seg_exceeds_span", "severity": "error",
+                    "msg": "模型侧 %s 视图 %s 向标注 %s = %.3f 超过该视图跨度 %.3f"
+                           "（差 %+.3f）—— 数值与几何矛盾"
+                           % (view, ax, d.get("text"), iv[1] - iv[0], span,
+                              (iv[1] - iv[0]) - span),
+                    "view": view, "axis": ax, "label": d.get("text"),
+                    "seg": round(iv[1] - iv[0], 3), "span": round(span, 3),
+                })
+        if len(segs) > 1 and all(v is not None for v in ivs) and _has_overlap(ivs, tol):
+            issues.append({
+                "kind": "parallel_dims", "severity": "info",
+                "msg": "模型侧 %s 视图 %s 向为同基准/嵌套标注（%s）—— 非链式，"
+                       "跳过闭合校验" % (view, ax, names),
+                "view": view, "axis": ax, "span": round(span, 3),
+                "intervals": [[round(v[0], 3), round(v[1], 3)] for v in ivs],
+            })
+            continue
+
+        s = sum(float(d.get("value_mm") or 0.0) for d in segs)
         if s > span + tol:
             issues.append({
                 "kind": "closure", "severity": "error",
