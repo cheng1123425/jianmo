@@ -144,12 +144,23 @@ python -m venv .venv
 
 ### 零件目录 `parts/`
 
-| 目录 | 零件 | 状态 |
-|---|---|---|
-| `parts/gasket/` | 加工垫片 | ✅ **默认零件**（`pipe.py`，闭环 pass）|
-| `parts/bracket/` | 铰链支座（双耳） | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 pass） |
-| `parts/lbracket/` | L 形支座（单立板双耳） | ✅ 已建完整流水线（`pipe.py --part parts/lbracket`，闭环 pass；按原图重修：叶形底板 56×40 + 顶双耳 R7/R6,5 + 中央窗口 8×14 + 3×φ8） |
-| `parts/socket/` | 多耳球铰盖 | ⏳ **未迁入**（`parts/socket/steps/` 为空 —— 现在跑会**直接报错**提示补齐，不会再静默拿垫片那份顶上；旧脚本 `socket_*.py` 在根目录）。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） |
+| 目录 | 零件 | 状态 | 架构版本 |
+|---|---|---|---|
+| `parts/gasket/` | 加工垫片 | ✅ **默认零件**（`pipe.py`，闭环 pass）。⚠️ 出图仍是**独立的老实现**（165 行 matplotlib，4 视图含轴测 Iso），未用 `draw_spec.py` —— 见 `docs/遗留事项与下一步.md` §2.1 | `mpipe/1` @ 2026-10-15 |
+| `parts/bracket/` | 铰链支座（双耳） | ✅ 已迁入消息流水线（`pipe.py --part parts/bracket`，闭环 manual）。出图已改数据驱动（`draw_spec.py`，像素 0 差异） | `mpipe/1` @ 2026-10-15 |
+| `parts/lbracket/` | L 形支座（单立板双耳） | ✅ 已建完整流水线（`pipe.py --part parts/lbracket`，闭环 pass）。出图已改数据驱动（`draw_spec.py`，像素 0 差异） | `mpipe/1` @ 2026-10-15 |
+| `parts/ybracket/` | 双耳支座 | ✅ 已建完整流水线（`pipe.py --part parts/ybracket`，闭环 manual）。出图已改数据驱动（`draw_spec.py`，像素 0 差异） | `mpipe/1` @ 2026-10-15 |
+| `parts/socket/` | 多耳球铰盖 | ⏳ **未迁入**（`parts/socket/steps/` 为空 —— 现在跑会**直接报错**提示补齐，不会再静默拿垫片那份顶上；旧脚本 `socket_*.py` 在根目录）。且图纸信息缺 4 项（4×45° 斜面位置、R3.6/R0.6 作用位置、中心凸台外径、13.8 与 2.5 的关系） | — |
+
+> **「架构版本」这一列是体检表**，记录该零件**最后验证通过的架构版本**。
+> 规则（见 `MSG.md` §〇 接口演进纪律）：
+>
+> - 任何架构改动（尤其**行为变更**：容差 / 算法 / 默认值）后，
+>   必须重跑**全部**零件的 `--loop` 闭环，并更新这一列。
+> - 落后于当前架构版本的零件 = 需要迁移，不允许长期停留在旧版本。
+> - 改架构后跑 `python tools/arch_impact.py` 看波及面；有产品依赖被破坏时
+>   `--strict` 会以退出码 2 拦住上传。
+
 
 每个零件目录结构相同：
 

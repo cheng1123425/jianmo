@@ -1,0 +1,840 @@
+{
+  "ir_version": 1,
+  "part": "gasket",
+  "source": {
+    "from": "build123d 执行+录制",
+    "script": "parts\\gasket\\steps\\s1_build.py",
+    "tool": "tools/recorder.py"
+  },
+  "meta": {},
+  "features": [
+    {
+      "id": "F1",
+      "semantic": {
+        "type": null,
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": null
+      },
+      "params": {
+        "amount": 50.0
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": null,
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    150.0,
+                    122.08995125628032,
+                    -64.17990251256062
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      292.1875,
+                      465.9683088405798,
+                      0.0
+                    ],
+                    400.0,
+                    -122.08995125628032,
+                    20.8990279660117
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      200.0,
+                      0.0,
+                      0.0
+                    ],
+                    75.0,
+                    78.80907670973139,
+                    -157.61815341946277
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      292.1875,
+                      -465.9683088405798,
+                      0.0
+                    ],
+                    400.0,
+                    101.19092329026861,
+                    20.8990279660117
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    150.0,
+                    -57.9100487437197,
+                    -64.17990251256062
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      -292.1875,
+                      -465.9683088405798,
+                      0.0
+                    ],
+                    400.0,
+                    57.9100487437197,
+                    20.899027966011687
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      -200.0,
+                      0.0,
+                      0.0
+                    ],
+                    75.0,
+                    -101.19092329026861,
+                    -157.61815341946277
+                  ]
+                }
+              },
+              {
+                "op": "sketch_center_arc",
+                "params": {
+                  "pts": [
+                    [
+                      -292.1875,
+                      465.9683088405798,
+                      0.0
+                    ],
+                    400.0,
+                    -78.80907670973139,
+                    20.899027966011687
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 50.0
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Sketch",
+          null
+        ],
+        [
+          "Pad",
+          50.0
+        ]
+      ],
+      "deps": [],
+      "drawing": null,
+      "note": null,
+      "_recorded": {
+        "after": {
+          "bbox": [
+            550.0,
+            300.0,
+            50.0
+          ],
+          "volume": 5517132.342,
+          "faces": 10,
+          "solids": 1
+        }
+      },
+      "needs_semantic": true
+    },
+    {
+      "id": "F2",
+      "semantic": {
+        "type": null,
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": "F1"
+      },
+      "params": {
+        "amount": 50
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": "POS(0, 0, P.BASE_T_Z)",
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_circle",
+                "params": {
+                  "pts": [
+                    100
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 50
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Sketch",
+          null
+        ],
+        [
+          "Pad",
+          50
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": null,
+      "_recorded": {
+        "after": {
+          "bbox": [
+            550.0,
+            300.0,
+            100.0
+          ],
+          "volume": 7087928.668,
+          "faces": 12,
+          "solids": 1
+        }
+      },
+      "needs_semantic": true
+    },
+    {
+      "id": "F3",
+      "semantic": {
+        "type": null,
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": "F1"
+      },
+      "params": {
+        "amount": 20
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": "POS(0, 0, P.BASE_T_Z)",
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_circle",
+                "params": {
+                  "pts": [
+                    75.0
+                  ]
+                },
+                "locations": {
+                  "args": [
+                    [
+                      200.0,
+                      0
+                    ],
+                    [
+                      -200.0,
+                      0
+                    ]
+                  ],
+                  "kwargs": {}
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 20
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Sketch",
+          null
+        ],
+        [
+          "Pad",
+          20
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": null,
+      "_recorded": {
+        "after": {
+          "bbox": [
+            550.0,
+            300.0,
+            100.0
+          ],
+          "volume": 7794787.015,
+          "faces": 14,
+          "solids": 1
+        }
+      },
+      "needs_semantic": true
+    },
+    {
+      "id": "F4",
+      "semantic": {
+        "type": null,
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": "F1"
+      },
+      "params": {
+        "amount": 100.0,
+        "mode": {
+          "_type": "Mode",
+          "name": "SUBTRACT",
+          "value": 2
+        }
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": null,
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_circle",
+                "params": {
+                  "pts": [
+                    75.0
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 100.0,
+            "mode": {
+              "_type": "Mode",
+              "name": "SUBTRACT",
+              "value": 2
+            }
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Sketch",
+          null
+        ],
+        [
+          "Pad",
+          100.0
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": null,
+      "_recorded": {
+        "after": {
+          "bbox": [
+            550.0,
+            300.0,
+            100.0
+          ],
+          "volume": 6027641.148,
+          "faces": 15,
+          "solids": 1
+        }
+      },
+      "needs_semantic": true
+    },
+    {
+      "id": "F5",
+      "semantic": {
+        "type": null,
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": "F1"
+      },
+      "params": {
+        "amount": 70.0,
+        "mode": {
+          "_type": "Mode",
+          "name": "SUBTRACT",
+          "value": 2
+        }
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": null,
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_circle",
+                "params": {
+                  "pts": [
+                    37.5
+                  ]
+                },
+                "locations": {
+                  "args": [
+                    [
+                      200.0,
+                      0
+                    ],
+                    [
+                      -200.0,
+                      0
+                    ]
+                  ],
+                  "kwargs": {}
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 70.0,
+            "mode": {
+              "_type": "Mode",
+              "name": "SUBTRACT",
+              "value": 2
+            }
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Sketch",
+          null
+        ],
+        [
+          "Pad",
+          70.0
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": null,
+      "_recorded": {
+        "after": {
+          "bbox": [
+            550.0,
+            300.0,
+            100.0
+          ],
+          "volume": 5409140.094,
+          "faces": 17,
+          "solids": 1
+        }
+      },
+      "needs_semantic": true
+    }
+  ],
+  "recorded_events": 21,
+  "_events": [
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          150.0,
+          122.08995125628032,
+          -64.17990251256062
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            292.1875,
+            465.9683088405798,
+            0.0
+          ],
+          400.0,
+          -122.08995125628032,
+          20.8990279660117
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            200.0,
+            0.0,
+            0.0
+          ],
+          75.0,
+          78.80907670973139,
+          -157.61815341946277
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            292.1875,
+            -465.9683088405798,
+            0.0
+          ],
+          400.0,
+          101.19092329026861,
+          20.8990279660117
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          150.0,
+          -57.9100487437197,
+          -64.17990251256062
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            -292.1875,
+            -465.9683088405798,
+            0.0
+          ],
+          400.0,
+          57.9100487437197,
+          20.899027966011687
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            -200.0,
+            0.0,
+            0.0
+          ],
+          75.0,
+          -101.19092329026861,
+          -157.61815341946277
+        ]
+      }
+    },
+    {
+      "op": "sketch_center_arc",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          [
+            -292.1875,
+            465.9683088405798,
+            0.0
+          ],
+          400.0,
+          -78.80907670973139,
+          20.899027966011687
+        ]
+      }
+    },
+    {
+      "op": "extrude",
+      "params": {
+        "amount": 50.0
+      },
+      "after": {
+        "bbox": [
+          550.0,
+          300.0,
+          50.0
+        ],
+        "volume": 5517132.342,
+        "faces": 10,
+        "solids": 1
+      }
+    },
+    {
+      "op": "pos",
+      "params": {
+        "args": [
+          0,
+          0,
+          50.0
+        ]
+      }
+    },
+    {
+      "op": "sketch_circle",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          100
+        ]
+      }
+    },
+    {
+      "op": "extrude",
+      "params": {
+        "amount": 50
+      },
+      "after": {
+        "bbox": [
+          550.0,
+          300.0,
+          100.0
+        ],
+        "volume": 7087928.668,
+        "faces": 12,
+        "solids": 1
+      }
+    },
+    {
+      "op": "pos",
+      "params": {
+        "args": [
+          0,
+          0,
+          50.0
+        ]
+      }
+    },
+    {
+      "op": "locations",
+      "params": {
+        "args": [
+          [
+            200.0,
+            0
+          ],
+          [
+            -200.0,
+            0
+          ]
+        ],
+        "kwargs": {}
+      }
+    },
+    {
+      "op": "sketch_circle",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          75.0
+        ]
+      }
+    },
+    {
+      "op": "extrude",
+      "params": {
+        "amount": 20
+      },
+      "after": {
+        "bbox": [
+          550.0,
+          300.0,
+          100.0
+        ],
+        "volume": 7794787.015,
+        "faces": 14,
+        "solids": 1
+      }
+    },
+    {
+      "op": "sketch_circle",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          75.0
+        ]
+      }
+    },
+    {
+      "op": "extrude",
+      "params": {
+        "amount": 100.0,
+        "mode": {
+          "_type": "Mode",
+          "name": "SUBTRACT",
+          "value": 2
+        }
+      },
+      "after": {
+        "bbox": [
+          550.0,
+          300.0,
+          100.0
+        ],
+        "volume": 6027641.148,
+        "faces": 15,
+        "solids": 1
+      }
+    },
+    {
+      "op": "locations",
+      "params": {
+        "args": [
+          [
+            200.0,
+            0
+          ],
+          [
+            -200.0,
+            0
+          ]
+        ],
+        "kwargs": {}
+      }
+    },
+    {
+      "op": "sketch_circle",
+      "plane": null,
+      "plane_n": 0,
+      "params": {
+        "pts": [
+          37.5
+        ]
+      }
+    },
+    {
+      "op": "extrude",
+      "params": {
+        "amount": 70.0,
+        "mode": {
+          "_type": "Mode",
+          "name": "SUBTRACT",
+          "value": 2
+        }
+      },
+      "after": {
+        "bbox": [
+          550.0,
+          300.0,
+          100.0
+        ],
+        "volume": 5409140.094,
+        "faces": 17,
+        "solids": 1
+      }
+    }
+  ],
+  "validate_problems": []
+}

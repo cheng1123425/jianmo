@@ -13,6 +13,58 @@
 
 ---
 
+## 〇、接口演进纪律（2026-10-15 立，与上面维护约定同级，必须遵守）
+
+> 目的：**改架构不应导致产品层重写**。产品层（`parts/*/steps/*.py`）是 AI 写的，
+> 每重写一批就是几万 token；架构层改了却让 4 个零件同时断线，等于把成本转嫁给产品。
+> 这四条是机制兜底，不是靠记性。
+
+### 1. 只增不改
+
+要加新能力 → **新增函数**，不要改老函数的签名。
+老函数过时了 → 标 `deprecated`、文档里不推荐，**实现要留着**。
+
+```python
+# 对的：新增，老的留着
+def add_dia(view, r, **kw):            # deprecated，仅转发
+    return add_dia_by_edge(view, _find_edge(view, r), **kw)
+
+def add_dia_by_edge(view, e1, e2, **kw):   # 真正的新实现
+    ...
+```
+
+老接口只做转发、不持有自己的实现 —— 这样"两套做法长期并存"这个屎山特征就不会出现。
+
+### 2. 禁止替换式改名 / 改签名
+
+❌ 把 `add_dia` 直接改名成 `add_dia_by_edge`、或改它的参数个数
+→ 所有 import 它的产品文件同时断，`arch_impact.py` 会报出是哪几个
+
+### 3. 删除前必须查依赖
+
+**任何**删除架构符号（`lib/*`、`msgio`、`tools/facelevels.py`）之前，必须跑：
+
+```bash
+python tools/arch_impact.py --strict     # 有产品依赖 → 退出码 2，不许删
+```
+
+只有报"无产品文件依赖"时才允许删，删完立刻 `python tools/arch_impact.py --snapshot` 刷新基线。
+
+### 4. 行为变更 ≠ 接口变更 → 必须全零件重跑闭环
+
+改了**容差 / 算法 / 默认值**（比如 `s6b_projection` 的容差 1e-6 → 1e-3），
+接口没变但**判定标准变了**，老零件在新版跑出来的"通过"含义已经不同。
+
+→ 这类改动必须**重跑全部零件的 `--loop` 闭环**，全部 `闭环结局：pass` 才算完成。
+只跑新零件 = 埋雷。
+
+### 配套体检表
+
+`README.md` 的零件目录表有"架构版本"列，记录每个零件**最后验证通过的架构版本**。
+任何一次架构改动后，都要看一眼这张表有没有落后。
+
+---
+
 ## 一、为什么
 
 改造前的耦合（都是隐式传递，出了问题不好追）：
@@ -184,7 +236,18 @@ _msg/
 | `s0_plan` | py | `params` / `dims_spec` / `ref_spec` / `notes/plan_src.md` / `?notes/errors.md` / `?notes/skill_advice.md` | 上轮 `s7` 判定 | `notes/plan.md`（role `plan_md`） | n_stages / n_bad / n_suspect / n_risk | `notes` |
 | `s1_build` | py | `params` | — | `models/*.step`(`model_step`)、`*.stl`(`model_stl`) | bbox / volume / solids | `models` |
 | `s2_drawing` | **fc** | `params`、`@s1_build(model_step)` | `template`（TechDraw 图框） | `_drawing.json`(`drawing_json`)、`*.FCStd`(`fcstd`) | views / n_dims | `.` |
-| `s3_render` | py | `@s2_drawing(drawing_json)` | — | `drawing.pdf`(`drawing_pdf`)、`drawing.png`(`drawing_png`) | n_dims_drawn | `.` |
+| `s3_render` | py | `@s2_drawing(drawing_json)` | — | `drawing.pdf`(`drawing_pdf`)、`drawing.png`(`drawing_png`) | n_dims_declared / n_dims_drawn / shift_dx / shift_dy | `.` |
+
+> **`s3_render` 是共享步骤**（2026-10-15 从零件层下沉，`SHARED_STEPS` 已含它）。
+> 零件的视图落位/顺序/标签/标题栏/标注清单全部搬进 **`parts/<name>/draw_spec.py`**，
+> 零件目录下**不再有 `steps/s3_render.py`**。
+> 效果：改 `lib.drawing_render.render` 签名时**产品层 0 波及**（`arch_impact.py --deps` 已验证）。
+>
+> `draw_spec.py` 提供的两项声明式能力（替代原先散在零件里的 Python）：
+> - `label_from="meas:<label>"` —— 标注数值取 `_drawing.json` 里 FreeCAD **实测值**，改参数自动跟随
+> - `when=dict(kind="circles_near", ...)` —— 条件标注（不满足则跳过该条）
+>
+> 缺 `draw_spec.py` 时**直接报错退出**，不静默回退（与 s1~s8 的策略一致）。
 | `s4_table` | py | `params`、`dims_spec`、`@s2_drawing(drawing_json)` | — | `dims_table.md/.png/.pdf` | rows / consistent / mismatch | `.` |
 | `s5_collect` | py | `@s2_drawing(drawing_json)` | — | （无） | 三视图外接 / 圆特征 / 标注实测 | `.` |
 | `s6_compare` | py | `ref_spec` | ← `s5_collect` | （无） | issues / n_geom / n_mark | `.` |

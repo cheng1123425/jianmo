@@ -28,7 +28,7 @@
             "plane": {
               "plane": "Plane.XY",
               "offset": null,
-              "resolved": false
+              "resolved": true
             },
             "ops": [
               {
@@ -178,9 +178,14 @@
           "sketch",
           {
             "plane": {
-              "plane": "Plane.YZ.offset(P.WALL_C_X)",
-              "offset": "P.WALL_C_X",
-              "resolved": false
+              "plane": "Plane.YZ",
+              "offset": 48.0,
+              "z_dir": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "resolved": true
             },
             "ops": [
               {
@@ -392,9 +397,14 @@
           "sketch",
           {
             "plane": {
-              "plane": "Plane.XZ.offset(-wy)",
-              "offset": "-wy",
-              "resolved": false
+              "plane": "Plane.XZ",
+              "offset": -20.0,
+              "z_dir": [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              "resolved": true
             },
             "ops": [
               {
@@ -870,6 +880,7 @@
     {
       "op": "sketch_polygon",
       "plane": null,
+      "plane_n": 0,
       "params": {
         "pts": [
           [
@@ -979,6 +990,7 @@
     {
       "op": "sketch_polygon",
       "plane": null,
+      "plane_n": 1,
       "params": {
         "pts": [
           [
@@ -1148,6 +1160,7 @@
     {
       "op": "sketch_line",
       "plane": null,
+      "plane_n": 2,
       "params": {
         "pts": [
           [
@@ -1164,6 +1177,7 @@
     {
       "op": "sketch_line",
       "plane": null,
+      "plane_n": 2,
       "params": {
         "pts": [
           [
@@ -1180,6 +1194,7 @@
     {
       "op": "sketch_line",
       "plane": null,
+      "plane_n": 2,
       "params": {
         "pts": [
           [

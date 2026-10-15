@@ -170,7 +170,12 @@ BY_NAME = {s["name"]: s for s in STEPS}
 # docstring、路径块、模块名一类的噪音（详见 docs/v4-第2-3刀方案（待批）.md §2）。
 SHARED_STEPS = {"s0_plan", "s9_record", "s0b_dwgread", "s5b_dimchain",
                 "s6b_projection",
-                "s4_table", "s5_collect", "s7_decide", "s8_apply"}
+                "s4_table", "s5_collect", "s7_decide", "s8_apply",
+                # s3_render：2026-10-15 从零件层下沉到共享层。
+                # 零件的五样数据（视图落位/顺序/标签/标题栏/标注清单）搬进
+                # parts/<name>/draw_spec.py，零件目录不再有 steps/s3_render.py。
+                # 效果：改 lib.drawing_render.render 签名时产品层 0 波及。
+                "s3_render"}
 
 CHAIN = [s["name"] for s in STEPS if not s.get("loop")]          # s0,s1,s2,s3,s4
 # s5,s6,s7（s8 按需单独执行；s9 是每轮结尾的记录员，单独放 LOOP_TAIL）
