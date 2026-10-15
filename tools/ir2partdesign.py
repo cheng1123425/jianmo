@@ -36,6 +36,12 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+# 算子注册表 = 单源（lib/ops.py）。本生成器**不再硬编码**「支持哪些算子」，
+# 而是从注册表派生（`REG.supported(段, REG.PD)`）。见 lessons.md §8.7「同步点」。
+from lib import ops as REG                                    # noqa: E402
 
 
 # ---------------------------------------------------------------- 参数 / 平面
@@ -98,21 +104,30 @@ def build_plan(ir, params_ns):
         fid = f["id"]
         after = (f.get("_recorded") or {}).get("after")
         if kind == "加法":
-            sketch_seg = extrude_params = None
+            sketch_seg = add_op = add_params = None
             for seg in f.get("impl", []):
                 if seg[0] == "sketch":
                     sketch_seg = seg[1]
-                elif seg[0] in ("extrude", "loft", "revolve", "sweep"):
-                    extrude_params = seg[1] or {}
-            if sketch_seg is None or not extrude_params:
-                plan.append({"op": "placeholder", "fid": fid, "why": "无草图/extrude 段"})
+                elif seg[0] in REG.impl_ops(REG.SEG_ADD):     # 段的算子名从注册表派生
+                    add_op, add_params = seg[0], (seg[1] or {})
+            if sketch_seg is None or add_op is None:
+                plan.append({"op": "placeholder", "fid": fid, "why": "无草图/加法段"})
+                continue
+            # 支持与否**由注册表裁决**（原先这里把 revolve/loft/sweep 也当 extrude 生成，
+            # 是静默错几何；现在明确降级为 placeholder 并说明注册表状态）
+            if REG.state(add_op, REG.PD) != REG.IMPL:
+                plan.append({"op": "placeholder", "fid": fid,
+                             "why": "加法算子 %r 在 FreeCAD 侧状态=%s（见 lib/ops.py）"
+                                    % (add_op, REG.state(add_op, REG.PD))})
                 continue
             base, off = _plane_base_offset(sketch_seg.get("plane") or {}, params_ns)
+            _sk_ok = REG.supported(REG.SEG_SKETCH, REG.PD)    # 草图算子从注册表派生
             pts = []
             for o in sketch_seg.get("ops", []):
-                if o.get("op") == "sketch_polygon":
+                opname = o.get("op")
+                if opname == "sketch_polygon" and opname in _sk_ok:
                     pts = o["params"].get("pts", [])
-                elif o.get("op") == "sketch_line":
+                elif opname == "sketch_line" and opname in _sk_ok:
                     sp = o["params"].get("pts", [])
                     if sp and not pts:
                         pts = list(sp)
@@ -123,7 +138,7 @@ def build_plan(ir, params_ns):
                 plan.append({"op": "placeholder", "fid": fid, "why": "草图点数不足"})
                 continue
             plan.append({"op": "pad", "fid": fid, "base": base, "offset": off,
-                         "pts": ring, "amount": extrude_params.get("amount"), "after": after})
+                         "pts": ring, "amount": add_params.get("amount"), "after": after})
         elif kind == "减法":
             tool_op = None
             for seg in f.get("impl", []):
@@ -133,19 +148,25 @@ def build_plan(ir, params_ns):
             pos = (p.get("pos") or {}).get("args")
             args = p.get("args", [])
             rot = p.get("rotation")
-            if tool_op == "tool_cylinder" and pos:
-                axis = "X" if (rot and len(rot) == 3 and abs(rot[1] - 90) < 1e-6) else "Z"
-                aidx = {"X": 0, "Y": 1, "Z": 2}[axis]
-                plan.append({"op": "pocket_cyl", "fid": fid, "axis": axis, "axis_idx": aidx,
-                             "center": list(pos), "r": args[0],
-                             "h": (args[1] if len(args) > 1 else None), "after": after})
-            elif tool_op == "tool_box" and pos:
-                plan.append({"op": "pocket_box", "fid": fid, "center": list(pos),
-                             "dims": list(args), "expected_vol": (after or {}).get("volume"),
-                             "after": after})
+            _tool_ok = REG.supported(REG.SEG_TOOL, REG.PD)    # 工具算子从注册表派生
+            if tool_op in _tool_ok and pos:
+                if tool_op == "tool_cylinder":
+                    axis = "X" if (rot and len(rot) == 3 and abs(rot[1] - 90) < 1e-6) else "Z"
+                    aidx = {"X": 0, "Y": 1, "Z": 2}[axis]
+                    plan.append({"op": "pocket_cyl", "fid": fid, "axis": axis, "axis_idx": aidx,
+                                 "center": list(pos), "r": args[0],
+                                 "h": (args[1] if len(args) > 1 else None), "after": after})
+                elif tool_op == "tool_box":
+                    plan.append({"op": "pocket_box", "fid": fid, "center": list(pos),
+                                 "dims": list(args), "expected_vol": (after or {}).get("volume"),
+                                 "after": after})
+                else:                               # 注册表说支持但本处没有实现体 → 明示
+                    plan.append({"op": "placeholder", "fid": fid,
+                                 "why": "注册表声明支持但生成器无实现体：%r" % tool_op})
             else:
                 plan.append({"op": "placeholder", "fid": fid,
-                             "why": "未支持的减法工具 %r" % tool_op})
+                             "why": "未支持/未定位的减法工具 %r（注册表 pd=%s）"
+                                    % (tool_op, REG.state(tool_op, REG.PD))})
         else:
             plan.append({"op": "placeholder", "fid": fid, "why": "%s 未覆盖" % kind})
     return plan

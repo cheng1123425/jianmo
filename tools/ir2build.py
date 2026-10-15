@@ -39,6 +39,14 @@ import os
 import re
 import sys
 
+# 算子注册表 = 单源（lib/ops.py）。本生成器**不再硬编码**「支持哪些算子」，
+# 而是从注册表派生（`REG.supported(段, REG.B3D)` / `REG.b3d_call(算子)`）。
+# 理由见 lessons.md §8.7「同步点」：原先一个算子要写在 ≥4 处，漏改一处即静默错误。
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from lib import ops as REG                                    # noqa: E402
+
 
 # ---------------------------------------------------------------- 参数解析
 
@@ -208,11 +216,16 @@ def _emit_sketch_ops(ops, indent):
     """
     pad = " " * indent
     lines = []
-    handled = {"sketch_polygon", "sketch_circle", "sketch_rect",
-               "sketch_line", "sketch_polyline"}
+    # 支持的草图 op 集合**从注册表派生**（不再硬编码）。
+    # `_INLINE_LINE_OPS` 是「不在本循环处理、留给后面 BuildLine 块」的 op。
+    _sketch_supported = REG.supported(REG.SEG_SKETCH, REG.B3D)
+    _INLINE_LINE_OPS = ("sketch_line", "sketch_polyline", "sketch_center_arc")
 
     for o in ops:
         kind = o.get("op")
+        if kind not in _sketch_supported:
+            lines.append("%s# PLACEHOLDER: 注册表未声明支持的草图 op %r" % (pad, kind))
+            continue
         p = o.get("params", {})
         if kind == "sketch_polygon":
             pts = ", ".join(_pt(q) for q in p.get("pts", []))
@@ -237,14 +250,13 @@ def _emit_sketch_ops(ops, indent):
                 lines.append("%s    %s" % (pad, body.strip()))
             else:
                 lines.append(body)
-        elif kind in ("sketch_line", "sketch_polyline", "sketch_center_arc"):
+        elif kind in _INLINE_LINE_OPS:
             continue                       # 统一在后面按 BuildLine 块处理
         else:
             lines.append("%s# PLACEHOLDER: 未支持的草图 op %r" % (pad, kind))
 
     # BuildLine 块：polyline 与 line 混在同一块里（脚本常这么写）
-    ln_ops = [o for o in ops if o.get("op") in ("sketch_line", "sketch_polyline",
-                                            "sketch_center_arc")]
+    ln_ops = [o for o in ops if o.get("op") in _INLINE_LINE_OPS]
     if ln_ops:
         lines.append("%swith BuildLine() as _ln:" % pad)
         for o in ln_ops:
@@ -368,9 +380,11 @@ def generate(ir, part_name, params_ns):
                 tool_op = seg[1]
         params = f.get("params", {})
         pos, args, rot = _emit_tool(params)
-        cls = {"tool_cylinder": "Cylinder", "tool_box": "Box",
-               "tool_sphere": "Sphere", "tool_cone": "Cone",
-               "tool_torus": "Torus"}.get(tool_op)
+        # build123d 侧的类名**从注册表派生**（原先此处硬编码 5 个映射）
+        if REG.state(tool_op, REG.B3D) == REG.IMPL:
+            cls = REG.b3d_call(tool_op)
+        else:
+            cls = None
         if cls is None or pos is None:
             lines.append("# PLACEHOLDER: %s 未支持的减法工具 %r" % (fid, tool_op))
             continue

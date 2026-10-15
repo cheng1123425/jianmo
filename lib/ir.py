@@ -50,15 +50,26 @@ STEP 是 AP214 纯几何，无参数、无特征树、无历史（是"照片"不
 import json
 import os
 
+try:                                    # 被 `from lib import ir` 导入
+    from . import ops as _ops
+except ImportError:                     # 被 `import ir`（sys.path 指向 lib/）导入
+    import ops as _ops
+
 # ---------------------------------------------------------------- 常量词表
+#
+# ⚠️ 词表**不在这里定义**，而是从 `lib/ops.py`（算子注册表 = 单源）派生。
+# 理由见 `lessons.md` §8.7「同步点」：原先一个算子要写在 ≥4 处，漏改一处就是
+# 静默错误。现在「加一个算子」只需改 `lib/ops.py` 一处，词表与两个生成器自动跟上。
 
 #: structural.kind —— 特征在建模里的角色
-KINDS = ("主体", "加法", "减法", "边处理")
+KINDS = _ops.kinds()
 
 #: tree.op —— 映射到 FreeCAD 原生特征的算子词表
 #: （impl 里的原始算子翻成这些；无对应物的标 None = 只读占位节点）
-TREE_OPS = ("Sketch", "Pad", "Pocket", "Fillet", "Chamfer", "Hole",
-            "Placeholder")
+TREE_OPS = _ops.tree_ops()
+
+#: impl 里的算子名（按段归类）—— 校验 impl 用；同时供生成器查「该段支持哪些算子」
+IMPL_OPS = _ops.impl_ops()
 
 #: drawing.dim_kind —— 标注形式（与 s2_drawing / TechDraw 对齐）
 DIM_KINDS = ("dia", "rad", "distX", "distY", "extentH", "extentV")

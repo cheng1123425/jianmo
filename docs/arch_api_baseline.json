@@ -208,6 +208,14 @@
           "template",
           "view_specs"
         ],
+        "_make_section": [
+          "self",
+          "spec"
+        ],
+        "_finish_section": [
+          "self",
+          "spec"
+        ],
         "visible": [
           "self",
           "view"
@@ -270,6 +278,158 @@
           "X",
           "Y",
           "label"
+        ],
+        "find_hline": [
+          "self",
+          "view",
+          "y",
+          "tol"
+        ],
+        "find_vline": [
+          "self",
+          "view",
+          "x",
+          "tol"
+        ],
+        "_bound_dim": [
+          "self",
+          "view",
+          "type_str",
+          "refs",
+          "X",
+          "Y",
+          "kind",
+          "label",
+          "extra"
+        ],
+        "disty_by_edge": [
+          "self",
+          "view",
+          "y1",
+          "y2",
+          "X",
+          "Y",
+          "label"
+        ],
+        "distx_by_edge": [
+          "self",
+          "view",
+          "x1",
+          "x2",
+          "X",
+          "Y",
+          "label"
+        ],
+        "view_x_range": [
+          "self",
+          "view"
+        ],
+        "view_y_range": [
+          "self",
+          "view"
+        ],
+        "view_axes": [
+          "self",
+          "view",
+          "tol"
+        ],
+        "_model_axis_lo": [
+          "self",
+          "axis"
+        ],
+        "_axis_flip": [
+          "self",
+          "view",
+          "axis",
+          "is_vertical"
+        ],
+        "_model_to_view": [
+          "self",
+          "view",
+          "axis",
+          "v",
+          "is_vertical"
+        ],
+        "model_dim": [
+          "self",
+          "view",
+          "a1",
+          "a2",
+          "axis",
+          "X",
+          "Y",
+          "label",
+          "allow_fallback"
+        ],
+        "dia_by_center": [
+          "self",
+          "view",
+          "r",
+          "cx",
+          "cy",
+          "X",
+          "Y",
+          "label",
+          "optional"
+        ],
+        "rad_by_center": [
+          "self",
+          "view",
+          "r",
+          "cx",
+          "cy",
+          "X",
+          "Y",
+          "label",
+          "optional"
+        ],
+        "_circle_at": [
+          "self",
+          "view",
+          "r",
+          "cx",
+          "cy",
+          "tol"
+        ],
+        "vertex_index_at": [
+          "self",
+          "view",
+          "x",
+          "y",
+          "tol"
+        ],
+        "_center_vertex_indices": [
+          "self",
+          "view",
+          "r",
+          "tol",
+          "n",
+          "pick",
+          "axis"
+        ],
+        "distx_by_centers": [
+          "self",
+          "view",
+          "r",
+          "X",
+          "Y",
+          "label",
+          "tol",
+          "n",
+          "pick",
+          "optional"
+        ],
+        "disty_by_centers": [
+          "self",
+          "view",
+          "r",
+          "X",
+          "Y",
+          "label",
+          "tol",
+          "n",
+          "pick",
+          "optional"
         ],
         "add_anchor_dim": [
           "self",
