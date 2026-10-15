@@ -1,0 +1,157 @@
+{
+  "ir_version": 1,
+  "part": "acc_plate",
+  "source": {
+    "from": "人工标注（纯数据零件）",
+    "script": null,
+    "tool": "tools/new_part.py"
+  },
+  "meta": {},
+  "features": [
+    {
+      "id": "F1",
+      "semantic": {
+        "type": "主体",
+        "role": "加法"
+      },
+      "structural": {
+        "kind": "加法",
+        "target": null
+      },
+      "params": {
+        "amount": 10.0
+      },
+      "impl": [
+        [
+          "sketch",
+          {
+            "plane": {
+              "plane": "Plane.XY",
+              "offset": null,
+              "resolved": true
+            },
+            "ops": [
+              {
+                "op": "sketch_rect",
+                "params": {
+                  "pts": [
+                    60.0,
+                    40.0
+                  ],
+                  "align": null
+                }
+              }
+            ]
+          }
+        ],
+        [
+          "extrude",
+          {
+            "amount": 10.0
+          }
+        ]
+      ],
+      "tree": [
+        [
+          "Pad",
+          {
+            "length": 10.0
+          }
+        ]
+      ],
+      "deps": [],
+      "drawing": null,
+      "note": "示例：矩形底板。按实际零件改 ops。"
+    },
+    {
+      "id": "F2",
+      "semantic": {
+        "type": "孔",
+        "role": "减法"
+      },
+      "structural": {
+        "kind": "减法",
+        "target": "F1"
+      },
+      "params": {
+        "pos": {
+          "args": [
+            -20.0,
+            0.0,
+            5.0
+          ]
+        },
+        "args": [
+          4.0,
+          12.0
+        ],
+        "rotation": null
+      },
+      "impl": [
+        [
+          "tool",
+          "tool_cylinder"
+        ]
+      ],
+      "tree": [
+        [
+          "Pocket",
+          {
+            "type": "ThroughAll",
+            "reversed": true
+          }
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": "示例：左孔。"
+    },
+    {
+      "id": "F3",
+      "semantic": {
+        "type": "孔",
+        "role": "减法"
+      },
+      "structural": {
+        "kind": "减法",
+        "target": "F1"
+      },
+      "params": {
+        "pos": {
+          "args": [
+            20.0,
+            0.0,
+            5.0
+          ]
+        },
+        "args": [
+          4.0,
+          12.0
+        ],
+        "rotation": null
+      },
+      "impl": [
+        [
+          "tool",
+          "tool_cylinder"
+        ]
+      ],
+      "tree": [
+        [
+          "Pocket",
+          {
+            "type": "ThroughAll",
+            "reversed": true
+          }
+        ]
+      ],
+      "deps": [
+        "F1"
+      ],
+      "drawing": null,
+      "note": "示例：右孔。"
+    }
+  ]
+}

@@ -81,6 +81,9 @@ class DrawingBuilder(object):
         self.views = {}
         self.plot = {}
         for spec in view_specs:
+            if spec.get("type") == "section":
+                self._make_section(spec)
+                continue
             v = self.doc.addObject("TechDraw::DrawViewPart", "View" + spec["name"])
             v.Source = [self.obj]
             v.Direction = spec["dir"]
@@ -92,7 +95,49 @@ class DrawingBuilder(object):
             self.views[spec["name"]] = v
             self.plot[spec["name"]] = spec.get("scale", 1.0)
         self.doc.recompute()
+        for spec in view_specs:                     # 剖视要在基点视图 recompute 之后再建
+            if spec.get("type") == "section":
+                self._finish_section(spec)
+        self.doc.recompute()
         self.dims = []
+
+    def _make_section(self, spec):
+        """建剖视图（先建，等基点视图 recompute 后再补 BaseView）。"""
+        v = self.doc.addObject("TechDraw::DrawViewSection", "View" + spec["name"])
+        v.Source = [self.obj]
+        v.SectionNormal = spec["normal"]
+        v.SectionOrigin = spec.get("origin", (0, 0, 0))
+        v.SectionDirection = spec.get("section_dir",
+                                      spec.get("dir"))
+        v.SectionSymbol = spec.get("symbol", spec["name"][:1])
+        v.Direction = spec["dir"]
+        if spec.get("xdir") is not None:
+            v.XDirection = spec["xdir"]
+        self.page.addView(v)
+        v.X = spec["X"]
+        v.Y = spec["Y"]
+        self.views[spec["name"]] = v
+        self.plot[spec["name"]] = spec.get("scale", 1.0)
+
+    def _finish_section(self, spec):
+        """补 `BaseView`（FreeCAD 强制：剖视必须挂在某个基点视图上，否则 0 边）。"""
+        name = spec["name"]
+        v = self.views[name]
+        bname = spec.get("base")
+        if bname is None:                            # 默认挂第一个非剖视视图
+            for k in self.views:
+                if k != name and self.views[k].TypeId.endswith("DrawViewPart"):
+                    bname = k
+                    break
+        if bname and bname in self.views:
+            v.BaseView = self.views[bname]
+        # 剖面线（可选）：h.Source = (view, [edges])，边空 = 整个剖面
+        if spec.get("hatch"):
+            try:
+                h = self.doc.addObject("TechDraw::DrawHatch", "Hatch" + name)
+                h.Source = (v, list(spec.get("hatch_edges") or []))
+            except Exception:
+                pass
 
     # ---------------- 工具 ----------------
     def visible(self, view):

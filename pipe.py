@@ -185,7 +185,18 @@ SHARED_STEPS = {"s0_plan", "s9_record", "s0b_dwgread", "s5b_dimchain",
                 # 零件的五样数据（视图落位/顺序/标签/标题栏/标注清单）搬进
                 # parts/<name>/draw_spec.py，零件目录不再有 steps/s3_render.py。
                 # 效果：改 lib.drawing_render.render 签名时产品层 0 波及。
-                "s3_render"}
+                "s3_render",
+                # s1_build：2026-10-15 增加共享的 **IR 驱动**实现。
+                # 零件自带 steps/s1_build.py → 用自带的（老零件/逃生口，本地优先）；
+                # 没自带 → 读 ir.json，用 tools/ir2build.py 生成 build123d 脚本并执行。
+                # 目的：让「新增零件不写 Python」成立（阶段 1 的验收）。
+                "s1_build",
+                # s2_drawing：2026-10-15 增加共享的 **数据驱动**实现。
+                # 视图 ← draw_spec.VIEWS/PLACE；标注 ← ir_anchors.json + draw_spec.DIM_POS。
+                "s2_drawing",
+                # s6_compare：2026-10-15 增加共享的 **ref_spec 驱动**实现。
+                # 检查项从 ref_spec 的 TOP/FRONT/RIGHT/FACE_LEVELS/MARKS 推出，按声明逐项核对。
+                "s6_compare"}
 
 CHAIN = [s["name"] for s in STEPS if not s.get("loop")]          # s0,s1,s2,s3,s4
 # s5,s6,s7（s8 按需单独执行；s9 是每轮结尾的记录员，单独放 LOOP_TAIL）
