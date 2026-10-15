@@ -80,7 +80,10 @@ class DrawingBuilder(object):
 
         self.views = {}
         self.plot = {}
+        self._specs = {}                            # 视图名 -> 声明（判轴向用）
         for spec in view_specs:
+            if spec.get("name"):
+                self._specs[spec["name"]] = spec
             if spec.get("type") == "section":
                 self._make_section(spec)
                 continue
@@ -100,6 +103,7 @@ class DrawingBuilder(object):
                 self._finish_section(spec)
         self.doc.recompute()
         self.dims = []
+        self._axis_flip_cache = {}                 # (视图名, 轴, 是否竖直) -> 是否翻转
 
     def _make_section(self, spec):
         """建剖视图（先建，等基点视图 recompute 后再补 BaseView）。"""
@@ -331,6 +335,147 @@ class DrawingBuilder(object):
         return self._bound_dim(view, "DistanceX", ["Edge%d" % k1, "Edge%d" % k2],
                                X, Y, "distX", label,
                                {"x1": float(x1), "x2": float(x2)})
+
+    # ------------------------------------------------------------------
+    #  按**模型坐标**给尺寸（内部换算成视图 2D 坐标）
+    #  `*_by_edge` 吃的是视图 2D 坐标，但零件作者手里只有模型尺寸（`P.BASE_T_Z`…），
+    #  直接传模型坐标是错的 —— 视图是**居中**的，模型 z=0 通常不是视图 y=0。
+    #  下面三个方法把这一步收口，避免每个零件各写一遍换算（也避免再犯）。
+    # ------------------------------------------------------------------
+
+    def view_x_range(self, view):
+        """视图 2D x 范围 (x0, x1)。"""
+        xs = []
+        for e in self.visible(view):
+            a = e.valueAt(e.FirstParameter)
+            b = e.valueAt(e.LastParameter)
+            xs += [a.x, b.x]
+        return (min(xs), max(xs)) if xs else (None, None)
+
+    def view_y_range(self, view):
+        """视图 2D y 范围 (y0, y1)。"""
+        ys = []
+        for e in self.visible(view):
+            a = e.valueAt(e.FirstParameter)
+            b = e.valueAt(e.LastParameter)
+            ys += [a.y, b.y]
+        return (min(ys), max(ys)) if ys else (None, None)
+
+    def view_axes(self, view, tol=0.6):
+        """判定视图的（水平轴, 竖直轴）各对应模型哪个轴，如 ('X','Z')、('Y','Z')。
+
+        **优先按视图声明解析**（`dir` + `XDirection`），因为「跨度匹配」不可靠 ——
+        实测 bracket 的 Right 视图竖直跨度 35.19 ≠ 模型 Z 跨度 37（顶端是圆弧，
+        可见边极值够不到），跨度法会判不出来。
+        声明缺失时退回「视图 2D 跨度 == 模型某轴跨度」匹配。判不出返回 (None, None)。
+        """
+        # ---- ① 按声明解析 ----
+        name = view.Name[4:] if view.Name.startswith("View") else view.Name
+        spec = self._specs.get(name)
+        if spec and spec.get("dir"):
+            d = list(spec["dir"]) + [0] * (3 - len(spec["dir"]))
+            xd = spec.get("xdir")
+            axname = ("X", "Y", "Z")
+
+            def dom(v):
+                if v is None:
+                    return None
+                v = list(v) + [0] * (3 - len(v))
+                i = max(range(3), key=lambda k: abs(v[k]))
+                return axname[i] if abs(v[i]) > tol else None
+            h = dom(xd)
+            if h is None:                       # 未给 XDirection：取与 dir 不平行的主方向
+                cands = [a for a, comp in zip(axname, d) if abs(comp) < tol]
+                h = cands[0] if cands else None
+            if h is not None:
+                # 竖直轴 = dir × 水平轴 里与 dir 不平行的那一轴
+                i = axname.index(h)
+                for j, comp in zip(range(3), d):
+                    if j != i and abs(comp) < tol:
+                        return (h, axname[j])
+        # ---- ② 退回跨度匹配 ----
+        bb = self.obj.Shape.BoundBox
+        spans = {"X": bb.XLength, "Y": bb.YLength, "Z": bb.ZLength}
+        vx = self.view_x_range(view)
+        vy = self.view_y_range(view)
+        if vx[0] is None or vy[0] is None:
+            return (None, None)
+
+        def match(s):
+            hit = [ax for ax, sp in spans.items() if abs(s - sp) <= tol]
+            return hit[0] if len(hit) == 1 else None
+        return (match(vx[1] - vx[0]), match(vy[1] - vy[0]))
+
+    def _model_axis_lo(self, axis):
+        bb = self.obj.Shape.BoundBox
+        return {"X": bb.XMin, "Y": bb.YMin, "Z": bb.ZMin}[axis]
+
+    def _axis_flip(self, view, axis, is_vertical):
+        """该视图沿 axis 的方向相对模型轴是否翻转（探测 + **按视图缓存**）。
+
+        探测法：视图的两个极值坐标里，**哪个真的有轮廓边**，模型低端就映射到那一端。
+        （模型的底面/最左面通常有轮廓边；若两端都有边则判"不翻转"。）
+        缓存保证同一视图上所有尺寸的朝向**一致**（不会一条正一条反）。
+        """
+        key = (view.Name, axis, is_vertical)
+        if key in self._axis_flip_cache:
+            return self._axis_flip_cache[key]
+        if is_vertical:
+            rng = self.view_y_range(view)
+            hit_lo = self.find_hline(view, rng[0])[0] is not None
+            hit_hi = self.find_hline(view, rng[1])[0] is not None
+        else:
+            rng = self.view_x_range(view)
+            hit_lo = self.find_vline(view, rng[0])[0] is not None
+            hit_hi = self.find_vline(view, rng[1])[0] is not None
+        flip = (not hit_lo) and hit_hi          # 只有"低值端没边、高值端才有边"才算翻转
+        self._axis_flip_cache[key] = flip
+        return flip
+
+    def _model_to_view(self, view, axis, v, is_vertical):
+        lo = self._model_axis_lo(axis)
+        rng = self.view_y_range(view) if is_vertical else self.view_x_range(view)
+        if self._axis_flip(view, axis, is_vertical):
+            return rng[1] - (v - lo)
+        return rng[0] + (v - lo)
+
+    def model_dim(self, view, a1, a2, axis, X, Y, label, allow_fallback=True):
+        """按**模型坐标**给线性尺寸：`axis ∈ {'X','Y','Z'}`，`a1`/`a2` 是该轴上的模型坐标。
+
+        内部：判定视图轴向 → 换算成视图 2D 坐标（含翻转）→ `disty_by_edge`/`distx_by_edge`。
+        轴向不符（该视图里没有这个轴）会明确报错，不会静默标错。
+
+        `allow_fallback`：**只画可见线**的投影里，有些尺寸的两端本来就不出轮廓边
+        （实测：bracket 底板 z=8、ybracket 底座顶 z=48 在剖视里都没有水平边）。
+        此时**明确退化**到两点法（`add_disty`/`add_distx`）——尺寸值仍由 FreeCAD
+        从模型实算、仍是真的尺寸线，只是不随 3D 几何重排而「绑边跟随」。
+        退化会打 `[warn]`，不静默。
+        """
+        h_ax, v_ax = self.view_axes(view)
+        if axis == v_ax:
+            y1 = self._model_to_view(view, axis, a1, True)
+            y2 = self._model_to_view(view, axis, a2, True)
+            try:
+                return self.disty_by_edge(view, y1, y2, X, Y, label)
+            except RuntimeError:
+                if not allow_fallback:
+                    raise
+                print("[drawing_fc][warn] %s 视图没有可绑的水平边（可见投影未露该轮廓）"
+                      "→ %s 退回两点法（值仍 FreeCAD 实算）" % (view.Name, label))
+                return self.add_disty(view, y1, y2, X, Y, label)
+        if axis == h_ax:
+            x1 = self._model_to_view(view, axis, a1, False)
+            x2 = self._model_to_view(view, axis, a2, False)
+            try:
+                return self.distx_by_edge(view, x1, x2, X, Y, label)
+            except RuntimeError:
+                if not allow_fallback:
+                    raise
+                print("[drawing_fc][warn] %s 视图没有可绑的竖直边（可见投影未露该轮廓）"
+                      "→ %s 退回两点法（值仍 FreeCAD 实算）" % (view.Name, label))
+                return self.add_distx(view, x1, x2, X, Y, label)
+        raise RuntimeError("视图 %s 里没有 %s 轴（实测 水平=%s 竖直=%s）-> %s"
+                           % (view.Name, axis, h_ax, v_ax, label))
 
     def dia_by_center(self, view, r, cx, cy, X, Y, label, optional=False):
         """直径尺寸 —— 按**半径 + 圆心**找圆并绑边。

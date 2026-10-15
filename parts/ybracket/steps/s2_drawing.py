@@ -105,20 +105,21 @@ def place_marks(b, P):
                            _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
 
     # ---- Right：剖视 Y 向线性 ----
-    # 2026-10-15 全部迁到绑边（遗留 §1.4 第②步）：传两条**边**而不是两个点，
-    # 值由 FreeCAD 从投影边实测。find_hline 找不到边会明确报错，不会静默出错误值。
-    # ——不迁的：上面的 ear_pitch（两圆**心**间距，圆心不是边，绑不了）
-    b.disty_by_edge(vr, 0.0, P.WALL_T_Y, _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")
-    b.disty_by_edge(vr, P.WALL_T_Y, P.ARM_L_Y,
-                    _y(vr.X) + 70, _y(vr.Y) - 25, "opening")
+    # 2026-10-15 迁到绑边（遗留 §1.4 第②步）。⚠️ 同日晚修正：Right 视图的
+    # **竖直轴是 Z、水平轴是 Y**（dir=(1,0,0)、xdir=(0,1,0)），所以 wall_t / opening
+    # 这两个 **Y 向**尺寸走的是**水平轴** —— 原写成 `disty_by_edge` 是轴向搞错了
+    # （会去找 y=0/20 的水平边，必然找不到）。现统一用 `model_dim(..., "Y", ...)`，
+    # 由 lib 判定轴向并把**模型坐标**换算成视图 2D 坐标。
+    b.model_dim(vr, 0.0, P.WALL_T_Y, "Y", _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")
+    b.model_dim(vr, P.WALL_T_Y, P.ARM_L_Y, "Y", _y(vr.X) + 70, _y(vr.Y) - 25, "opening")
 
-    # ---- Right：剖视 Z 向线性 ----
-    b.disty_by_edge(vr, 0.0, P.BASE_H_Z, _y(vr.X) - 70, _y(vr.Y) - 25, "base_h")
-    b.disty_by_edge(vr, P.BODY_H_Z - P.ARM_T_Z, P.BODY_H_Z,
-                    _y(vr.X) - 70, _y(vr.Y) + 25, "arm_t")
+    # ---- Right：剖视 Z 向线性（竖直轴）----
+    b.model_dim(vr, 0.0, P.BASE_H_Z, "Z", _y(vr.X) - 70, _y(vr.Y) - 25, "base_h")
+    b.model_dim(vr, P.BODY_H_Z - P.ARM_T_Z, P.BODY_H_Z, "Z",
+                _y(vr.X) - 70, _y(vr.Y) + 25, "arm_t")
     # cbore_depth 是内腔台阶：底面 Z=BODY_H−CBORE_T（孔底那条边）、顶面 Z=BODY_H（上表面）
-    b.disty_by_edge(vr, P.BODY_H_Z - P.CBORE_T_Z, P.BODY_H_Z,
-                    _y(vr.X) - 70, _y(vr.Y), "cbore_depth")
+    b.model_dim(vr, P.BODY_H_Z - P.CBORE_T_Z, P.BODY_H_Z, "Z",
+                _y(vr.X) - 70, _y(vr.Y), "cbore_depth")
 
 
 # ================= 主流程（通用） =================

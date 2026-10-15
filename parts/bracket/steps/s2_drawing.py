@@ -80,13 +80,13 @@ def place_marks(b, P):
     # 不会静默出错误值。
     # ——不迁的：下面 P9（两 φ9 **孔心**距，圆心不是边，绑不了）
     # 28（两臂外宽 = ARM_OUT_C_X × 2）→ 两条臂**外侧面**（竖直边）
-    b.distx_by_edge(vf, -P.ARM_OUT_C_X, P.ARM_OUT_C_X,
-                    _y(vf.X) + 50, _y(vf.Y) + 5, "arm_outer")
+    b.model_dim(vf, -P.ARM_OUT_C_X, P.ARM_OUT_C_X, "X",
+                _y(vf.X) + 50, _y(vf.Y) + 5, "arm_outer")
     # 16（内距 = ARM_GAP_X）→ 两条臂**内侧面**（竖直边）
-    b.distx_by_edge(vf, -P.ARM_IN_C_X, P.ARM_IN_C_X,
-                    _y(vf.X) + 50, _y(vf.Y) + 20, "arm_inner")
+    b.model_dim(vf, -P.ARM_IN_C_X, P.ARM_IN_C_X, "X",
+                _y(vf.X) + 50, _y(vf.Y) + 20, "arm_inner")
     # 8（底板厚）→ 底板上表面 / 下表面两条水平边
-    b.disty_by_edge(vf, 0, P.BASE_T_Z, _y(vf.X) - 5, _y(vf.Y) + 15, "T_base")
+    b.model_dim(vf, 0, P.BASE_T_Z, "Z", _y(vf.X) - 5, _y(vf.Y) + 15, "T_base")
     # 62（底板总长）—— 已由锚点生成则跳过
     if "L" not in covered:
         b.add_extent(vf, 0, _y(vf.X) + 50, _y(vf.Y) - 25, "L")
@@ -105,11 +105,11 @@ def place_marks(b, P):
         b.add_dia(vf, P.ARM_THRU_D / 2, _y(vf.X) + 25, _y(vf.Y) + 30, "dia_thru")
 
     # ---- Right ----
-    b.disty_by_edge(vr, 0, P.HEAD_C_Z, _y(vr.X) - 5, _y(vr.Y) + 5, "head_h")
-    b.disty_by_edge(vr, 0, P.ARM_END_C_Z, _y(vr.X) - 5, _y(vr.Y) - 5, "arm_h")
+    b.model_dim(vr, 0, P.HEAD_C_Z, "Z", _y(vr.X) - 5, _y(vr.Y) + 5, "head_h")
+    b.model_dim(vr, 0, P.ARM_END_C_Z, "Z", _y(vr.X) - 5, _y(vr.Y) - 5, "arm_h")
     # 36（臂水平总长 = END_Y − HEAD_Y）→ 圆头顶端切点所在竖直边 ↔ 臂端面
-    b.distx_by_edge(vr, P.HEAD_C_Y, P.ARM_END_C_Y,
-                    _y(vr.X) + 50, _y(vr.Y) - 8, "arm_len")
+    b.model_dim(vr, P.HEAD_C_Y, P.ARM_END_C_Y, "Y",
+                _y(vr.X) + 50, _y(vr.Y) - 8, "arm_len")
     # 46（侧视外接；用 extent 取更稳）
     b.add_extent(vr, 0, _y(vr.X) + 50, _y(vr.Y) - 25, "W")
     b.add_rad(vr, P.HEAD_R, _y(vr.X) - 50, _y(vr.Y) + 5, "R_head")
