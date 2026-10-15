@@ -68,6 +68,13 @@ def collect(data):
         "all_radii": sorted({round(c["r"], 2) for v in (vt, vf, vr)
                              for c in (v or {}).get("circles", [])}),
         "marks": {d["label"]: d["value"] for d in data.get("dims", [])},
+        # 2026-10-15 新增：标注的**类型**（extentH/extentV/distX/distY/dia/rad）。
+        # `marks` 只给数值，而闭环校验交付 PDF 上的字时必须区分：
+        #   · 线性尺寸（extent*/dist*）→ 图上印**裸数字**，值应等于实测值
+        #   · 直径/半径（dia/rad）    → 图上印 φ8 / R10 的**名义值**，不是实测直径
+        # 不分开就会把「φ8 找不到实测直径 8.18」误判成缺标注。
+        # **新增键，不动 `marks` 的结构** ⇒ 现有零件的 s6_compare 零影响。
+        "marks_kind": {d["label"]: d.get("kind") for d in data.get("dims", [])},
     }
 
     if vt:

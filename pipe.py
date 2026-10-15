@@ -140,7 +140,17 @@ STEPS = [
                    ("drawing_json_file", "?_drawing.json"),
                    ("params", "params.py")]),
     dict(name="s6_compare", runner="py", out_dir=".", loop=True,
-         in_files=[("ref_spec", "ref_spec.py"), ("model_step", "@s1_build")],
+         in_files=[("ref_spec", "ref_spec.py"), ("model_step", "@s1_build"),
+                   # 2026-10-15 新增（遗留 §二-2 修检测缺口）：
+                   #   drawing_pdf      校验「交付 PDF 上印的字」与实测值一致
+                   #   drawing_json_file 取标注 kind（线性尺寸 vs 直径/半径）
+                   # 闭环原本只比 FreeCAD 的标注值、从不看图上印了什么 ⇒
+                   # bracket 的硬编码标注一路 pass。读 PDF 文字层逐条核对。
+                   ("drawing_pdf", "@s3_render", True),
+                   ("drawing_json_file", "?_drawing.json"),
+                   # draw_spec：声明了「图上要画哪些标注」，用于
+                   # ① 扫硬编码  ② 只核对声明的那些（模型有的不必都上图）
+                   ("draw_spec", "?draw_spec.py")],
          in_data_from="s5_collect"),
     # 投影原则校验：长对正 / 高平齐 / 宽相等（图纸规范，不是几何精度）
     dict(name="s6b_projection", runner="py", out_dir=".", loop=True,

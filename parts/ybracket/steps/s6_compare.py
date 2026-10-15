@@ -18,6 +18,67 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 from msgio import run_stage, ref_path, ref_data, exec_module
 from facelevels import check_face_levels
+from lib.pdf_marks import check_draw_spec, check_pdf_marks
+
+
+def _marks_kind(in_msg, S):
+    """标注 label → kind。优先用 s5 新增的 `marks_kind`，否则读 `_drawing.json`。
+
+    拿不到时返回 None，调用方据此跳过 PDF 核对而不是报错。
+    """
+    k = S.get("marks_kind")
+    if k:
+        return k
+    try:
+        p = ref_path(in_msg, "drawing_json_file")
+    except Exception:
+        return None
+    if not p or not os.path.exists(p):
+        return None
+    try:
+        import json
+        d = json.load(open(p, encoding="utf-8"))
+        return {x["label"]: x.get("kind") for x in d.get("dims", [])}
+    except Exception:
+        return None
+
+
+def _check_pdf(in_msg, S, add):
+    """图上印的字 vs 模型实测值（遗留 §二-2 修的检测缺口）。两道检查：
+
+    ① 硬编码扫描：draw_spec 里带字面量 `label=` 的标注（不用读 PDF）
+    ② PDF 文字核对：把 draw_spec 声明要画的标注到交付 PDF 里逐条核对
+    """
+    import os as _os
+
+    def _rp(role):
+        """取 ref 路径；缺失的可选 ref 会抛异常，这里一律当"没有"（返回 None）。
+
+        gasket 没有 draw_spec.py（它的出图是独立的老实现），bracket/lbracket/
+        ybracket 有 —— 所以这一步必须容错，不能让整个s6 挂掉。
+        """
+        try:
+            return ref_path(in_msg, role)
+        except Exception:
+            return None
+
+    ds = _rp("draw_spec") or _os.path.join(
+        _os.environ.get("MPIPE_HERE", "."), "draw_spec.py")
+    meas, hard = check_draw_spec(ds, add)
+    if _os.path.exists(ds):
+        print("[s6_compare] draw_spec 硬编码扫描：%d 条标注写死了字面量%s"
+              % (hard, "" if not hard else "（问题已报）"))
+
+    only = meas if meas else None      # 没有声明就退回「查全部线性尺寸」
+    n, bad, state = check_pdf_marks(_rp("drawing_pdf"), S["marks"],
+                                    _marks_kind(in_msg, S), add, only=only)
+    if state == "skipped":
+        print("[s6_compare] PDF 文字核对跳过（pypdf 未安装或 PDF 不可读）")
+    else:
+        print("[s6_compare] PDF 文字核对：%d 条标注，%s"
+              % (n, "全部一致" if state == "ok" else "%d 条对不上" % bad))
+    return state, n
+
 
 
 def handler(in_msg):
@@ -83,7 +144,10 @@ def handler(in_msg):
     check_face_levels(R, ref_path(in_msg, "model_step"), TOL, add)
 
     n_geom = sum(1 for x in iss if x["kind"] == "geom")
+    pdf_state, pdf_n = _check_pdf(in_msg, S, add)
+
     return [], {"issues": iss, "n_geom": n_geom, "n_mark": len(iss) - n_geom,
+                "pdf_check": pdf_state, "pdf_checked": pdf_n,
                 "calib": R.CALIB_NOTE, "tol": TOL}
 
 

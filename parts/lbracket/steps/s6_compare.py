@@ -18,6 +18,63 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 from msgio import run_stage, ref_path, ref_data, exec_module
 from facelevels import check_face_levels
+from lib.pdf_marks import check_draw_spec, check_pdf_marks
+
+
+def _marks_kind(in_msg, S):
+    """标注 label → kind。优先用 s5 新增的 `marks_kind`，否则读 `_drawing.json`。
+
+    两种情况拿不到（非线框渲染时 `_drawing.json` 可能不存在、s5 是老版本）：
+    返回 None，调用方据此跳过 PDF 校验而不是报错。
+    """
+    k = S.get("marks_kind")
+    if k:
+        return k
+    try:
+        p = ref_path(in_msg, "drawing_json_file")
+    except Exception:
+        return None                      # 可选 ref 缺失时不报错，只放弃这项校验
+    if not p or not os.path.exists(p):
+        return None
+    try:
+        import json
+        d = json.load(open(p, encoding="utf-8"))
+        return {x["label"]: x.get("kind") for x in d.get("dims", [])}
+    except Exception:
+        return None
+
+
+def _rp(in_msg, role):
+    """取 ref 路径；缺失的可选 ref 会抛异常，这里一律当"没有"（返回 None）。"""
+    try:
+        return ref_path(in_msg, role)
+    except Exception:
+        return None
+
+
+def _check_pdf(in_msg, S, add):
+    """图上印的字 vs 模型实测值（遗留 §二-2 修的检测缺口）。两道检查：
+
+    ① 硬编码扫描：draw_spec 里带字面量 `label=` 的标注（不用读 PDF）
+    ② PDF 文字核对：把 draw_spec 声明要画的标注到交付 PDF 里逐条核对
+    """
+    import os as _os
+    ds = _rp(in_msg, "draw_spec") or _os.path.join(
+        _os.environ.get("MPIPE_HERE", "."), "draw_spec.py")
+    meas, hard = check_draw_spec(ds, add)
+    if _os.path.exists(ds):
+        print("[s6_compare] draw_spec 硬编码扫描：%d 条标注写死了字面量%s"
+              % (hard, "" if not hard else "（问题已报）"))
+
+    only = meas if meas else None      # 没有声明就退回「查全部线性尺寸」
+    n, bad, state = check_pdf_marks(_rp(in_msg, "drawing_pdf"), S["marks"],
+                                    _marks_kind(in_msg, S), add, only=only)
+    if state == "skipped":
+        print("[s6_compare] PDF 文字核对跳过（pypdf 未安装或 PDF 不可读）")
+    else:
+        print("[s6_compare] PDF 文字核对：%d 条标注，%s"
+              % (n, "全部一致" if state == "ok" else "%d 条对不上" % bad))
+    return state, n
 
 
 def handler(in_msg):
@@ -80,9 +137,16 @@ def handler(in_msg):
     # ---- 端面标高（系统性）：补「geom 只测圆+包围盒、不测面到面距离」的盲区 ----
     check_face_levels(R, ref_path(in_msg, "model_step"), TOL, add)
 
+    # ---- 图上印的字（遗留 §二-2 修的检测缺口）----
+    # ① 扫 draw_spec 里有没有硬编码的标注值
+    # ② 把 draw_spec 声明要画的标注，到**交付 PDF 的文字层**逐条核对实测值在不在
+    #    （之前这里只看 _drawing.json 的值，bracket 的硬编码标注因此一路 pass）
+    pdf_state, pdf_n = _check_pdf(in_msg, S, add)
+
     n_geom = sum(1 for x in iss if x["kind"] == "geom")
     return [], {"issues": iss, "n_geom": n_geom, "n_mark": len(iss) - n_geom,
-                "calib": R.CALIB_NOTE, "tol": TOL}
+                "calib": R.CALIB_NOTE, "tol": TOL,
+                "pdf_check": pdf_state, "pdf_checked": pdf_n}
 
 
 if __name__ == "__main__":
