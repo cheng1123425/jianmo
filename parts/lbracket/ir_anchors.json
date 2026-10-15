@@ -1,0 +1,72 @@
+{
+  "_note": "lbracket 的 2D↔3D 语义锚点（G 阶段 · 正向标注）。这是 recorder 产出的 ir.json 之外的『人工标注 overlay』——semantic/anchors 只能正向标，不能自动抽，所以单独存、ir.json 重录也不丢。每个锚点把一个图纸标注绑到 IR 特征 + 一个可重放的几何谓词（不存 Edge#N）。geom 谓词：extent=整体范围(沿axis)；circle=按半径找圆；level_pair=两个同径圆的间距。expected=该标注应测得的值（指对性校核用）。view2d 为视图局部坐标（x=右,y=上），轴向已按视图投影方向折算。",
+  "part": "lbracket",
+  "anchors": [
+    {
+      "label": "L",
+      "fid": "F1",
+      "semantic": "底板长",
+      "view": "Top",
+      "dim_kind": "extentH",
+      "geom": {"kind": "extent", "axis": "x"},
+      "expected": 56.0,
+      "target_param": "BASE_L_X",
+      "annotation": "56"
+    },
+    {
+      "label": "W",
+      "fid": "F1",
+      "semantic": "底板最大宽",
+      "view": "Top",
+      "dim_kind": "extentV",
+      "geom": {"kind": "extent", "axis": "y"},
+      "expected": 40.0,
+      "target_param": "BASE_W_Y",
+      "annotation": "40"
+    },
+    {
+      "label": "D8_base",
+      "fid": "F4",
+      "semantic": "底板左端安装孔 φ8",
+      "view": "Top",
+      "dim_kind": "dia",
+      "geom": {"kind": "circle", "r": 4.0},
+      "expected": 8.0,
+      "target_param": "HOLE_D",
+      "annotation": "4×φ8"
+    },
+    {
+      "label": "H_total",
+      "fid": "F2",
+      "semantic": "总高(底板+立板)",
+      "view": "Front",
+      "dim_kind": "extentV",
+      "geom": {"kind": "extent", "axis": "y"},
+      "expected": 39.0,
+      "target_param": "WALL_H_Z + BASE_T_Z",
+      "annotation": "39"
+    },
+    {
+      "label": "D8_wall",
+      "fid": "F7",
+      "semantic": "立板销孔 φ8",
+      "view": "Right",
+      "dim_kind": "dia",
+      "geom": {"kind": "circle", "r": 4.0},
+      "expected": 8.0,
+      "target_param": "HOLE_D",
+      "annotation": "2×φ8"
+    },
+    {
+      "label": "pitch",
+      "fid": "F7",
+      "semantic": "立板两销孔心距",
+      "view": "Right",
+      "dim_kind": "distX",
+      "geom": {"kind": "level_pair", "r": 4.0, "axis": "x"},
+      "expected": 26.0,
+      "target_param": "2*WALL_HOLE_C_Y",
+      "annotation": "26"
+    }
+  ]
+}

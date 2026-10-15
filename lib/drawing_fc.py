@@ -151,6 +151,87 @@ class DrawingBuilder(object):
         return self._rec(view, "extentH" if direction == 0 else "extentV", X, Y, 0,
                          {"label": label, "_d": d})
 
+    # ---------------- 锚点驱动（G 阶段：2D↔3D 语义绑定）----------------
+    def add_anchor_dim(self, anchor, X, Y):
+        """按 `ir_anchors.json` 的一个锚点生成标注——**几何谓词驱动**，不写死边号。
+
+        谓词 → 生成方式：
+          * ``circle``   → 按半径找投影圆，`References2D` 绑边做直径标注（真·绑边）。
+          * ``extent``   → 整体范围标注（长/宽/高）。
+          * ``level_pair``→ 两个同径圆的圆心间距标注（两点距离）。
+
+        返回带锚点元数据（fid / semantic / expected）的标注记录，供下游 s6 追链路。
+        无锚点声明的标注不经过这里——各零件 `place_marks` 保留原行为（向后兼容）。
+        """
+        label = anchor.get("label")
+        geom = anchor.get("geom") or {}
+        kind = geom.get("kind")
+        expected = anchor.get("expected")
+        meta = {"anchor_fid": anchor.get("fid"), "semantic": anchor.get("semantic"),
+                "expected": expected, "geom": geom}
+
+        if anchor.get("view") not in self.views:
+            return self._rec(None, "anchor_missing_view", X, Y, 0,
+                             dict(meta, label=label, note="视图不存在"))
+        view = self.views[anchor["view"]]
+
+        if kind == "circle":
+            r = float(geom.get("r"))
+            k, c = self.first_circle_r(view, r)
+            if k is None:
+                return self._rec(view, "dia", X, Y, 0,
+                                 dict(meta, label=label, note="未找到 r=%.2f 的圆" % r,
+                                      found=False))
+            d = self.doc.addObject("TechDraw::DrawViewDimension", "Dim%d" % len(self.dims))
+            d.Type = "Diameter"
+            d.References2D = [(view, "Edge%d" % k)]      # 绑边
+            self.page.addView(d)
+            d.X, d.Y = X, Y
+            return self._rec(view, "dia", X, Y, 0,
+                             dict(meta, label=label, r=_y(c.Radius),
+                                  cx=_y(c.Center.x), cy=_y(c.Center.y),
+                                  found=True, _d=d, _edge=k))
+
+        if kind == "extent":
+            direction = 0 if anchor.get("dim_kind") == "extentH" else 1
+            d = self.TechDraw.makeExtentDim(view, [], direction)
+            d.FormatSpec = "%.0f"
+            self.page.addView(d)
+            d.X, d.Y = X, Y
+            return self._rec(view, "extentH" if direction == 0 else "extentV", X, Y, 0,
+                             dict(meta, label=label, found=True, _d=d))
+
+        if kind == "level_pair":
+            r = float(geom.get("r"))
+            axis = geom.get("axis", "x")
+            hits = [e.Curve for e in self.visible(view)
+                    if "Circle" in e.Curve.__class__.__name__
+                    and abs(_y(e.Curve.Radius) - r) < 0.3]
+            if len(hits) < 2:
+                return self._rec(view, "distX", X, Y, 0,
+                                 dict(meta, label=label, found=False,
+                                      note="同径圆不足 2 个(找到%d)" % len(hits)))
+            a = sorted(_y(c.Center.x) if axis == "x" else _y(c.Center.y) for c in hits)
+            v1, v2 = a[0], a[-1]
+            AppV = self.App.Vector
+            if axis == "x":
+                p1, p2 = AppV(v1, 0, 0), AppV(v2, 0, 0)
+                dk = "DistanceX"
+            else:
+                p1, p2 = AppV(0, v1, 0), AppV(0, v2, 0)
+                dk = "DistanceY"
+            d = self.TechDraw.makeDistanceDim(view, dk, p1, p2)
+            d.FormatSpec = "%.0f"
+            self.page.addView(d)
+            d.X, d.Y = X, Y
+            return self._rec(view, "distX", X, Y, 0,
+                             dict(meta, label=label, coords=[round(v1, 3), round(v2, 3)],
+                                  found=True, _d=d))
+
+        # 未知谓词：诚实留痕，不静默
+        return self._rec(view, "anchor_unknown", X, Y, 0,
+                         dict(meta, label=label, note="未知谓词 %r" % kind, found=False))
+
     # ---------------- 收尾：recompute 后取 FreeCAD 实算值 ----------------
     def finalize(self, verbose=True):
         self.doc.recompute()

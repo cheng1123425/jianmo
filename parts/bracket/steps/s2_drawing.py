@@ -10,6 +10,7 @@ r"""s2_drawing —— STEP → 工程图（铰链支座，三视图 + 尺寸标�
 标注**引用投影边**（`References2D`，getVisibleEdges 的 0-based 下标）或用两点距离，
 数值由 FreeCAD 在 `b.finalize()` 里从实体实算（`getRawValue()`），不是写死的。
 """
+import json
 import os
 import sys
 
@@ -43,10 +44,36 @@ VIEW_SPECS = [
 
 
 # ================= ② 标注布置（零件特有） =================
+def _load_anchors():
+    """G 阶段：读语义锚点（正向标注）。没有就返回 None → 退回原硬编码。"""
+    path = os.path.normpath(os.path.join(os.path.dirname(HERE), "ir_anchors.json"))
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f).get("anchors") or None
+
+
 # 语义名 = label（与 dims_spec.DIMS 的 label 一致，供 s4_table / s6_compare 比对）
 def place_marks(b, P):
     vf, vr, vt = b.views["Front"], b.views["Right"], b.views["Top"]
 
+    # ---- G 阶段：锚点驱动的标注（谓词找边 + References2D 绑边）----
+    anchors = _load_anchors()
+    if anchors:
+        APOS = {
+            "L":  (_y(vf.X) + 50, _y(vf.Y) - 25),   # Front 整体长
+            "D9": (_y(vt.X) + 35, _y(vt.Y) + 10),   # Top 底板孔径
+            "P9": (_y(vt.X) + 50, _y(vt.Y) - 10),   # Top 两孔心距
+        }
+        for a in anchors:
+            lbl = a.get("label")
+            if lbl in APOS:
+                b.add_anchor_dim(a, *APOS[lbl])
+        covered = set(APOS)
+    else:
+        covered = set()
+
+    # ---- 以下为未纳入锚点的其余标注（保持原实现）----
     # ---- Front ----
     # 28（两臂外宽 = ARM_OUT_C_X × 2）
     b.add_distx(vf, -P.ARM_OUT_C_X, P.ARM_OUT_C_X, _y(vf.X) + 50, _y(vf.Y) + 5, "arm_outer")
@@ -54,11 +81,13 @@ def place_marks(b, P):
     b.add_distx(vf, -P.ARM_IN_C_X, P.ARM_IN_C_X, _y(vf.X) + 50, _y(vf.Y) + 20, "arm_inner")
     # 8（底板厚）
     b.add_disty(vf, 0, P.BASE_T_Z, _y(vf.X) - 5, _y(vf.Y) + 15, "T_base")
-    # 45（底板 2-φ9 孔心距）
-    b.add_distx(vf, -P.BASE_HOLE_P / 2, P.BASE_HOLE_P / 2,
-                _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
-    # 62（底板总长）
-    b.add_extent(vf, 0, _y(vf.X) + 50, _y(vf.Y) - 25, "L")
+    # 62（底板总长）—— 已由锚点生成则跳过
+    if "L" not in covered:
+        b.add_extent(vf, 0, _y(vf.X) + 50, _y(vf.Y) - 25, "L")
+    # 45（底板 2-φ9 孔心距）—— 已由锚点生成则跳过
+    if "P9" not in covered:
+        b.add_distx(vf, -P.BASE_HOLE_P / 2, P.BASE_HOLE_P / 2,
+                    _y(vf.X) + 50, _y(vf.Y) - 10, "P9")
     # 2-φ6 / 2-φ3（Front 视图里这两个孔是圆）—— 找不到对应半径就跳过，不报错
     k6, _ = b.first_circle_r(vf, P.ARM_CBORE_D / 2)
     if k6 is not None:
@@ -78,7 +107,8 @@ def place_marks(b, P):
     b.add_dia(vr, P.PIN_HOLE_D / 2, _y(vr.X) + 30, _y(vr.Y) - 30, "dia_pin")
 
     # ---- Top ----
-    b.add_dia(vt, P.BASE_HOLE_D / 2, _y(vt.X) + 35, _y(vt.Y) + 10, "D9")
+    if "D9" not in covered:
+        b.add_dia(vt, P.BASE_HOLE_D / 2, _y(vt.X) + 35, _y(vt.Y) + 10, "D9")
 
 
 # ================= 主流程（通用） =================

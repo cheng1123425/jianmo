@@ -11,6 +11,7 @@ r"""s2_drawing —— STEP → 工程图（双耳直角支座，三视图 + 尺�
 `cbore_depth` 是内腔、标准三视图不可见（未开隐藏线），用「点距法」处理：
 两点落在 Z=98 与 Z=120，值仍由 FreeCAD 实算 —— 保证是真尺寸线而非角落文字。
 """
+import json
 import os
 import sys
 
@@ -43,21 +44,49 @@ VIEW_SPECS = [
 
 
 # ================= ② 标注布置（零件特有） =================
+def _load_anchors():
+    """G 阶段：读语义锚点（正向标注）。没有就返回 None → 退回原硬编码。"""
+    path = os.path.normpath(os.path.join(os.path.dirname(HERE), "ir_anchors.json"))
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f).get("anchors") or None
+
+
 def place_marks(b, P):
     vt, vf, vr = b.views["Top"], b.views["Front"], b.views["Right"]
 
+    # ---- G 阶段：锚点驱动的标注（谓词找边 + References2D 绑边）----
+    anchors = _load_anchors()
+    if anchors:
+        APOS = {
+            "len_x":    (_y(vt.X) + 50, _y(vt.Y) - 15),   # Top 总长
+            "ear_hole": (_y(vt.X) - 30, _y(vt.Y) - 35),   # Top 耳孔孔径
+            "ear_pitch":(_y(vt.X),      _y(vt.Y) - 55),   # Top 两耳孔心距
+        }
+        for a in anchors:
+            lbl = a.get("label")
+            if lbl in APOS:
+                b.add_anchor_dim(a, *APOS[lbl])
+        covered = set(APOS)
+    else:
+        covered = set()
+
+    # ---- 以下为未纳入锚点的其余标注（保持原实现）----
     # ---- Front：总高 ----
     b.add_extent(vf, 1, _y(vf.X) - 8, _y(vf.Y) + 20, "height_z")
 
     # ---- Top：总长 / 总深 / 耳 R42 / 2-Ø42 / Ø54 / Ø32 ----
-    b.add_extent(vt, 0, _y(vt.X) + 50, _y(vt.Y) - 15, "len_x")
+    if "len_x" not in covered:
+        b.add_extent(vt, 0, _y(vt.X) + 50, _y(vt.Y) - 15, "len_x")
     b.add_extent(vt, 1, _y(vt.X) - 8, _y(vt.Y) + 20, "depth_y")
     k42t, _ = b.first_circle_r(vt, P.EAR_R)
     if k42t is not None:
         b.add_rad(vt, P.EAR_R, _y(vt.X) - 45, _y(vt.Y) + 45, "ear_R")
-    k21t, _ = b.first_circle_r(vt, P.EAR_R / 2.0)          # 耳孔半径 = 21（Ø42）
-    if k21t is not None:
-        b.add_dia(vt, P.EAR_R / 2.0, _y(vt.X) - 30, _y(vt.Y) - 35, "ear_hole")
+    if "ear_hole" not in covered:
+        k21t, _ = b.first_circle_r(vt, P.EAR_R / 2.0)          # 耳孔半径 = 21（Ø42）
+        if k21t is not None:
+            b.add_dia(vt, P.EAR_R / 2.0, _y(vt.X) - 30, _y(vt.Y) - 35, "ear_hole")
     k27t, _ = b.first_circle_r(vt, P.CBORE_D / 2.0)        # 沉孔半径 = 27（Ø54）
     if k27t is not None:
         b.add_dia(vt, P.CBORE_D / 2.0, _y(vt.X) + 35, _y(vt.Y) + 35, "d_cbore")
@@ -68,9 +97,10 @@ def place_marks(b, P):
     # ---- Right：外接水平 ----
     b.add_extent(vr, 0, _y(vr.X) + 50, _y(vr.Y) - 15, "depth_y")
 
-    # ---- Top：耳孔心距（X 向 ±58 → 116）----
-    b.add_distx(vt, -P.EAR_HOLE_P / 2.0, P.EAR_HOLE_P / 2.0,
-                _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
+    # ---- Top：耳孔心距（X 向 ±58 → 116）---- 已由锚点生成则跳过
+    if "ear_pitch" not in covered:
+        b.add_distx(vt, -P.EAR_HOLE_P / 2.0, P.EAR_HOLE_P / 2.0,
+                    _y(vt.X), _y(vt.Y) - 55, "ear_pitch")
 
     # ---- Right：剖视 Y 向线性 ----
     b.add_disty(vr, 0.0, P.WALL_T_Y, _y(vr.X) + 70, _y(vr.Y) + 25, "wall_t")

@@ -1,0 +1,40 @@
+{
+  "_note": "bracket 的 2D↔3D 语义锚点（G 阶段·最小集·覆盖 circle/extent/level_pair 三种谓词，以验证锚点机制是通用架构能力而非某零件特例）。这些零件是回归测试夹具，非交付物，故只取够覆盖架构代码路径的最小锚点集。geom 谓词不存 Edge#N。本零件尚未抽 IR，fid 为临时语义标签（抽 IR 后可映射到 F编号）。view2d 为视图局部坐标。",
+  "part": "bracket",
+  "fid_provisional": true,
+  "anchors": [
+    {
+      "label": "L",
+      "fid": "base_len",
+      "semantic": "底板总长",
+      "view": "Front",
+      "dim_kind": "extentH",
+      "geom": {"kind": "extent", "axis": "x"},
+      "expected": 62.0,
+      "target_param": "BASE_L_X",
+      "annotation": "62"
+    },
+    {
+      "label": "D9",
+      "fid": "base_holes",
+      "semantic": "底板 2-φ9 孔径",
+      "view": "Top",
+      "dim_kind": "dia",
+      "geom": {"kind": "circle", "r": 4.5},
+      "expected": 9.0,
+      "target_param": "BASE_HOLE_D",
+      "annotation": "2×φ9"
+    },
+    {
+      "label": "P9",
+      "fid": "base_hole_pitch",
+      "semantic": "底板两 φ9 孔心距",
+      "view": "Top",
+      "dim_kind": "distX",
+      "geom": {"kind": "level_pair", "r": 4.5, "axis": "x"},
+      "expected": 45.0,
+      "target_param": "BASE_HOLE_P",
+      "annotation": "45"
+    }
+  ]
+}

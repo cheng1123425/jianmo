@@ -1,0 +1,40 @@
+{
+  "_note": "ybracket 的 2D↔3D 语义锚点（G 阶段·最小集·覆盖 circle/extent/level_pair 三种谓词）。零件为回归测试夹具，只取覆盖架构路径的最小集。geom 谓词不存 Edge#N。本零件尚未抽 IR，fid 为临时语义标签。view2d 为视图局部坐标。",
+  "part": "ybracket",
+  "fid_provisional": true,
+  "anchors": [
+    {
+      "label": "len_x",
+      "fid": "body_len",
+      "semantic": "总长(背板 X 向)",
+      "view": "Top",
+      "dim_kind": "extentH",
+      "geom": {"kind": "extent", "axis": "x"},
+      "expected": 200.0,
+      "target_param": "LEN_X",
+      "annotation": "200"
+    },
+    {
+      "label": "ear_hole",
+      "fid": "ear_holes",
+      "semantic": "双耳孔 φ42 孔径",
+      "view": "Top",
+      "dim_kind": "dia",
+      "geom": {"kind": "circle", "r": 21.0},
+      "expected": 42.0,
+      "target_param": "EAR_R",
+      "annotation": "2×φ42"
+    },
+    {
+      "label": "ear_pitch",
+      "fid": "ear_hole_pitch",
+      "semantic": "双耳孔心距",
+      "view": "Top",
+      "dim_kind": "distX",
+      "geom": {"kind": "level_pair", "r": 21.0, "axis": "x"},
+      "expected": 116.0,
+      "target_param": "EAR_HOLE_P",
+      "annotation": "116"
+    }
+  ]
+}

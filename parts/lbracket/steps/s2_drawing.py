@@ -5,10 +5,16 @@ r"""s2_drawing —— STEP → 工程图（L 形支座，三视图 + 尺寸标�
 本文件只声明这个零件自己的两样东西：
 
   ① `VIEW_SPECS` —— 建哪些视图（投影方向、XDirection、纸面位置、缩放）
-  ② `place_marks(b, P)` —— 标注布置（标哪些尺寸、放在视图的什么位置、用什么语义名）
+  ② `place_marks(b, P)` —— 标注布置（标哪些尺寸、放在视图的什么位置）
+
+**G 阶段（2D↔3D 语义绑定）**：若 `parts/lbracket/ir_anchors.json` 存在，标注改为
+**锚点驱动**——按锚点的几何谓词（圆半径 / 整体范围 / 同径圆间距）找边、用
+`References2D` 绑边，并把锚点元数据（feature/semantic/expected）记进 dim 记录供 s6
+追链路。无锚点文件时**完全退回原硬编码行为**（向后兼容，不影响其它零件）。
 
 数值由 FreeCAD 在 `b.finalize()` 里从实体实算（`getRawValue()`），不是写死的。
 """
+import json
 import os
 import sys
 
@@ -41,23 +47,44 @@ VIEW_SPECS = [
 
 
 # ================= ② 标注布置（零件特有） =================
+def _load_anchors():
+    """G 阶段：读语义锚点（正向标注）。没有就返回 None → 退回原硬编码。"""
+    # HERE=parts/lbracket/steps → 锚点在 parts/lbracket/ir_anchors.json（零件根，非 steps 的父）
+    path = os.path.normpath(os.path.join(os.path.dirname(HERE), "ir_anchors.json"))
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f).get("anchors") or None
+
+
 def place_marks(b, P):
     vt, vf, vr = b.views["Top"], b.views["Front"], b.views["Right"]
 
-    # ---- Top：L（横）/ W（竖）/ 底板 φ8 ----
+    # 标注在纸面上的摆放位置（表现层）；语义 + 几何绑定由锚点提供
+    POS = {
+        "L":        (_y(vt.X) + 50, _y(vt.Y) + 5),
+        "W":        (_y(vt.X) - 5,  _y(vt.Y) + 15),
+        "D8_base":  (_y(vt.X) - 25, _y(vt.Y) - 30),
+        "H_total":  (_y(vf.X) - 5,  _y(vf.Y) + 15),
+        "D8_wall":  (_y(vr.X) - 30, _y(vr.Y) + 45),
+        "pitch":    (_y(vr.X) + 50, _y(vr.Y) - 8),
+    }
+
+    anchors = _load_anchors()
+    if anchors:
+        for a in anchors:
+            lbl = a.get("label")
+            if lbl in POS:
+                b.add_anchor_dim(a, *POS[lbl])
+        return
+
+    # ---- 无锚点：退回原硬编码（向后兼容）----
     b.add_extent(vt, 0, _y(vt.X) + 50, _y(vt.Y) + 5, "L")
     b.add_extent(vt, 1, _y(vt.X) - 5, _y(vt.Y) + 15, "W")
     k8t, _ = b.first_circle_r(vt, P.HOLE_D / 2.0)
     if k8t is not None:
         b.add_dia(vt, P.HOLE_D / 2.0, _y(vt.X) - 25, _y(vt.Y) - 30, "D8_base")
-
-    # ---- Front：H_total（总高）/ 立板 φ8（两孔投影重合为 1 个圆）----
     b.add_extent(vf, 1, _y(vf.X) - 5, _y(vf.Y) + 15, "H_total")
-    k8f, _ = b.first_circle_r(vf, P.HOLE_D / 2.0)
-    if k8f is not None:
-        b.add_dia(vf, P.HOLE_D / 2.0, _y(vf.X) + 25, _y(vf.Y) + 30, "D8_wall")
-
-    # ---- Right：pitch（立板两 φ8 在 Right 视图里的 view2d-X 间距 = 世界 Y 心距）----
     rc = [k for k, e in enumerate(b.visible(vr))
           if "Circle" in e.Curve.__class__.__name__
           and abs(_y(e.Curve.Radius) - P.HOLE_D / 2.0) < 0.3]

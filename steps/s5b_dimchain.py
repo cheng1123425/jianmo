@@ -35,14 +35,24 @@ import dimchain                                                # noqa: E402
 
 def _load_json_opt(in_msg, *roles):
     """按 role 取可选入参（JSON 文件），支持多个候选 role 依序回落。
+
+    用 `msgio.ref_path` 解析（**不能**用 os.path.exists(r["path"]) 判相对路径）：
+    pipe 不给子进程设 cwd，相对路径会落到项目根目录，导致所有零件都读到根目录
+    垫片那份 _drawing.json / dwg_semantics —— 表现为报出别的零件的尺寸链错误
+    （如 lbracket 报 "ΣH_boss+T_base+H_step"）。同 steps/s6b_projection.py 的坑。
     `@步名` 优先，文件形式（_file 后缀）兜底 —— 单步调试时也能跑。"""
     import json
-    refs = in_msg.get("in", {}).get("refs", [])
+    from msgio import ref_path
     for role in roles:
-        for r in refs:
-            if r["role"] == role and os.path.exists(r["path"]):
-                with open(r["path"], encoding="utf-8") as f:
-                    return json.load(f)
+        for r in in_msg.get("in", {}).get("refs", []):
+            if r["role"] == role:
+                try:
+                    p = ref_path(in_msg, role)
+                except Exception:
+                    p = r["path"]
+                if p and os.path.exists(p):
+                    with open(p, encoding="utf-8") as f:
+                        return json.load(f)
     return None
 
 
