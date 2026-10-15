@@ -169,13 +169,16 @@ git checkout -b refactor/naming-and-layering FETCH_HEAD
 |---|---|
 | 远程（fetch 用） | `https://gh-proxy.com/https://github.com/cheng1123425/jianmo.git` |
 | **HTTPS 推送** | ❌ 无凭据（`credential.helper=helper-selector`，无 `~/.git-credentials`），会报 `could not read Username` |
-| **SSH 推送** | ✅ 可用 `~/.ssh/id_ed25519`（已认证为 `cheng1123425`） |
+| **SSH 推送** | ✅ 用 `~/.ssh/id_ed25519_jianmo`（**可写**）；⚠️ `~/.ssh/id_ed25519` 是**只读 deploy key**，用它 push 会报 `Permission ... denied to deploy key`（2026-10-15 实测） |
 
 **本机推荐推送命令**（不改动 remote 配置）：
 
 ```bash
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
-  git push git@github.com:cheng1123425/jianmo.git HEAD:refs/heads/<分支名>
+git push origin HEAD:refs/heads/<分支名>     # 直接走仓库 core.sshCommand 里的 id_ed25519_jianmo
+
+# ⚠️ 下面这条已【作废】：id_ed25519 是只读 deploy key，会报 denied
+# GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
+#   git push git@github.com:cheng1123425/jianmo.git HEAD:refs/heads/<分支名>
 ```
 
 ### ⚠️ 本机沙箱的「写 ref」坑（比原开发机的更严重）
