@@ -109,6 +109,8 @@ STEPS = [
     # ---- 输入层：读原图（谁也不再直接碰 drawing.png；无图零件自动跳过）----
     dict(name="s0b_dwgread", runner="py", out_dir="notes", head=True,
          in_files=[("drawing_png", "?drawing.png"),
+                   # 矢量 PDF：与 drawing.png **并行**，给谁走谁（两个都给 → 优先 PDF）
+                   ("drawing_pdf", "?drawing.pdf"),
                    ("dwg_semantics_prev", "?notes/dwg_semantics.json")],
          in_data=[("known_scale", None), ("verbose", False)]),
     dict(name="s0_plan", runner="py", out_dir="notes", head=True,
