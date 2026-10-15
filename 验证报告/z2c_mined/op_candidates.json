@@ -1,0 +1,760 @@
+{
+  "n_parts": 430,
+  "ops_per_part": {
+    "min": 4,
+    "max": 60,
+    "avg": 23.9
+  },
+  "L1_leaf": [
+    {
+      "key": "Workplane",
+      "count": 1021,
+      "parts": 430,
+      "coverage": 1.0
+    },
+    {
+      "key": "edges",
+      "count": 486,
+      "parts": 384,
+      "coverage": 0.893
+    },
+    {
+      "key": "extrude",
+      "count": 738,
+      "parts": 368,
+      "coverage": 0.8558
+    },
+    {
+      "key": "faces",
+      "count": 813,
+      "parts": 360,
+      "coverage": 0.8372
+    },
+    {
+      "key": "workplane",
+      "count": 755,
+      "parts": 351,
+      "coverage": 0.8163
+    },
+    {
+      "key": "chamfer",
+      "count": 341,
+      "parts": 319,
+      "coverage": 0.7419
+    },
+    {
+      "key": "rect",
+      "count": 556,
+      "parts": 297,
+      "coverage": 0.6907
+    },
+    {
+      "key": "hole",
+      "count": 328,
+      "parts": 248,
+      "coverage": 0.5767
+    },
+    {
+      "key": "center",
+      "count": 451,
+      "parts": 241,
+      "coverage": 0.5605
+    },
+    {
+      "key": "close",
+      "count": 264,
+      "parts": 235,
+      "coverage": 0.5465
+    },
+    {
+      "key": "union",
+      "count": 336,
+      "parts": 213,
+      "coverage": 0.4953
+    },
+    {
+      "key": "cutBlind",
+      "count": 225,
+      "parts": 167,
+      "coverage": 0.3884
+    },
+    {
+      "key": "circle",
+      "count": 292,
+      "parts": 158,
+      "coverage": 0.3674
+    },
+    {
+      "key": "translate",
+      "count": 256,
+      "parts": 158,
+      "coverage": 0.3674
+    },
+    {
+      "key": "cut",
+      "count": 256,
+      "parts": 157,
+      "coverage": 0.3651
+    },
+    {
+      "key": "pushPoints",
+      "count": 185,
+      "parts": 154,
+      "coverage": 0.3581
+    },
+    {
+      "key": "lineTo",
+      "count": 631,
+      "parts": 138,
+      "coverage": 0.3209
+    },
+    {
+      "key": "moveTo",
+      "count": 161,
+      "parts": 137,
+      "coverage": 0.3186
+    },
+    {
+      "key": "fillet",
+      "count": 151,
+      "parts": 135,
+      "coverage": 0.314
+    },
+    {
+      "key": "range",
+      "count": 157,
+      "parts": 115,
+      "coverage": 0.2674
+    }
+  ],
+  "L1_leaf_modeling": [
+    {
+      "key": "Workplane",
+      "count": 1021,
+      "parts": 430,
+      "coverage": 1.0
+    },
+    {
+      "key": "edges",
+      "count": 486,
+      "parts": 384,
+      "coverage": 0.893
+    },
+    {
+      "key": "extrude",
+      "count": 738,
+      "parts": 368,
+      "coverage": 0.8558
+    },
+    {
+      "key": "faces",
+      "count": 813,
+      "parts": 360,
+      "coverage": 0.8372
+    },
+    {
+      "key": "workplane",
+      "count": 755,
+      "parts": 351,
+      "coverage": 0.8163
+    },
+    {
+      "key": "chamfer",
+      "count": 341,
+      "parts": 319,
+      "coverage": 0.7419
+    },
+    {
+      "key": "rect",
+      "count": 556,
+      "parts": 297,
+      "coverage": 0.6907
+    },
+    {
+      "key": "hole",
+      "count": 328,
+      "parts": 248,
+      "coverage": 0.5767
+    },
+    {
+      "key": "center",
+      "count": 451,
+      "parts": 241,
+      "coverage": 0.5605
+    },
+    {
+      "key": "close",
+      "count": 264,
+      "parts": 235,
+      "coverage": 0.5465
+    },
+    {
+      "key": "union",
+      "count": 336,
+      "parts": 213,
+      "coverage": 0.4953
+    },
+    {
+      "key": "cutBlind",
+      "count": 225,
+      "parts": 167,
+      "coverage": 0.3884
+    },
+    {
+      "key": "circle",
+      "count": 292,
+      "parts": 158,
+      "coverage": 0.3674
+    },
+    {
+      "key": "translate",
+      "count": 256,
+      "parts": 158,
+      "coverage": 0.3674
+    },
+    {
+      "key": "cut",
+      "count": 256,
+      "parts": 157,
+      "coverage": 0.3651
+    },
+    {
+      "key": "pushPoints",
+      "count": 185,
+      "parts": 154,
+      "coverage": 0.3581
+    },
+    {
+      "key": "lineTo",
+      "count": 631,
+      "parts": 138,
+      "coverage": 0.3209
+    },
+    {
+      "key": "moveTo",
+      "count": 161,
+      "parts": 137,
+      "coverage": 0.3186
+    },
+    {
+      "key": "fillet",
+      "count": 151,
+      "parts": 135,
+      "coverage": 0.314
+    },
+    {
+      "key": "box",
+      "count": 150,
+      "parts": 106,
+      "coverage": 0.2465
+    }
+  ],
+  "L2_path": [
+    {
+      "key": "cq.Workplane",
+      "count": 1021,
+      "parts": 430,
+      "coverage": 1.0
+    },
+    {
+      "key": "cq.Workplane.rect",
+      "count": 174,
+      "parts": 115,
+      "coverage": 0.2674
+    },
+    {
+      "key": "range",
+      "count": 157,
+      "parts": 115,
+      "coverage": 0.2674
+    },
+    {
+      "key": "cq.Workplane.moveTo",
+      "count": 119,
+      "parts": 115,
+      "coverage": 0.2674
+    },
+    {
+      "key": "cq.Workplane.center",
+      "count": 163,
+      "parts": 106,
+      "coverage": 0.2465
+    },
+    {
+      "key": "cq.Workplane.moveTo.lineTo",
+      "count": 110,
+      "parts": 106,
+      "coverage": 0.2465
+    },
+    {
+      "key": "cq.Workplane.rect.extrude",
+      "count": 145,
+      "parts": 102,
+      "coverage": 0.2372
+    },
+    {
+      "key": "cq.Workplane.box",
+      "count": 130,
+      "parts": 98,
+      "coverage": 0.2279
+    },
+    {
+      "key": "Measures",
+      "count": 133,
+      "parts": 95,
+      "coverage": 0.2209
+    },
+    {
+      "key": "cq.Workplane.moveTo.lineTo.lineTo",
+      "count": 98,
+      "parts": 95,
+      "coverage": 0.2209
+    },
+    {
+      "key": "self.build",
+      "count": 91,
+      "parts": 91,
+      "coverage": 0.2116
+    },
+    {
+      "key": "cq.Workplane.polyline",
+      "count": 95,
+      "parts": 85,
+      "coverage": 0.1977
+    },
+    {
+      "key": "base.faces",
+      "count": 148,
+      "parts": 84,
+      "coverage": 0.1953
+    },
+    {
+      "key": "cq.Workplane.moveTo.lineTo.lineTo.lineTo",
+      "count": 84,
+      "parts": 83,
+      "coverage": 0.193
+    },
+    {
+      "key": "base.faces.workplane",
+      "count": 139,
+      "parts": 82,
+      "coverage": 0.1907
+    },
+    {
+      "key": "cq.Workplane.polyline.close",
+      "count": 92,
+      "parts": 82,
+      "coverage": 0.1907
+    },
+    {
+      "key": "cq.Workplane.circle",
+      "count": 118,
+      "parts": 78,
+      "coverage": 0.1814
+    },
+    {
+      "key": "base.union",
+      "count": 77,
+      "parts": 73,
+      "coverage": 0.1698
+    },
+    {
+      "key": "result.faces",
+      "count": 157,
+      "parts": 69,
+      "coverage": 0.1605
+    },
+    {
+      "key": "cq.Workplane.circle.extrude",
+      "count": 94,
+      "parts": 66,
+      "coverage": 0.1535
+    }
+  ],
+  "L3_ngram": {
+    "2": [
+      {
+        "key": [
+          "workplane",
+          "faces"
+        ],
+        "count": 252,
+        "parts": 180,
+        "coverage": 0.4186
+      },
+      {
+        "key": [
+          "Workplane",
+          "Workplane"
+        ],
+        "count": 186,
+        "parts": 130,
+        "coverage": 0.3023
+      },
+      {
+        "key": [
+          "faces",
+          "faces"
+        ],
+        "count": 173,
+        "parts": 118,
+        "coverage": 0.2744
+      },
+      {
+        "key": [
+          "workplane",
+          "workplane"
+        ],
+        "count": 147,
+        "parts": 108,
+        "coverage": 0.2512
+      },
+      {
+        "key": [
+          "moveTo",
+          "Workplane"
+        ],
+        "count": 107,
+        "parts": 106,
+        "coverage": 0.2465
+      },
+      {
+        "key": [
+          "Workplane",
+          "faces"
+        ],
+        "count": 105,
+        "parts": 99,
+        "coverage": 0.2302
+      },
+      {
+        "key": [
+          "extrude",
+          "union"
+        ],
+        "count": 108,
+        "parts": 98,
+        "coverage": 0.2279
+      },
+      {
+        "key": [
+          "extrude",
+          "extrude"
+        ],
+        "count": 117,
+        "parts": 92,
+        "coverage": 0.214
+      },
+      {
+        "key": [
+          "faces",
+          "workplane"
+        ],
+        "count": 101,
+        "parts": 91,
+        "coverage": 0.2116
+      },
+      {
+        "key": [
+          "lineTo",
+          "moveTo"
+        ],
+        "count": 87,
+        "parts": 84,
+        "coverage": 0.1953
+      },
+      {
+        "key": [
+          "Workplane",
+          "workplane"
+        ],
+        "count": 86,
+        "parts": 82,
+        "coverage": 0.1907
+      },
+      {
+        "key": [
+          "center",
+          "workplane"
+        ],
+        "count": 96,
+        "parts": 80,
+        "coverage": 0.186
+      },
+      {
+        "key": [
+          "lineTo",
+          "faces"
+        ],
+        "count": 94,
+        "parts": 76,
+        "coverage": 0.1767
+      },
+      {
+        "key": [
+          "rect",
+          "rect"
+        ],
+        "count": 103,
+        "parts": 75,
+        "coverage": 0.1744
+      },
+      {
+        "key": [
+          "translate",
+          "union"
+        ],
+        "count": 88,
+        "parts": 75,
+        "coverage": 0.1744
+      },
+      {
+        "key": [
+          "faces",
+          "lineTo"
+        ],
+        "count": 88,
+        "parts": 75,
+        "coverage": 0.1744
+      },
+      {
+        "key": [
+          "faces",
+          "Workplane"
+        ],
+        "count": 77,
+        "parts": 75,
+        "coverage": 0.1744
+      },
+      {
+        "key": [
+          "lineTo",
+          "lineTo"
+        ],
+        "count": 150,
+        "parts": 69,
+        "coverage": 0.1605
+      },
+      {
+        "key": [
+          "extrude",
+          "cut"
+        ],
+        "count": 91,
+        "parts": 69,
+        "coverage": 0.1605
+      },
+      {
+        "key": [
+          "workplane",
+          "Workplane"
+        ],
+        "count": 65,
+        "parts": 65,
+        "coverage": 0.1512
+      }
+    ],
+    "3": [
+      {
+        "key": [
+          "lineTo",
+          "moveTo",
+          "Workplane"
+        ],
+        "count": 71,
+        "parts": 71,
+        "coverage": 0.1651
+      },
+      {
+        "key": [
+          "lineTo",
+          "lineTo",
+          "moveTo"
+        ],
+        "count": 53,
+        "parts": 53,
+        "coverage": 0.1233
+      },
+      {
+        "key": [
+          "workplane",
+          "faces",
+          "faces"
+        ],
+        "count": 46,
+        "parts": 44,
+        "coverage": 0.1023
+      },
+      {
+        "key": [
+          "extrude",
+          "extrude",
+          "union"
+        ],
+        "count": 45,
+        "parts": 43,
+        "coverage": 0.1
+      },
+      {
+        "key": [
+          "Measures",
+          "LBracket",
+          "build"
+        ],
+        "count": 43,
+        "parts": 43,
+        "coverage": 0.1
+      },
+      {
+        "key": [
+          "workplane",
+          "workplane",
+          "faces"
+        ],
+        "count": 41,
+        "parts": 40,
+        "coverage": 0.093
+      },
+      {
+        "key": [
+          "center",
+          "workplane",
+          "faces"
+        ],
+        "count": 53,
+        "parts": 38,
+        "coverage": 0.0884
+      },
+      {
+        "key": [
+          "workplane",
+          "lineTo",
+          "faces"
+        ],
+        "count": 36,
+        "parts": 36,
+        "coverage": 0.0837
+      },
+      {
+        "key": [
+          "faces",
+          "lineTo",
+          "lineTo"
+        ],
+        "count": 36,
+        "parts": 36,
+        "coverage": 0.0837
+      },
+      {
+        "key": [
+          "lineTo",
+          "faces",
+          "lineTo"
+        ],
+        "count": 35,
+        "parts": 35,
+        "coverage": 0.0814
+      },
+      {
+        "key": [
+          "faces",
+          "workplane",
+          "faces"
+        ],
+        "count": 34,
+        "parts": 32,
+        "coverage": 0.0744
+      },
+      {
+        "key": [
+          "lineTo",
+          "lineTo",
+          "lineTo"
+        ],
+        "count": 68,
+        "parts": 30,
+        "coverage": 0.0698
+      },
+      {
+        "key": [
+          "faces",
+          "faces",
+          "faces"
+        ],
+        "count": 44,
+        "parts": 30,
+        "coverage": 0.0698
+      },
+      {
+        "key": [
+          "Workplane",
+          "Workplane",
+          "Workplane"
+        ],
+        "count": 42,
+        "parts": 29,
+        "coverage": 0.0674
+      },
+      {
+        "key": [
+          "LBracket",
+          "build",
+          "extrude"
+        ],
+        "count": 28,
+        "parts": 28,
+        "coverage": 0.0651
+      },
+      {
+        "key": [
+          "workplane",
+          "workplane",
+          "workplane"
+        ],
+        "count": 35,
+        "parts": 26,
+        "coverage": 0.0605
+      },
+      {
+        "key": [
+          "Workplane",
+          "faces",
+          "faces"
+        ],
+        "count": 26,
+        "parts": 26,
+        "coverage": 0.0605
+      },
+      {
+        "key": [
+          "build",
+          "close",
+          "extrude"
+        ],
+        "count": 26,
+        "parts": 26,
+        "coverage": 0.0605
+      },
+      {
+        "key": [
+          "faces",
+          "faces",
+          "workplane"
+        ],
+        "count": 26,
+        "parts": 25,
+        "coverage": 0.0581
+      },
+      {
+        "key": [
+          "Workplane",
+          "workplane",
+          "workplane"
+        ],
+        "count": 25,
+        "parts": 25,
+        "coverage": 0.0581
+      }
+    ]
+  }
+}
