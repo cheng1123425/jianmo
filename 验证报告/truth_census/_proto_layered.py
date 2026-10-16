@@ -16,8 +16,9 @@ import pdf_geom as G
 import readops as R
 import census
 from build123d import Polyline, make_face, extrude, Rectangle, Pos
+from batch import data_root
 
-DATA = r'D:/桌面文件/胀断器/新建文件夹 (2)/生产图纸/生产图纸'
+DATA = data_root()
 
 
 def scanline(poly, y):

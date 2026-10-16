@@ -18,7 +18,8 @@ import readops as R
 import profile as P
 import census
 
-D = r'D:/桌面文件/胀断器/新建文件夹 (2)/生产图纸/生产图纸'
+from batch import data_root
+D = data_root()
 
 
 def hatch_cells(g, view, axis):

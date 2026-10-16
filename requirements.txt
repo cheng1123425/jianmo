@@ -9,6 +9,12 @@
 build123d==0.13.0       # 三维建模（B-rep 实体，底层是 cadquery-ocp 内核）
 matplotlib==3.11.2      # 图纸 / 表格渲染（A3 矢量 PDF + 300dpi PNG）
 
+# 实验区「真值普查」的 PDF 读取依赖。正式流水线**不装也能跑** ——
+# 主链路的 tools/pdf_vector.py 是纯标准库实现（re/zlib/math），零 PDF 依赖。
+# 只有 验证报告/truth_census/{pdf_geom,pdf_anno,view_map}.py 用到它
+# （那套是为守「实验区不 import 项目模块」的隔离约定另写的）。
+pypdf>=6.0
+
 # ---------------- 说明 ----------------
 # 1) FreeCAD 1.1.0 **不是 pip 包**，需单独安装（见 README「环境准备」第 2 步）。
 #    本项目只调用它的命令行版 freecadcmd.exe 做无界面 TechDraw 投影。

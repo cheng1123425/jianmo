@@ -10,7 +10,8 @@ import pdf_geom as G
 import readops as R
 import pdf_anno
 
-D = r'D:/桌面文件/胀断器/新建文件夹 (2)/生产图纸/生产图纸'
+from batch import data_root
+D = data_root()
 pools = json.load(open('pools.json', encoding='utf-8'))
 
 print('%-7s %-12s %-30s %-34s %s' % ('图号', '零件', 'pair: prof / thin (axis)',

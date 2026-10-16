@@ -9,7 +9,8 @@ sys.path.insert(0, '.')
 import pdf_geom as G
 import readops as R
 
-D = r'D:/桌面文件/胀断器/新建文件夹 (2)/生产图纸/生产图纸'
+from batch import data_root
+D = data_root()
 for name in ['sj-008(底座)', 'sj-006(上层限位口)', 'sj-007(抗剪块)', 'sj-002(顶部垫片)']:
     g = G.geometry_of(D + '/' + name + '-模型.pdf')
     views = [v for v in G.cluster_views(g['segments']) if v['n_seg'] >= 3]
