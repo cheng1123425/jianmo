@@ -1,0 +1,47 @@
+{
+ "diameter": [
+  {
+   "d": 6.2,
+   "n": 1,
+   "tok": "Ø6.2",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 6.5,
+   "n": 1,
+   "tok": "Ø6.5",
+   "through": false,
+   "uniform": false
+  }
+ ],
+ "radius": [
+  {
+   "r": 7.0,
+   "tok": "R7"
+  }
+ ],
+ "thread": [],
+ "angle": [],
+ "through_holes": [],
+ "sample": [],
+ "linear_bare": [
+  "3"
+ ],
+ "roughness": [
+  3.2,
+  1.6
+ ],
+ "gdt": [],
+ "tolerance": [
+  "-011"
+ ],
+ "scale": "5:1",
+ "title": {
+  "图号": "sj-011",
+  "材料": "TC4"
+ },
+ "excluded": 21,
+ "part": "sj-011(定心垫片)-模型",
+ "source": "D:\\桌面文件\\胀断器\\新建文件夹 (2)\\生产图纸\\生产图纸\\sj-011(定心垫片)-模型.pdf"
+}

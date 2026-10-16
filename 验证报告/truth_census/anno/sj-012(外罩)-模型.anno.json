@@ -1,0 +1,115 @@
+{
+ "diameter": [
+  {
+   "d": 28.0,
+   "n": 1,
+   "tok": "Ø28",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 20.53,
+   "n": 1,
+   "tok": "Ø20.53",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 38.0,
+   "n": 1,
+   "tok": "Ø38",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 4.5,
+   "n": 4,
+   "tok": "4×Ø4.5通孔",
+   "through": true,
+   "uniform": false
+  },
+  {
+   "d": 6.5,
+   "n": 1,
+   "tok": "Ø6.5",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 22.0,
+   "n": 1,
+   "tok": "Ø22",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 22.0,
+   "n": 1,
+   "tok": "Ø22",
+   "through": false,
+   "uniform": false
+  }
+ ],
+ "radius": [
+  {
+   "r": 3.0,
+   "tok": "R3"
+  },
+  {
+   "r": 7.0,
+   "tok": "R7"
+  }
+ ],
+ "thread": [],
+ "angle": [
+  {
+   "deg": 40.0,
+   "tok": "40°"
+  }
+ ],
+ "through_holes": [
+  {
+   "d": 4.5,
+   "n": 4,
+   "uniform": false
+  }
+ ],
+ "sample": [
+  "48.5±0.1"
+ ],
+ "linear_bare": [
+  "52",
+  "3",
+  "15.515",
+  "6",
+  "4",
+  "45",
+  "3",
+  "52",
+  "44",
+  "5",
+  "40.5"
+ ],
+ "roughness": [
+  3.2,
+  0.1,
+  1.6,
+  1.6,
+  3.2
+ ],
+ "gdt": [],
+ "tolerance": [
+  "±0.1",
+  "+0.05",
+  "+0.03",
+  "-012"
+ ],
+ "scale": "2:1",
+ "title": {
+  "图号": "sj-012",
+  "材料": "7075"
+ },
+ "excluded": 26,
+ "part": "sj-012(外罩)-模型",
+ "source": "D:\\桌面文件\\胀断器\\新建文件夹 (2)\\生产图纸\\生产图纸\\sj-012(外罩)-模型.pdf"
+}

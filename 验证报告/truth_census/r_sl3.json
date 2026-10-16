@@ -1,0 +1,769 @@
+[
+ {
+  "pid": "sj-001",
+  "name": "切槽螺栓",
+  "pool": "test",
+  "ok": true,
+  "part": "sj-001（切槽螺栓）-模型",
+  "view_route": "revolve",
+  "views": 3,
+  "route": "revolve",
+  "profile_src": "stepped",
+  "scale_pt_per_mm": 2.6644,
+  "axis": "v",
+  "profile_pts": 10,
+  "profile_view": [
+   30.8,
+   239.8
+  ],
+  "model": {
+   "volume": 2909.348,
+   "bbox": [
+    89.985,
+    11.62,
+    11.62
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-001（切槽螺栓）-模型.step",
+  "truth": {
+   "volume": 2712.969,
+   "bbox": [
+    -3.774,
+    -57.5,
+    -5.0,
+    7.774,
+    32.5,
+    5.0
+   ],
+   "faces": 83
+  },
+  "diff": {
+   "volume_pct": 7.239
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-002",
+  "name": "顶部垫片",
+  "pool": "test",
+  "ok": true,
+  "part": "sj-002(顶部垫片)-模型",
+  "view_route": "extrude",
+  "views": 10,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "loop",
+  "profile_pick": "big",
+  "scale_pt_per_mm": 3.772,
+  "profile_view": [
+   188.6,
+   188.6
+  ],
+  "thin_view": [
+   188.6,
+   15.1
+  ],
+  "poly_pts": 12,
+  "thickness_mm": 4.003,
+  "poly_mm": [
+   [
+    1.0,
+    0.0
+   ],
+   [
+    49.01,
+    0.0
+   ],
+   [
+    49.72,
+    0.33
+   ],
+   [
+    50.01,
+    1.0
+   ],
+   [
+    50.01,
+    49.03
+   ],
+   [
+    49.72,
+    49.72
+   ],
+   [
+    49.01,
+    50.01
+   ],
+   [
+    1.03,
+    50.01
+   ],
+   [
+    0.33,
+    49.72
+   ],
+   [
+    0.0,
+    49.01
+   ],
+   [
+    0.0,
+    1.0
+   ],
+   [
+    0.33,
+    0.33
+   ]
+  ],
+  "holes": [
+   6.5,
+   3.5,
+   3.5,
+   3.5,
+   3.5
+  ],
+  "scale_votes": 2,
+  "axis": "x",
+  "model": {
+   "volume": 9720.323,
+   "bbox": [
+    50.011,
+    50.011,
+    4.003
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-002(顶部垫片)-模型.step",
+  "truth": {
+   "volume": 9459.834,
+   "bbox": [
+    -29.566,
+    -32.346,
+    0.0,
+    20.434,
+    17.654,
+    4.0
+   ],
+   "faces": 30
+  },
+  "diff": {
+   "volume_pct": 2.754
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-003",
+  "name": "顶部保护罩",
+  "pool": "test",
+  "ok": true,
+  "part": "sj-003(顶部保护罩)-模型",
+  "view_route": "revolve",
+  "views": 2,
+  "route": "revolve",
+  "profile_src": "stepped",
+  "scale_pt_per_mm": 1.8505,
+  "axis": "v",
+  "profile_pts": 15,
+  "profile_view": [
+   79.2,
+   75.4
+  ],
+  "model": {
+   "volume": 8663.233,
+   "bbox": [
+    40.757,
+    42.8,
+    42.8
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-003(顶部保护罩)-模型.step",
+  "truth": {
+   "volume": 3984.131,
+   "bbox": [
+    -21.0,
+    -21.0,
+    -38.0,
+    21.0,
+    21.0,
+    2.0
+   ],
+   "faces": 113
+  },
+  "diff": {
+   "volume_pct": 117.443
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-004",
+  "name": "顶部胀断反馈",
+  "pool": "test",
+  "ok": true,
+  "part": "sj-004(顶部胀断器反馈)-模型",
+  "view_route": "extrude",
+  "views": 3,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "loop",
+  "profile_pick": "small(实占更低)",
+  "scale_pt_per_mm": 5.3241,
+  "profile_view": [
+   69.3,
+   53.3
+  ],
+  "thin_view": [
+   77.2,
+   53.3
+  ],
+  "poly_pts": 4,
+  "thickness_mm": 14.5,
+  "poly_mm": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    1.0
+   ],
+   [
+    12.01,
+    10.01
+   ],
+   [
+    13.02,
+    10.01
+   ]
+  ],
+  "holes": [],
+  "scale_votes": 4,
+  "axis": "y",
+  "model": {
+   "volume": 160.124,
+   "bbox": [
+    13.016,
+    10.007,
+    14.5
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-004(顶部胀断器反馈)-模型.step",
+  "truth": {
+   "volume": 273.247,
+   "bbox": [
+    -4.02,
+    -7.182,
+    -9.0,
+    8.98,
+    7.278,
+    1.0
+   ],
+   "faces": 28
+  },
+  "diff": {
+   "volume_pct": -41.4
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-005",
+  "name": "顶部胀断反馈2",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-005(顶部涨断反馈2)-模型",
+  "view_route": "extrude",
+  "views": 3,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "loop",
+  "profile_pick": "big",
+  "scale_pt_per_mm": 8.0,
+  "profile_view": [
+   120.0,
+   60.0
+  ],
+  "thin_view": [
+   80.0,
+   60.0
+  ],
+  "poly_pts": 5,
+  "thickness_mm": 10.0,
+  "poly_mm": [
+   [
+    14.0,
+    0.0
+   ],
+   [
+    15.0,
+    0.0
+   ],
+   [
+    0.0,
+    7.5
+   ],
+   [
+    0.0,
+    6.5
+   ],
+   [
+    13.71,
+    6.21
+   ]
+  ],
+  "holes": [],
+  "scale_votes": 3,
+  "axis": "y",
+  "model": {
+   "volume": 317.382,
+   "bbox": [
+    15.0,
+    7.5,
+    10.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-005(顶部涨断反馈2)-模型.step",
+  "truth": {
+   "volume": 197.886,
+   "bbox": [
+    0.0,
+    -7.5,
+    -5.0,
+    15.0,
+    0.0,
+    5.0
+   ],
+   "faces": 18
+  },
+  "diff": {
+   "volume_pct": 60.386
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-006",
+  "name": "上层限位口",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-006(上层限位口)-模型",
+  "view_route": "extrude",
+  "views": 3,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "loop",
+  "profile_pick": "big",
+  "scale_pt_per_mm": 5.3333,
+  "profile_view": [
+   106.6,
+   111.9
+  ],
+  "thin_view": [
+   106.6,
+   26.7
+  ],
+  "poly_pts": 7,
+  "thickness_mm": 5.0,
+  "poly_mm": [
+   [
+    0.0,
+    5.88
+   ],
+   [
+    1.1,
+    5.23
+   ],
+   [
+    2.08,
+    4.42
+   ],
+   [
+    2.91,
+    3.47
+   ],
+   [
+    3.58,
+    2.41
+   ],
+   [
+    4.08,
+    1.24
+   ],
+   [
+    4.39,
+    0.0
+   ]
+  ],
+  "holes": [],
+  "scale_votes": 5,
+  "axis": "x",
+  "model": {
+   "volume": 21.439,
+   "bbox": [
+    4.386,
+    5.882,
+    5.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-006(上层限位口)-模型.step",
+  "truth": {
+   "volume": 467.606,
+   "bbox": [
+    -10.0,
+    -10.0,
+    0.0,
+    10.0,
+    11.0,
+    5.0
+   ],
+   "faces": 47
+  },
+  "diff": {
+   "volume_pct": -95.415
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-007",
+  "name": "抗剪块",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-007(抗剪块)-模型",
+  "view_route": "extrude",
+  "views": 4,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "hatch",
+  "profile_pick": "small(实占更低)",
+  "scale_pt_per_mm": 2.6671,
+  "profile_view": [
+   186.7,
+   16.0
+  ],
+  "thin_view": [
+   186.7,
+   120.1
+  ],
+  "poly_pts": 8,
+  "thickness_mm": 45.0,
+  "poly_mm": [
+   [
+    20.84,
+    0.0
+   ],
+   [
+    20.84,
+    1.8
+   ],
+   [
+    0.0,
+    1.8
+   ],
+   [
+    0.0,
+    5.59
+   ],
+   [
+    69.71,
+    5.59
+   ],
+   [
+    69.71,
+    1.8
+   ],
+   [
+    49.12,
+    1.8
+   ],
+   [
+    49.12,
+    0.0
+   ]
+  ],
+  "holes": [],
+  "scale_votes": 6,
+  "axis": "x",
+  "model": {
+   "volume": 14172.615,
+   "bbox": [
+    69.706,
+    5.585,
+    45.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-007(抗剪块)-模型.step",
+  "truth": {
+   "volume": 12183.082,
+   "bbox": [
+    -66.315,
+    -13.038,
+    -22.5,
+    3.685,
+    -7.038,
+    22.5
+   ],
+   "faces": 28
+  },
+  "diff": {
+   "volume_pct": 16.33
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-008",
+  "name": "底座",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-008(底座)-模型",
+  "view_route": "extrude",
+  "views": 4,
+  "route": "extrude",
+  "profile_degraded": null,
+  "profile_src": "loop",
+  "profile_pick": "small(实占更低)",
+  "scale_pt_per_mm": 1.4583,
+  "profile_view": [
+   69.9,
+   69.9
+  ],
+  "thin_view": [
+   87.5,
+   69.9
+  ],
+  "poly_pts": 16,
+  "thickness_mm": 60.0,
+  "poly_mm": [
+   [
+    4.27,
+    0.02
+   ],
+   [
+    10.61,
+    6.5
+   ],
+   [
+    24.32,
+    6.46
+   ],
+   [
+    30.77,
+    0.0
+   ],
+   [
+    35.01,
+    4.24
+   ],
+   [
+    28.55,
+    10.7
+   ],
+   [
+    28.55,
+    24.32
+   ],
+   [
+    35.01,
+    30.77
+   ],
+   [
+    30.83,
+    35.07
+   ],
+   [
+    24.4,
+    28.51
+   ],
+   [
+    10.7,
+    28.55
+   ],
+   [
+    4.24,
+    35.01
+   ],
+   [
+    0.0,
+    30.77
+   ],
+   [
+    6.46,
+    24.32
+   ],
+   [
+    6.46,
+    10.7
+   ],
+   [
+    0.25,
+    3.95
+   ]
+  ],
+  "holes": [
+   18.0
+  ],
+  "scale_votes": 4,
+  "axis": "y",
+  "model": {
+   "volume": 24835.707,
+   "bbox": [
+    35.013,
+    35.074,
+    60.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-008(底座)-模型.step",
+  "truth": {
+   "volume": 27009.19,
+   "bbox": [
+    -21.913,
+    1.0,
+    -38.0,
+    38.087,
+    49.0,
+    2.0
+   ],
+   "faces": 106
+  },
+  "diff": {
+   "volume_pct": -8.047
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-009",
+  "name": "底部垫片",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-009(底部垫片)-模型",
+  "view_route": "revolve",
+  "views": 1,
+  "route": "revolve",
+  "profile_src": "hatch",
+  "scale_pt_per_mm": 13.3333,
+  "axis": "v",
+  "profile_pts": 7,
+  "profile_view": [
+   160.0,
+   46.7
+  ],
+  "model": {
+   "volume": 139.105,
+   "bbox": [
+    3.349,
+    12.0,
+    12.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-009(底部垫片)-模型.step",
+  "truth": {
+   "volume": 141.863,
+   "bbox": [
+    -11.309,
+    -1.5,
+    -6.0,
+    0.691,
+    2.0,
+    6.0
+   ],
+   "faces": 9
+  },
+  "diff": {
+   "volume_pct": -1.944
+  },
+  "verdict": "MISMATCH"
+ },
+ {
+  "pid": "sj-010",
+  "name": "合金管垫片",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-010(合金管垫片)-模型",
+  "view_route": "annular",
+  "views": 2,
+  "route": "annular",
+  "scale_pt_per_mm": 13.3378,
+  "measured_diameters_mm": [
+   12.0,
+   6.502
+  ],
+  "annotated_diameters": [
+   12.0,
+   6.5
+  ],
+  "thickness_mm": 0.997,
+  "snap": {
+   "od": true,
+   "id": true,
+   "thickness": true
+  },
+  "final": {
+   "od": 12.0,
+   "id": 6.5,
+   "thickness": 1.0
+  },
+  "model": {
+   "volume": 79.914,
+   "bbox": [
+    12.0,
+    12.0,
+    1.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-010(合金管垫片)-模型.step",
+  "truth": {
+   "volume": 79.914,
+   "bbox": [
+    -6.0,
+    -6.0,
+    0.0,
+    6.0,
+    6.0,
+    1.0
+   ],
+   "faces": 6
+  },
+  "diff": {
+   "volume_pct": 0.0
+  },
+  "verdict": "PASS"
+ },
+ {
+  "pid": "sj-011",
+  "name": "定心垫片",
+  "pool": "test",
+  "ok": true,
+  "part": "sj-011(定心垫片)-模型",
+  "view_route": "revolve",
+  "views": 1,
+  "route": "revolve",
+  "profile_src": "hatch",
+  "scale_pt_per_mm": 12.0429,
+  "axis": "v",
+  "profile_pts": 4,
+  "profile_view": [
+   168.6,
+   42.7
+  ],
+  "model": {
+   "volume": 158.85,
+   "bbox": [
+    1.585,
+    13.279,
+    13.279
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-011(定心垫片)-模型.step",
+  "truth": {
+   "volume": 174.689,
+   "bbox": [
+    -6.325,
+    0.8,
+    -6.325,
+    6.325,
+    4.0,
+    6.325
+   ],
+   "faces": 6
+  },
+  "diff": {
+   "volume_pct": -9.067
+  },
+  "verdict": "MISMATCH"
+ }
+]

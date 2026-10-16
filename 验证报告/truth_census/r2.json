@@ -1,0 +1,307 @@
+[
+ {
+  "pid": "sj-001",
+  "name": "切槽螺栓",
+  "pool": "test",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-002",
+  "name": "顶部垫片",
+  "pool": "test",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-003",
+  "name": "顶部保护罩",
+  "pool": "test",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-004",
+  "name": "顶部胀断反馈",
+  "pool": "test",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-005",
+  "name": "顶部胀断反馈2",
+  "pool": "train",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-006",
+  "name": "上层限位口",
+  "pool": "train",
+  "ok": false,
+  "part": "sj-006(上层限位口)-模型",
+  "scale_pt_per_mm": 1.6834,
+  "circle_view_bbox": [
+   134.3,
+   509.8,
+   241.0,
+   621.7
+  ],
+  "measured_diameters_mm": [
+   18.0
+  ],
+  "annotated_diameters": [
+   18.0,
+   3.0
+  ],
+  "thickness_mm": 15.801,
+  "bare_numbers": [
+   10.0,
+   21.0,
+   11.0,
+   21.0,
+   2.0,
+   5.0,
+   2.5,
+   7075.0
+  ],
+  "views": [
+   {
+    "bbox": [
+     134.3,
+     356.2,
+     241.0,
+     382.9
+    ],
+    "n": 463
+   },
+   {
+    "bbox": [
+     134.3,
+     509.8,
+     241.0,
+     621.7
+    ],
+    "n": 337
+   },
+   {
+    "bbox": [
+     350.4,
+     509.7,
+     377.0,
+     621.7
+    ],
+    "n": 62
+   }
+  ],
+  "why": "尺寸不足（需要 外径 + 内孔 + 厚度）",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-007",
+  "name": "抗剪块",
+  "pool": "train",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-008",
+  "name": "底座",
+  "pool": "train",
+  "ok": false,
+  "part": "sj-008(底座)-模型",
+  "scale_pt_per_mm": 1.4695,
+  "circle_view_bbox": [
+   442.7,
+   268.9,
+   512.6,
+   338.8
+  ],
+  "measured_diameters_mm": [
+   48.0,
+   44.042,
+   26.218,
+   18.268
+  ],
+  "annotated_diameters": [
+   48.0,
+   38.0,
+   22.0,
+   18.0,
+   7.0,
+   4.5
+  ],
+  "thickness_mm": null,
+  "bare_numbers": [
+   45.0,
+   60.0,
+   6.0,
+   6.0,
+   60.0,
+   -0.03,
+   -0.05,
+   40.0,
+   5.0,
+   5.0,
+   3.0,
+   0.02,
+   0.1,
+   0.02,
+   4.0,
+   7075.0,
+   3.2
+  ],
+  "views": [
+   {
+    "bbox": [
+     442.7,
+     268.9,
+     512.6,
+     338.8
+    ],
+    "n": 430
+   },
+   {
+    "bbox": [
+     179.9,
+     268.9,
+     267.4,
+     338.8
+    ],
+    "n": 422
+   },
+   {
+    "bbox": [
+     344.8,
+     268.9,
+     403.1,
+     338.8
+    ],
+    "n": 120
+   },
+   {
+    "bbox": [
+     179.9,
+     148.4,
+     267.3,
+     206.7
+    ],
+    "n": 74
+   }
+  ],
+  "why": "尺寸不足（需要 外径 + 内孔 + 厚度）",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-009",
+  "name": "底部垫片",
+  "pool": "train",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ },
+ {
+  "pid": "sj-010",
+  "name": "合金管垫片",
+  "pool": "train",
+  "ok": true,
+  "part": "sj-010(合金管垫片)-模型",
+  "scale_pt_per_mm": 13.3378,
+  "circle_view_bbox": [
+   166.7,
+   395.9,
+   326.7,
+   556.0
+  ],
+  "measured_diameters_mm": [
+   12.0,
+   6.502
+  ],
+  "annotated_diameters": [
+   12.0,
+   6.5
+  ],
+  "thickness_mm": 0.997,
+  "bare_numbers": [
+   1.0,
+   3.2
+  ],
+  "views": [
+   {
+    "bbox": [
+     166.7,
+     395.9,
+     326.7,
+     556.0
+    ],
+    "n": 64
+   },
+   {
+    "bbox": [
+     396.4,
+     395.9,
+     409.7,
+     555.9
+    ],
+    "n": 6
+   }
+  ],
+  "snap": {
+   "od": true,
+   "id": true,
+   "thickness": true,
+   "raw": {
+    "od": 12.0,
+    "id": 6.502,
+    "thickness": 0.997
+   }
+  },
+  "final": {
+   "od": 12.0,
+   "id": 6.5,
+   "thickness": 1.0
+  },
+  "model": {
+   "od": 12.0,
+   "id": 6.5,
+   "thickness": 1.0,
+   "volume": 79.914,
+   "bbox": [
+    12.0,
+    12.0,
+    1.0
+   ]
+  },
+  "step": "C:\\Users\\linmin\\WorkBuddy\\2026-09-29-11-45-53\\验证报告\\truth_census\\built\\sj-010(合金管垫片)-模型.step",
+  "truth": {
+   "volume": 79.914,
+   "bbox": [
+    -6.0,
+    -6.0,
+    0.0,
+    6.0,
+    6.0,
+    1.0
+   ],
+   "faces": 6
+  },
+  "diff": {
+   "volume_pct": 0.0
+  },
+  "verdict": "PASS"
+ },
+ {
+  "pid": "sj-011",
+  "name": "定心垫片",
+  "pool": "test",
+  "ok": false,
+  "why": "没找到圆视图",
+  "verdict": "FAIL"
+ }
+]

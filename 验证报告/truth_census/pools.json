@@ -1,0 +1,172 @@
+{
+  "_doc": "训练/测试分池清单 —— 方案④ 的准入基础。任何读图/调参步骤的输入都必须先过 pool_guard.py。",
+  "_rule": [
+    "三维 STEP 只允许出现在两个地方：(1) 造度量尺子本身（census）(2) 最终评判。",
+    "STEP 绝不允许出现在『读图』这一步的输入或调参里 —— 那是把答案抄进学习。",
+    "同一件的 PDF/DWG 与 STEP 必须同池 —— 否则拿 A 的图读、用 A 的 STEP 判 = 开卷。",
+    "pool=contaminated 的零件禁止进 test（它的模型是被真值修正出来的，指标是拟合不是泛化）。"
+  ],
+  "_split_basis": "按面数分层交替，且把『垫片族』拆到两池，用于测同族泛化。",
+  "dataset": {
+    "root": "D:\\桌面文件\\胀断器\\新建文件夹 (2)\\生产图纸\\生产图纸",
+    "counts": {
+      "dwg": 12,
+      "pdf": 13,
+      "step": 13
+    },
+    "verified_on": "2026-10-16",
+    "note": "12 件 sj-001..sj-012 齐（矢量PDF+DWG+STEP）；另有 1 个装配体真值。PDF 为 AutoCAD pdfplot16.hdi 出图（矢量，无内嵌位图）。"
+  },
+  "parts": {
+    "sj-001": {
+      "name": "切槽螺栓",
+      "pool": "test",
+      "faces": 83,
+      "class": "螺栓",
+      "pdf": "sj-001（切槽螺栓）-模型.pdf",
+      "dwg": "sj-001（切槽螺栓）.DWG",
+      "step": "切槽螺栓.STEP"
+    },
+    "sj-002": {
+      "name": "顶部垫片",
+      "pool": "test",
+      "faces": 30,
+      "class": "垫片",
+      "pdf": "sj-002(顶部垫片)-模型.pdf",
+      "dwg": "sj-002(顶部垫片).dwg",
+      "step": "顶部垫片.STEP"
+    },
+    "sj-003": {
+      "name": "顶部保护罩",
+      "pool": "test",
+      "faces": 113,
+      "class": "薄壁罩",
+      "pdf": "sj-003(顶部保护罩)-模型.pdf",
+      "dwg": "sj-003(顶部保护罩).dwg",
+      "step": "顶部保护罩.STEP"
+    },
+    "sj-004": {
+      "name": "顶部胀断反馈",
+      "pool": "test",
+      "faces": 28,
+      "class": "板类",
+      "pdf": "sj-004(顶部胀断器反馈)-模型.pdf",
+      "dwg": "sj-004(顶部胀断器反馈).dwg",
+      "step": "顶部胀断反馈.STEP"
+    },
+    "sj-005": {
+      "name": "顶部胀断反馈2",
+      "pool": "train",
+      "faces": 18,
+      "class": "板类",
+      "pdf": "sj-005(顶部涨断反馈2)-模型.pdf",
+      "dwg": "sj-005(顶部涨断反馈2).dwg",
+      "step": "顶部胀断反馈2.STEP"
+    },
+    "sj-006": {
+      "name": "上层限位口",
+      "pool": "train",
+      "faces": 47,
+      "class": "口类",
+      "pdf": "sj-006(上层限位口)-模型.pdf",
+      "dwg": "sj-006(上层限位口).dwg",
+      "step": "上层限位口.STEP"
+    },
+    "sj-007": {
+      "name": "抗剪块",
+      "pool": "train",
+      "faces": 28,
+      "class": "块类",
+      "pdf": "sj-007(抗剪块)-模型.pdf",
+      "dwg": "sj-007(抗剪块).dwg",
+      "step": "抗剪块.STEP"
+    },
+    "sj-008": {
+      "name": "底座",
+      "pool": "train",
+      "faces": 106,
+      "class": "复杂体",
+      "pdf": "sj-008(底座)-模型.pdf",
+      "dwg": "sj-008(底座).dwg",
+      "step": "底座.STEP"
+    },
+    "sj-009": {
+      "name": "底部垫片",
+      "pool": "train",
+      "faces": 9,
+      "class": "垫片",
+      "pdf": "sj-009(底部垫片)-模型.pdf",
+      "dwg": "sj-009(底部垫片).dwg",
+      "step": "底部垫片.STEP"
+    },
+    "sj-010": {
+      "name": "合金管垫片",
+      "pool": "train",
+      "faces": 6,
+      "class": "垫片",
+      "pdf": "sj-010(合金管垫片)-模型.pdf",
+      "dwg": "sj-010(合金管垫片).dwg",
+      "step": "合金管垫片.STEP"
+    },
+    "sj-011": {
+      "name": "定心垫片",
+      "pool": "test",
+      "faces": 6,
+      "class": "垫片",
+      "pdf": "sj-011(定心垫片)-模型.pdf",
+      "dwg": "sj-011(定心垫片).dwg",
+      "step": "定心垫片.STEP"
+    }
+  },
+  "assembly": {
+    "name": "定版胀断器加工装配",
+    "pool": "test_only",
+    "solids": 27,
+    "faces": 852,
+    "volume": 81047.0,
+    "step": "定版胀断器加工装配.STEP",
+    "why": "天然独立真值：单件读图阶段看不见它，只做跨件一致性评判。"
+  },
+  "contaminated": {
+    "sj-012": {
+      "name": "外罩",
+      "pool": "contaminated",
+      "faces": 79,
+      "volume": 20576.3,
+      "pdf": "sj-012(外罩)-模型.pdf",
+      "dwg": "sj-012(外罩).dwg",
+      "step": "外罩.STEP",
+      "why": "另一台机器提交 137334c『用客户真值 STEP 反向校验并修正外罩 sj-012』——模型是看着真值改出来的。",
+      "consequence": "其『体积差 0.50% / 体素一致率 98.09%』是拟合结果不是泛化结果，禁止作为 test 样例或能力证据。"
+    }
+  },
+  "duplicates": {
+    "Drawing1-模型.pdf": "文本与 sj-002(顶部垫片)-模型.pdf 逐字相同（已实测比对），是同件重复，不计入。"
+  },
+  "split_check": {
+    "train": {
+      "n": 6,
+      "faces_total": 214,
+      "faces_range": [
+        6,
+        106
+      ]
+    },
+    "test": {
+      "n": 5,
+      "faces_total": 260,
+      "faces_range": [
+        6,
+        113
+      ]
+    },
+    "contaminated": {
+      "n": 1
+    },
+    "assembly": {
+      "n": 1,
+      "role": "test_only"
+    },
+    "gaskets_split": "合金管垫片/底部垫片 → train；定心垫片/顶部垫片 → test（测同族泛化）"
+  }
+}

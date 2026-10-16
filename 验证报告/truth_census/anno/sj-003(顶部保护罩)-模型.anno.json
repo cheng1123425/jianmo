@@ -1,0 +1,98 @@
+{
+ "diameter": [
+  {
+   "d": 24.0,
+   "n": 1,
+   "tok": "Ø24",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 42.8,
+   "n": 1,
+   "tok": "Ø42.8",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 3.5,
+   "n": 4,
+   "tok": "4×Ø3.5均布通孔",
+   "through": true,
+   "uniform": true
+  },
+  {
+   "d": 34.0,
+   "n": 1,
+   "tok": "Ø34",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 26.0,
+   "n": 1,
+   "tok": "Ø26",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 3.0,
+   "n": 1,
+   "tok": "Ø3",
+   "through": false,
+   "uniform": false
+  }
+ ],
+ "radius": [
+  {
+   "r": 21.0,
+   "tok": "R21"
+  },
+  {
+   "r": 4.5,
+   "tok": "R4.5"
+  }
+ ],
+ "thread": [],
+ "angle": [
+  {
+   "deg": 41.21,
+   "tok": "41.21°"
+  }
+ ],
+ "through_holes": [
+  {
+   "d": 3.5,
+   "n": 4,
+   "uniform": true
+  }
+ ],
+ "sample": [
+  "8±0.1"
+ ],
+ "linear_bare": [
+  "40",
+  "2",
+  "5",
+  "32",
+  "3",
+  "14",
+  "4"
+ ],
+ "roughness": [
+  3.2
+ ],
+ "gdt": [],
+ "tolerance": [
+  "±0.1",
+  "-003"
+ ],
+ "scale": "1:1",
+ "title": {
+  "图号": "sj-003",
+  "材料": "7075"
+ },
+ "excluded": 23,
+ "part": "sj-003(顶部保护罩)-模型",
+ "source": "D:\\桌面文件\\胀断器\\新建文件夹 (2)\\生产图纸\\生产图纸\\sj-003(顶部保护罩)-模型.pdf"
+}

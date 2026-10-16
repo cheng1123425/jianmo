@@ -1,0 +1,41 @@
+{
+ "diameter": [
+  {
+   "d": 12.0,
+   "n": 1,
+   "tok": "Ø12",
+   "through": false,
+   "uniform": false
+  },
+  {
+   "d": 6.5,
+   "n": 1,
+   "tok": "Ø6.5",
+   "through": false,
+   "uniform": false
+  }
+ ],
+ "radius": [],
+ "thread": [],
+ "angle": [],
+ "through_holes": [],
+ "sample": [],
+ "linear_bare": [
+  "1"
+ ],
+ "roughness": [
+  3.2
+ ],
+ "gdt": [],
+ "tolerance": [
+  "-010"
+ ],
+ "scale": "5:1",
+ "title": {
+  "图号": "sj-010",
+  "材料": "TC4"
+ },
+ "excluded": 21,
+ "part": "sj-010(合金管垫片)-模型",
+ "source": "D:\\桌面文件\\胀断器\\新建文件夹 (2)\\生产图纸\\生产图纸\\sj-010(合金管垫片)-模型.pdf"
+}
