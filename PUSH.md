@@ -102,6 +102,7 @@ git push origin main
 | 2026-10-14 | `74a2c69` → `dd5a3be`（共 6 个） | **推 `refactor/naming-and-layering` 分支（非 main）**：① **命名规范化**——参数改四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀；新增 `tools/check_naming.py`（可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名）；`docs/rename_maps/*.json` 存 4 个零件改名映射（可反向撤销）；命名 0 error/0 warning。② **逻辑分层**——`SHARED_STEPS` 5→9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`collect.py` / `drawing_fc.py` / `drawing_render.py`）；删 12 个零件副本，零件只留 4 个含几何/标注的步骤。③ **s6b 修复**——容差 1e-6→1e-3（FreeCAD 投影噪声 1e-4 量级），高度链要求 ≥2 段。④ **出图自动适配**——`s3_render` 分两遍绘制，保证视图/标注/文字不越图框（bracket/lbracket/ybracket 均已收进图框）。⑤ **垫片迁入 `parts/gasket/`**——根目录只剩框架，默认 `--part` 改 `parts/gasket`。⑥ **s2/s3 抽 lib**——3 个零件文件从 250~283 行缩到约 100 行，只声明视图布局与标注布置（s3 用数据清单 DIMS、s2 用 `place_marks` 回调）。**关键验证：每个零件「抽 lib 前 vs 后」像素对比全部 0 差异**（`tools/diff_images.py`）；四件闭环全 pass，guard 26/26。遗留见 `docs/遗留事项与下一步.md`（gasket 是另一套老实现未纳入、bracket 标注数字硬编码等）。 |
 | 2026-10-15 | `703a619` | **推 `feature/ir-feature-tree` 分支（非 main）**：① **IR 路线定案**——IR 当唯一真值源（不再是"双后端"），build123d 升为几何引擎 + 特征树真源，FreeCAD PartDesign 退为按需物化的交互面，TechDraw 出图，`drawing.anchors` 缝 3D↔2D；四项 2D↔3D 决策拍板（锚点放 IR 特征侧 / 绑定存可重放查询不存编号 / 图纸只读 / 内腔不可见当特例放行）。② **A** `lib/ir.py`：IR schema（feature 八栏 + 词表 + `validate()` + dump/load）。③ **B** `tools/recorder.py`：build123d 执行+录制 → IR（三种注入：模块属性补丁 + `Compound.__sub__/__add__` 布尔钩子 + `Builder._get_context()` 快照中间形状），样板 `parts/lbracket/ir.json`（26 事件 → 9 特征）。④ **交接文档** `docs/HANDOFF-2026-10-15.md`。⑤ `.gitignore` 忽略本机 `env.bat`。❗**实测关键坑**：build123d 的 `BuildPart`/`BuildSketch` 一点都不能打补丁（替换 BuildPart 破坏 `pending_faces` 传递；替换 BuildSketch 类或改其 `__init__` 破坏 `BuildLine`→`make_face` 边传递）⇒ 草图平面只能静态扫源码。保真度：录制最终形状 vs 流水线 s1_build 输出 bbox/solids 一致、体积差 0.03。上传前检查：guard 9/13 步全过；垫片 + bracket 闭环均 `闭环结局：pass`。**下一步**：C（IR→build123d 生成器 + 往返自测）→ D/E（PartDesign 生成 + 回读）→ G（2D↔3D 三层绑定）。 |
 | 2026-10-16 | `137334c` | **推 `feature/truth-step-validation` 分支（非 main）**：① **客户真值 STEP 反向校验**——拿到 `D:\工作内容\生产图纸`（11 件同时有 矢量PDF+DWG+真值STEP），用 `外罩.STEP` 当标准答案，把外罩 sj-012 从"只读 2D 修到 v2"推进到 v4：总高 48→**52**（图上 `48.5±0.1` 是颈顶台阶标高，不是总高）、本体**外锥→Ø28 圆柱**（正视图那条斜线是 4 条筋在 45° 的投影 ×cos45°）、筋宽 6→**4**（俯视图量到的"6"含 R1 根圆角）、内腔顶 R11 半球→**R7 球冠**（球心 z=41）、补漏一个 **Ø6×21 径向长圆孔**、标定 k 修正 **0.4%**（0.48331→0.48527）。验收：包围盒 48×48×52 一致、体积差 **0.50%**、体素一致率 **98.09%**。② 新增 `docs/BATCH-REVERSE-VALIDATION-2026-10-16.md`（问题点/根因 R-A~R-F、流程建议 S1~S10、降本建议 T1~T8）。上传前检查：guard 14/14、7 件闭环 6 pass（`valve_cover` 是历史存根：仓库里只有 params.py/ref_spec.py，非本次回归）、`arch_impact --strict` 退出码 0。❗**本机 SSH 坑**：`~/.ssh/id_ed25519_jianmo` **不存在**（§五 的写法在本机不适用）；22 端口 reset；改用 **`ssh -p 443 git@ssh.github.com` + `~/.ssh/id_ed25519`**，且**第一次必 reset、重试即成功**。 |
+| 2026-10-16 | `0c6dae3` + `f7e2605` | **推 `fix/truth-census-portability` 分支（非 main）**：给另一台机器建的实验区 `验证报告/truth_census/` 修**可移植性**（算法本身没动）。① **数据根目录不再写死** —— `batch.py:18` 焊的是建库那台机器的 `D:/桌面文件/胀断器/新建文件夹 (2)/生产图纸/生产图纸`，本机不存在 ⇒ 换机器必 `FileNotFoundError`；改为三级解析「环境变量 `TRUTH_DATA_ROOT` → `pools.json` 的 `dataset.root` → 报错（错误信息列出候选路径+来源，可照抄）」，9 个 `_diag_*/_proto_*` 里的同一处写法也统一成 `from batch import data_root`。② **申报 `pypdf`** —— 实验区为守「不 import 项目模块」自写了 `pdf_geom/pdf_anno/view_map`，依赖 pypdf 却既不在 `requirements.txt` 也不在 venv ⇒ `ModuleNotFoundError`；已在 requirements 补上并注明**正式流水线不装也能跑**（主链路 `tools/pdf_vector.py` 是纯标准库）。③ 顺带修判定口径：缺输入（本机没有 sj-001/sj-002 的矢量 PDF）原来整件 `FileNotFoundError`、与"算法炸了"混在一起，改为记 **SKIP**、单独汇总、**不进 PASS 分母**。验证：全批重现原结果 **PASS 1/9 + 跳过 2**，9 件体积差逐位与 `最终结果-2026-10-16.md` 一致；9 个诊断脚本 `py_compile` + 运行 OK。上传前检查：guard 13/13、`arch_impact --strict` 退出码 0、gasket/waizhao 闭环均 pass。**未提交** `built/*.step` 与 `out/*.census.json` 的再生成（差异仅 STEP 头时间戳 + 一条机器路径，提交等于把机器路径又焊回仓库）。 |
 
 ### ⚠️ 本次推送的坑：本地分支 ref 建不了
 
@@ -132,15 +133,17 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
 
 工作区 `git status` **干净**（0 改动）。
 
-### 本地分支状态（2026-10-16 08:20 复核）
+### 本地分支状态（2026-10-16 20:35 复核）
 
 | 分支 / 标记 | 本地指向 | 远程指向 |
 |---|---|---|
-| `main` | `029adbd` | `029adbd` ✅ 一致 |
-| `sandbox-merge` | `4c3552e`+（承载全部新工作，ahead 39） | `c0f4a2e` ⚠️ **不要 push** |
+| `main` | `029adbd` | `029adbd` ✅ 一致（始终没动） |
+| `sandbox-merge` | `f7e2605`（承载全部新工作） | `c0f4a2e` ⚠️ **不要 push** |
 | `feature/ir-feature-tree`（远程） | — | `404b1f2` |
 | `refactor/naming-and-layering`（远程） | — | `59d35c3` |
-| **`feature/truth-step-validation`（远程）** | = `sandbox-merge` HEAD | `137334c` ✅ **本次** |
+| `feature/truth-step-validation`（远程） | — | `137334c` |
+| **`feature/pdf-read-ops`（远程）** | — | `4a210e0`（另一会话：truth_census 实验区） |
+| **`fix/truth-census-portability`（远程）** | = `sandbox-merge` HEAD | `f7e2605` ✅ **本次** |
 
 **IR 路线这批工作放在 `feature/ir-feature-tree`**（不在 main、不推 sandbox-merge），
 沿用项目一贯做法：新工作开新远程分支，验证充分后再谈合流。
