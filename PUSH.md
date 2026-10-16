@@ -101,6 +101,7 @@ git push origin main
 | 2026-10-14 | `c8e7672` | **推 sandbox-merge 分支（非 main）**：① s6b_projection.py 修复（_load_json_opt 改 msgio.ref_path，解决误读根目录 _drawing.json 的 4 条假投影错误，已编译待闭环）；② ybracket ref_spec 补全 13 项 MARKS；③ 沙箱 zip 的 13 步流水线代码同步（pipe.py/s0_plan/s7_decide）；④ 四件闭环产物回归；⑤ 新增 HANDOFF-2026-10-14.md。注意：含未验证项（ybracket 模型 bug 开放、s6b 未跑闭环），按 PUSH.md 约定不进 main；推送触发 PUSH.md「沙箱写 ref」坑，已手动补 .git/refs/remotes/origin/sandbox-merge。另：验证报告/z2c_sample.parquet(84MB) 超 50MB 告警但已入库。 |
 | 2026-10-14 | `74a2c69` → `dd5a3be`（共 6 个） | **推 `refactor/naming-and-layering` 分支（非 main）**：① **命名规范化**——参数改四段式 `<部位>_[<修饰>_]<量型>[_<方向>]`，带方向的量必带轴向后缀；新增 `tools/check_naming.py`（可执行检查）与 `tools/rename_params.py`（tokenize 标识符级改名）；`docs/rename_maps/*.json` 存 4 个零件改名映射（可反向撤销）；命名 0 error/0 warning。② **逻辑分层**——`SHARED_STEPS` 5→9（新增 s4_table/s5_collect/s7_decide/s8_apply）；新增 `lib/` 系统层骨架（`collect.py` / `drawing_fc.py` / `drawing_render.py`）；删 12 个零件副本，零件只留 4 个含几何/标注的步骤。③ **s6b 修复**——容差 1e-6→1e-3（FreeCAD 投影噪声 1e-4 量级），高度链要求 ≥2 段。④ **出图自动适配**——`s3_render` 分两遍绘制，保证视图/标注/文字不越图框（bracket/lbracket/ybracket 均已收进图框）。⑤ **垫片迁入 `parts/gasket/`**——根目录只剩框架，默认 `--part` 改 `parts/gasket`。⑥ **s2/s3 抽 lib**——3 个零件文件从 250~283 行缩到约 100 行，只声明视图布局与标注布置（s3 用数据清单 DIMS、s2 用 `place_marks` 回调）。**关键验证：每个零件「抽 lib 前 vs 后」像素对比全部 0 差异**（`tools/diff_images.py`）；四件闭环全 pass，guard 26/26。遗留见 `docs/遗留事项与下一步.md`（gasket 是另一套老实现未纳入、bracket 标注数字硬编码等）。 |
 | 2026-10-15 | `703a619` | **推 `feature/ir-feature-tree` 分支（非 main）**：① **IR 路线定案**——IR 当唯一真值源（不再是"双后端"），build123d 升为几何引擎 + 特征树真源，FreeCAD PartDesign 退为按需物化的交互面，TechDraw 出图，`drawing.anchors` 缝 3D↔2D；四项 2D↔3D 决策拍板（锚点放 IR 特征侧 / 绑定存可重放查询不存编号 / 图纸只读 / 内腔不可见当特例放行）。② **A** `lib/ir.py`：IR schema（feature 八栏 + 词表 + `validate()` + dump/load）。③ **B** `tools/recorder.py`：build123d 执行+录制 → IR（三种注入：模块属性补丁 + `Compound.__sub__/__add__` 布尔钩子 + `Builder._get_context()` 快照中间形状），样板 `parts/lbracket/ir.json`（26 事件 → 9 特征）。④ **交接文档** `docs/HANDOFF-2026-10-15.md`。⑤ `.gitignore` 忽略本机 `env.bat`。❗**实测关键坑**：build123d 的 `BuildPart`/`BuildSketch` 一点都不能打补丁（替换 BuildPart 破坏 `pending_faces` 传递；替换 BuildSketch 类或改其 `__init__` 破坏 `BuildLine`→`make_face` 边传递）⇒ 草图平面只能静态扫源码。保真度：录制最终形状 vs 流水线 s1_build 输出 bbox/solids 一致、体积差 0.03。上传前检查：guard 9/13 步全过；垫片 + bracket 闭环均 `闭环结局：pass`。**下一步**：C（IR→build123d 生成器 + 往返自测）→ D/E（PartDesign 生成 + 回读）→ G（2D↔3D 三层绑定）。 |
+| 2026-10-16 | `137334c` | **推 `feature/truth-step-validation` 分支（非 main）**：① **客户真值 STEP 反向校验**——拿到 `D:\工作内容\生产图纸`（11 件同时有 矢量PDF+DWG+真值STEP），用 `外罩.STEP` 当标准答案，把外罩 sj-012 从"只读 2D 修到 v2"推进到 v4：总高 48→**52**（图上 `48.5±0.1` 是颈顶台阶标高，不是总高）、本体**外锥→Ø28 圆柱**（正视图那条斜线是 4 条筋在 45° 的投影 ×cos45°）、筋宽 6→**4**（俯视图量到的"6"含 R1 根圆角）、内腔顶 R11 半球→**R7 球冠**（球心 z=41）、补漏一个 **Ø6×21 径向长圆孔**、标定 k 修正 **0.4%**（0.48331→0.48527）。验收：包围盒 48×48×52 一致、体积差 **0.50%**、体素一致率 **98.09%**。② 新增 `docs/BATCH-REVERSE-VALIDATION-2026-10-16.md`（问题点/根因 R-A~R-F、流程建议 S1~S10、降本建议 T1~T8）。上传前检查：guard 14/14、7 件闭环 6 pass（`valve_cover` 是历史存根：仓库里只有 params.py/ref_spec.py，非本次回归）、`arch_impact --strict` 退出码 0。❗**本机 SSH 坑**：`~/.ssh/id_ed25519_jianmo` **不存在**（§五 的写法在本机不适用）；22 端口 reset；改用 **`ssh -p 443 git@ssh.github.com` + `~/.ssh/id_ed25519`**，且**第一次必 reset、重试即成功**。 |
 
 ### ⚠️ 本次推送的坑：本地分支 ref 建不了
 
@@ -127,8 +128,19 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/id_ed25519" \
 | tag `refactor-naming-and-layering-c69e466` | `c69e466` | 本地标记 |
 | 远程 `refactor/naming-and-layering` | `59d35c3` | ✅ 已推送 |
 | **远程 `feature/ir-feature-tree`** | `c1cc32c` | ✅ 已推送（2026-10-15，快进 `2ff1c06` → `c1cc32c`，共 12 个 commit） |
+| **远程 `feature/truth-step-validation`** | `137334c` | ✅ 已推送（2026-10-16，真值 STEP 反向校验修外罩） |
 
 工作区 `git status` **干净**（0 改动）。
+
+### 本地分支状态（2026-10-16 08:20 复核）
+
+| 分支 / 标记 | 本地指向 | 远程指向 |
+|---|---|---|
+| `main` | `029adbd` | `029adbd` ✅ 一致 |
+| `sandbox-merge` | `4c3552e`+（承载全部新工作，ahead 39） | `c0f4a2e` ⚠️ **不要 push** |
+| `feature/ir-feature-tree`（远程） | — | `404b1f2` |
+| `refactor/naming-and-layering`（远程） | — | `59d35c3` |
+| **`feature/truth-step-validation`（远程）** | = `sandbox-merge` HEAD | `137334c` ✅ **本次** |
 
 **IR 路线这批工作放在 `feature/ir-feature-tree`**（不在 main、不推 sandbox-merge），
 沿用项目一贯做法：新工作开新远程分支，验证充分后再谈合流。
@@ -170,6 +182,29 @@ git checkout -b refactor/naming-and-layering FETCH_HEAD
 | 远程（fetch 用） | `https://gh-proxy.com/https://github.com/cheng1123425/jianmo.git` |
 | **HTTPS 推送** | ❌ 无凭据（`credential.helper=helper-selector`，无 `~/.git-credentials`），会报 `could not read Username` |
 | **SSH 推送** | ✅ 用 `~/.ssh/id_ed25519_jianmo`（**可写**）；⚠️ `~/.ssh/id_ed25519` 是**只读 deploy key**，用它 push 会报 `Permission ... denied to deploy key`（2026-10-15 实测） |
+
+### ⭐ 2026-10-16 实测：本机 `id_ed25519_jianmo` 已不存在，改走 443
+
+```bash
+ls ~/.ssh/            # → 只有 id_ed25519 / id_ed25519.pub / known_hosts（无 _jianmo）
+```
+
+22 端口是 `Connection reset`。**可用命令**（`id_ed25519` 在本机对这是**可写**的，
+与上一段的"只读"结论不同 —— 以实测为准）：
+
+```bash
+cd jianmo
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o BatchMode=yes \
+  -o ServerAliveInterval=15 -p 443 -i $HOME/.ssh/id_ed25519" \
+  git push git@ssh.github.com:cheng1123425/jianmo.git \
+  HEAD:refs/heads/<新分支名>
+```
+
+**要点**：
+* 必须走 `ssh.github.com` **443**（22 被 reset）；`git ls-remote` 一般一次就通，
+  但 **`git push` 第一次大概率 `Connection reset`，原样重试第 2 次即成功**（2026-10-16 实测）。
+* 一定要 `HEAD:refs/heads/<新分支名>` 形式 —— 沙箱建不了本地 ref，
+  也不能碰 `sandbox-merge` / `main`。
 
 **本机推荐推送命令**（不改动 remote 配置）：
 
